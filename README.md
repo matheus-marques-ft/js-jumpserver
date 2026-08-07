@@ -124,3 +124,4 @@ Unless required by applicable law or agreed to in writing, software distributed 
 [license-shield]: https://img.shields.io/github/license/jumpserver/jumpserver
 [deepwiki-shield]: https://img.shields.io/badge/deepwiki-devin?color=blue
 [discord-shield]: https://img.shields.io/discord/1194233267294052363?style=flat&logo=discord&logoColor=%23f5f5f5&labelColor=%235462eb&color=%235462eb
+# js-jumpserver
