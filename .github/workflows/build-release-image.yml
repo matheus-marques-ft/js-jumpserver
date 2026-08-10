@@ -40,7 +40,7 @@ jobs:
           fi
           PLATFORMS="${{ github.event.inputs.PLATFORMS }}"
           if [ -z "$PLATFORMS" ]; then
-            PLATFORMS="linux/amd64,linux/arm64"
+            PLATFORMS="linux/arm64"
           fi
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "platforms=$PLATFORMS" >> "$GITHUB_OUTPUT"
