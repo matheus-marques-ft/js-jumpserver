@@ -18,7 +18,7 @@ from users.models import User
 
 __all__ = ['AssetPermission', 'ActionChoices', 'AssetPermissionQuerySet']
 
-# 使用场景
+# Usage scenario
 logger = logging.getLogger('jumpserver.permissions')
 
 
@@ -71,7 +71,7 @@ class AssetPermission(LabeledMixin, JMSOrgBaseModel):
     nodes = models.ManyToManyField(
         'assets.Node', related_name='granted_by_permissions', blank=True, verbose_name=_("Node")
     )
-    # 特殊的账号: @ALL, @INPUT @USER 默认包含，将来在全局设置中进行控制.
+    # Special accounts: @ALL, @INPUT, @USER are included by default; will be controlled via global settings in the future.
     accounts = models.JSONField(default=list, verbose_name=_("Account"))
     protocols = models.JSONField(default=default_protocols, verbose_name=_("Protocols"))
     actions = models.IntegerField(default=ActionChoices.connect, verbose_name=_("Actions"))
@@ -162,7 +162,7 @@ class AssetPermission(LabeledMixin, JMSOrgBaseModel):
 
     def get_all_accounts(self, flat=False):
         """
-         :return: 返回授权的所有账号对象 Account
+         :return: Returns all authorized Account objects
         """
         asset_ids = self.get_all_assets(flat=True)
         q = Q(asset_id__in=asset_ids)

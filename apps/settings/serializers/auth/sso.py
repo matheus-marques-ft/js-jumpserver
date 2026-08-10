@@ -8,7 +8,7 @@ __all__ = [
 
 class SSOSettingSerializer(serializers.Serializer):
     """
-    不对外开放了，只能通过配置文件修改，比较这个稍微有点危险
+    Not exposed externally anymore; can only be changed via the config file, since this is a bit risky
     """
     PREFIX_TITLE = _('SSO')
 

@@ -297,7 +297,7 @@ class RoleMixin:
     @property
     def is_superuser(self):
         """
-        由于这里用了 cache ，所以不能改成 self.system_roles.filter().exists() 会查询的
+        Since a cache is used here, this cannot be changed to self.system_roles.filter().exists(), which would hit the database
         """
         if self._is_superuser is not None:
             return self._is_superuser

@@ -72,14 +72,14 @@ class UserViewSet(CommonApiMixin, UserQuerysetMixin, SuggestionMixin, BulkModelV
             return super().match(request, *args, **kwargs)
 
     def get_serializer(self, *args, **kwargs):
-        """重写 get_serializer, 用于设置用户的角色缓存
-        放到 paginate_queryset 里面会导致 导出有问题, 因为导出的时候，没有 pager
+        """Override get_serializer, used to set the user's role cache
+        Putting this in paginate_queryset would break export, because there's no pager during export
         """
         if self.request.method.lower() in ['get'] \
             and self.request.query_params.get('fields_size') not in ['mini'] \
             and len(args) == 1 \
             and kwargs.get('many'):
-            # 批量更新一些用户时，args[0] 是全量 queryset 速度极慢，所以只在 get list 的时候设置缓存
+            # When bulk-updating some users, args[0] is the full queryset which is extremely slow, so only set the cache during get list
             queryset = self.set_users_roles_for_cache(args[0])
             queryset = self.set_users_orgs_roles(args[0])
             args = (queryset,)
@@ -87,7 +87,7 @@ class UserViewSet(CommonApiMixin, UserQuerysetMixin, SuggestionMixin, BulkModelV
 
     @staticmethod
     def set_users_roles_for_cache(queryset):
-        # Todo: 未来有机会用 SQL 实现
+        # Todo: implement with SQL in the future if there's a chance
         queryset_list = queryset
         user_ids = [u.id for u in queryset_list]
         role_bindings = RoleBinding.objects.filter(user__in=user_ids) \
@@ -181,7 +181,7 @@ class UserViewSet(CommonApiMixin, UserQuerysetMixin, SuggestionMixin, BulkModelV
                         user.username)
                 }
                 return Response(error, status=400)
-            # 追加角色，不清除除原有的角色
+            # Append the roles, without clearing the existing roles
             user.org_roles.add(*org_roles)
         return Response(serializer.data, status=201)
 

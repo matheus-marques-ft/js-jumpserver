@@ -9,20 +9,20 @@ def is_weak_password(password):
     if len(password) < 8:
         return True
 
-    # 判断是否只有一种字符类型
+    # Check whether it contains only a single character type
     if password.isdigit() or password.isalpha():
         return True
 
-    # 判断是否只包含数字或字母
+    # Check whether it contains only digits or only letters
     if password.islower() or password.isupper():
         return True
 
-    # 判断是否包含常见弱密码
+    # Check whether it is a common weak password
     common_passwords = ["123456", "password", "12345678", "qwerty", "abc123"]
     if password.lower() in common_passwords:
         return True
 
-    # 正则表达式判断字符多样性（数字、字母、特殊字符）
+    # Use a regex to check character diversity (digits, letters, special characters)
     if (
             not re.search(r"[A-Za-z]", password)
             or not re.search(r"[0-9]", password)

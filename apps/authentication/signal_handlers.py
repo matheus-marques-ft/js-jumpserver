@@ -14,10 +14,10 @@ from .backends.oauth2_provider.signal_handlers import *
 
 @receiver(user_logged_in)
 def on_user_auth_login_success(sender, user, request, **kwargs):
-    # 失效 perms 缓存
+    # Invalidate perms cache
     user.expire_rbac_perms_cache()
 
-    # 开启了 MFA，且没有校验过, 可以全局校验, middleware 中可以全局管理 oidc 等第三方认证的 MFA
+    # MFA is enabled and hasn't been verified yet; it can be verified globally, the middleware can globally manage MFA for third-party auth such as OIDC
     if settings.SECURITY_MFA_AUTH_ENABLED_FOR_THIRD_PARTY \
             and user.mfa_enabled \
             and not request.session.get('auth_mfa'):
@@ -29,7 +29,7 @@ def on_user_auth_login_success(sender, user, request, **kwargs):
 
     user_session_id = request.session.get('user_session_id')
     UserSession.objects.filter(id=user_session_id).update(key=request.session.session_key)
-    # 单点登录，超过了自动退出
+    # Single sign-on, automatically logged out when exceeded
     if settings.USER_LOGIN_SINGLE_MACHINE_ENABLED:
         lock_key = 'single_machine_login_' + str(user.id)
         session_key = cache.get(lock_key)

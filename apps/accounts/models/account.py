@@ -140,7 +140,7 @@ class Account(AbsConnectivity, LabeledMixin, BaseAccount, JSONFilterMixin):
     @lazyproperty
     def alias(self) -> str:
         """
-        别称，因为有虚拟账号，@INPUT @MANUAL @USER, 否则为 id
+        Alias, because there are virtual accounts, @INPUT @MANUAL @USER, otherwise the id
         """
         if self.username.startswith('@'):
             return self.username
@@ -148,7 +148,8 @@ class Account(AbsConnectivity, LabeledMixin, BaseAccount, JSONFilterMixin):
 
     def is_virtual(self) -> bool:
         """
-        不要用 username 去判断，因为可能是构造的 account 对象，设置了同名账号的用户名,
+        Don't use username to determine this, because it may be a constructed account
+        object with the username of an account of the same name set,
         """
         return self.alias.startswith('@')
 
@@ -167,7 +168,7 @@ class Account(AbsConnectivity, LabeledMixin, BaseAccount, JSONFilterMixin):
 
     @lazyproperty
     def ds_domain(self) -> str:
-        """这个不能去掉，perm_account 会动态设置这个值，以更改 full_username"""
+        """This cannot be removed, perm_account dynamically sets this value to change full_username"""
         if self.is_virtual():
             return ''
         if self.ds and self.ds.domain_name:
@@ -192,7 +193,7 @@ class Account(AbsConnectivity, LabeledMixin, BaseAccount, JSONFilterMixin):
         return self.history.count()
 
     def get_su_from_accounts(self):
-        """ 排除自己和以自己为 su-from 的账号 """
+        """ Exclude itself and accounts whose su-from is itself """
         return self.asset.accounts.exclude(id=self.id).exclude(su_from=self)
 
     def make_account_ansible_vars(self, su_from):
@@ -262,11 +263,11 @@ class Account(AbsConnectivity, LabeledMixin, BaseAccount, JSONFilterMixin):
 
 def replace_history_model_with_mixin():
     """
-    替换历史模型中的父类为指定的Mixin类。
+    Replace the parent class of the historical model with the specified Mixin class.
 
     Parameters:
-        model (class): 历史模型类，例如 Account.history.model
-        mixin_class (class): 要替换为的Mixin类
+        model (class): the historical model class, e.g. Account.history.model
+        mixin_class (class): the Mixin class to replace it with
 
     Returns:
         None

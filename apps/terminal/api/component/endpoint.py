@@ -19,7 +19,7 @@ class SmartEndpointViewMixin:
     get_serializer: callable
     request: Request
 
-    # View 处理过程中用的属性
+    # Attributes used during View processing
     target_instance: None
     target_protocol: None
 
@@ -45,7 +45,7 @@ class SmartEndpointViewMixin:
         return Endpoint.match_by_instance_label(self.target_instance, self.target_protocol, self.request)
 
     def match_endpoint_by_target_ip(self):
-        target_ip = self.request.GET.get('target_ip', '')  # 支持target_ip参数，用来方便测试
+        target_ip = self.request.GET.get('target_ip', '')  # Support target_ip parameter for testing convenience
         if not target_ip and callable(getattr(self.target_instance, 'get_target_ip', None)):
             target_ip = self.target_instance.get_target_ip()
         endpoint = EndpointRule.match_endpoint(

@@ -94,7 +94,7 @@ class SendAndVerifyCodeUtil(object):
 
     def __send(self, code):
         """
-        发送信息的方法，如果有错误直接抛出 api 异常
+        Method for sending the message; raises an api exception directly on error
         """
         if self.backend == 'sms':
             self.__send_with_sms()

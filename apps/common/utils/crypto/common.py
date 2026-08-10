@@ -6,7 +6,7 @@ secret_pattern = re.compile(r'password|secret|key|token', re.IGNORECASE)
 
 def padding_key(key, max_length=32):
     """
-    返回32 bytes 的key
+    Returns a 32-byte key
     """
     if not isinstance(key, bytes):
         key = bytes(key, encoding='utf-8')

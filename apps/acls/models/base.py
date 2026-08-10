@@ -72,7 +72,7 @@ class BaseACL(JMSBaseModel):
             is_contain_time_period = contains_time_period(time_periods) if time_periods else True
 
             if is_contain_ip and is_contain_time_period:
-                # 满足条件，则返回
+                # Conditions satisfied, return
                 return acl
         return None
 

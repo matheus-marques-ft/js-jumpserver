@@ -467,7 +467,7 @@ class LDAPImportUtil(object):
         for org in orgs:
             self.bind_org(org, objs, group_users_mapper)
         logger.info('End perform import ldap users')
-        # 禁止ldap 不存在的用户的
+        # Disable users that no longer exist in ldap
         disable_usernames = []
         if self.strict_sync_enabled and self.is_sync_all:
             disable_usernames = self.disable_not_exist_users(users)
@@ -492,7 +492,7 @@ class LDAPImportUtil(object):
         return disable_usernames
 
     def exit_user_group(self, user_groups_mapper):
-        # 通过对比查询本次导入用户需要移除的用户组
+        # Determine the user groups to remove for the users imported this time, by comparison
         group_remove_users_mapper = defaultdict(set)
         for user, current_groups in user_groups_mapper.items():
             old_groups = set(user.groups.filter(name__startswith=self.user_group_name_prefix))
@@ -501,7 +501,7 @@ class LDAPImportUtil(object):
             for g in exit_groups:
                 group_remove_users_mapper[g].add(user)
 
-        # 根据用户组统一移除用户
+        # Remove users from each group accordingly
         for g, rm_users in group_remove_users_mapper.items():
             g.users.remove(*rm_users)
 
@@ -584,7 +584,7 @@ class LDAPTestUtil(object):
             raise LDAPInvalidServerError(err)
 
     def _test_server_uri(self):
-        # 这里测试 server uri 是否能连通, 不进行 bind 操作, 不需要传入 bind dn 和密码
+        # Test whether the server uri is reachable here, without performing a bind operation; no need to pass a bind dn and password
         util = LDAPServerUtil(config=self.config)
         connection = util._open_connection(bind=False)
         connection.unbind()

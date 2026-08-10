@@ -36,7 +36,7 @@ def stop_beat_process(sig, frame):
 
 
 def main():
-    # 父进程结束通知子进程结束
+    # Notify the child process to stop when the parent process stops
     signal.signal(signal.SIGTERM, stop_beat_process)
 
     with cache.lock("beat-distribute-start-lock", expire=60, auto_renewal=True):

@@ -6,16 +6,16 @@
     user1password: Fit2Cloud@12344
 
   tasks:
-    - name: 监测特权用户密码
+    - name: Check privileged user password
       ansible.builtin.ping:
 
-    - name: 更改用户密码
+    - name: Change user password
       user:
         name: "{{ user1 }}"
         password: "{{ user1password|password_hash('sha512', 'K3mIlKK') }}"
         update_password: always
 
-    - name: 校验密码是否更改成功
+    - name: Verify the password was changed successfully
       vars:
         - ansible_user: '{{ user1 }}'
           ansible_ssh_password: '{{ user1password }}'

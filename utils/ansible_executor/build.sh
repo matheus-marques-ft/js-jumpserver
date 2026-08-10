@@ -16,7 +16,7 @@ if ! command -v ansible-builder >/dev/null 2>&1; then
 fi
 
 # Optional: rewrite GitHub zip URLs via mirror (speed up ansible-core / ansible-runner download).
-# 临时 EE 必须放在 SCRIPT_DIR：ansible-builder 按 EE 文件所在目录解析 requirements-python.txt 等相对路径。
+# The temporary EE file must be placed in SCRIPT_DIR: ansible-builder resolves relative paths such as requirements-python.txt based on the directory the EE file is in.
 WORK_EE="$EE_FILE"
 if [ "$USE_CHINA_MIRROR" = "1" ] && [ -n "$GITHUB_MIRROR" ]; then
   WORK_EE="$(mktemp "${SCRIPT_DIR}/.execution-environment.XXXXXX.yml")"

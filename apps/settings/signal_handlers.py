@@ -37,7 +37,7 @@ def refresh_settings_on_changed(sender, instance=None, **kwargs):
         return
     setting_pub_sub.publish(instance.name)
     if instance.is_name('PERM_SINGLE_ASSET_TO_UNGROUP_NODE'):
-        """ 过期所有用户授权树 """
+        """ Expire the permission tree for all users """
         logger.debug('Expire all user perm tree')
         from perms.utils import UserPermTreeExpireUtil
         UserPermTreeExpireUtil().expire_perm_tree_for_all_user()
@@ -91,7 +91,7 @@ def after_migrate_some_config(sender, app_config, **kwargs):
 def monkey_patch_settings(sender, **kwargs):
     def monkey_patch_getattr(self, name):
         val = getattr(self._wrapped, name)
-        # 只解析 defaults 中的 callable
+        # Only resolve callables that are in defaults
         if callable(val) and val.__module__.endswith('jumpserver.conf'):
             val = val()
         return val
@@ -108,7 +108,7 @@ def init_sqlite_db(sender, app_config, **kwargs):
          return
     db_path = settings.LEAK_PASSWORD_DB_PATH
     if not os.path.isfile(db_path):
-        # 这里处理一下历史数据，有可能用户 copy 了旧的文件到 目录下
+        # Handle legacy data here, the user may have copied an old file into the directory
         src = os.path.join(settings.PROJECT_DIR, 'data', 'leak_passwords.db')
         if not os.path.isfile(src):
             src = os.path.join(

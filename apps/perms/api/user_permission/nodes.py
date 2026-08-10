@@ -36,14 +36,14 @@ class BaseUserPermedNodesApi(SelfOrPKUserMixin, RebuildTreeMixin, ListAPIView):
 
 
 class UserAllPermedNodesApi(BaseUserPermedNodesApi):
-    """ 用户授权的节点 """
+    """ Nodes granted to the user """
 
     def get_nodes(self):
         return self.query_node_util.get_whole_tree_nodes()
 
 
 class UserPermedNodeChildrenApi(BaseUserPermedNodesApi):
-    """ 用户授权的节点下的子节点 """
+    """ Child nodes under a node granted to the user """
 
     def get_nodes(self):
         key = self.request.query_params.get('key')

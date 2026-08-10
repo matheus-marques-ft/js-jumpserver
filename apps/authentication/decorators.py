@@ -185,7 +185,7 @@ def post_save_next_to_session_if_guard_redirect(view_func):
             # Copy AUTH_SESSION_NEXT_URL_KEY to 'next' if it exists
             saved_next_url = request.session.get(AUTH_SESSION_NEXT_URL_KEY)
             if saved_next_url:
-                # 这里 'next' 是 UserLoginGuardView.redirect_field_name
+                # Here 'next' is UserLoginGuardView.redirect_field_name
                 request.session[USER_LOGIN_GUARD_VIEW_REDIRECT_FIELD] = saved_next_url
                 logger.debug(f"[Auth] Copied {AUTH_SESSION_NEXT_URL_KEY} to 'next' in session: {saved_next_url}")
         

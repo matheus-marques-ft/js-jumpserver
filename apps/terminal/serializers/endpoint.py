@@ -42,7 +42,7 @@ class EndpointSerializer(BulkModelSerializer):
 
     def validate_is_active(self, value):
         if self.instance and str(self.instance.id) == Endpoint.default_id:
-            # 默认端点不能禁用
+            # The default endpoint cannot be disabled
             return True
         else:
             return value

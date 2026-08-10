@@ -16,7 +16,7 @@ __all__ = [
 
 class UserConfirmRequiredExceptionMixin:
     """
-    异常处理
+    Exception handling
     """
 
     def dispatch(self, request, *args, **kwargs):

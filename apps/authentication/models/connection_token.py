@@ -41,7 +41,7 @@ class ConnectionToken(JMSOrgBaseModel):
         'assets.Asset', on_delete=models.SET_NULL, null=True, blank=True,
         related_name='connection_tokens', verbose_name=_('Asset'),
     )
-    account = models.CharField(max_length=128, verbose_name=_("Account name"))  # 登录账号Name
+    account = models.CharField(max_length=128, verbose_name=_("Account name"))  # Login account Name
     input_username = models.CharField(max_length=128, default='', blank=True, verbose_name=_("Input username"))
     input_secret = EncryptTextField(max_length=64, default='', blank=True, verbose_name=_("Input secret"))
     input_secret_type = models.CharField(max_length=16, default='password', blank=True, null=True, verbose_name=_("Input secret type"))
@@ -124,7 +124,7 @@ class ConnectionToken(JMSOrgBaseModel):
         self.save(update_fields=['is_reusable', 'date_expired'])
 
     def renewal(self):
-        """ 续期 Token，将来支持用户自定义创建 token 后，续期策略要修改 """
+        """ Renew the Token; once user-customized token creation is supported in the future, the renewal strategy will need to change """
         self.date_expired = date_expired_default()
         self.save()
 
@@ -138,9 +138,9 @@ class ConnectionToken(JMSOrgBaseModel):
     @classmethod
     def get_asset_accounts_by_alias(cls, asset, alias):
         """
-        获取资产下的账号
-        :param alias: 账号别名
-        :return: 账号对象
+        Get the account under the asset
+        :param alias: account alias
+        :return: account object
         """
         if is_uuid(alias):
             kwargs = {'id': alias}
@@ -231,7 +231,7 @@ class ConnectionToken(JMSOrgBaseModel):
             'alternate shell:s': app,
             'remoteapplicationcmdline:s': cmdline_b64,
             'disableconnectionsharing:i': '1',
-            'bitmapcachepersistenable:i': '0',  # 图缓存相关设置,便于录像审计
+            'bitmapcachepersistenable:i': '0',  # Bitmap cache related setting, to facilitate recording/audit
             'bitmapcachesize:i': '1500',
         }
         return options
@@ -291,7 +291,7 @@ class ConnectionToken(JMSOrgBaseModel):
 
         ad_domain = rdp.setting.get('ad_domain')
         if ad_domain:
-            # serializer account username 用的是 full_username 所以这么设置
+            # The serializer's account username uses full_username, hence this setting
             account.ds_domain = ad_domain
 
     @lazyproperty
@@ -445,7 +445,7 @@ class AdminConnectionToken(ConnectionToken):
     @classmethod
     def get_user_permed_account(cls, user, asset, account_alias, protocol):
         """
-        管理员 token 可以访问所有资产的账号
+        Admin tokens can access accounts on all assets
         """
         account = cls.get_asset_accounts_by_alias(asset, account_alias)
         if not account:

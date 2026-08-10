@@ -10,10 +10,10 @@ __all__ = ['MaskingMethod', 'DataMaskingRule']
 
 
 class MaskingMethod(models.TextChoices):
-    fixed_char = "fixed_char", _("Fixed Character Replacement")  # 固定字符替换
-    hide_middle = "hide_middle", _("Hide Middle Characters")  # 隐藏中间几位
-    keep_prefix = "keep_prefix", _("Keep Prefix Only")  # 只保留前缀
-    keep_suffix = "keep_suffix", _("Keep Suffix Only")  # 只保留后缀
+    fixed_char = "fixed_char", _("Fixed Character Replacement")
+    hide_middle = "hide_middle", _("Hide Middle Characters")
+    keep_prefix = "keep_prefix", _("Keep Prefix Only")
+    keep_suffix = "keep_suffix", _("Keep Suffix Only")
 
 
 class DataMaskingRule(UserAssetAccountBaseACL):

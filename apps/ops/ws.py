@@ -47,7 +47,8 @@ class TaskLogWebsocket(AsyncJsonWebsocketConsumer, OrgMixin):
     @sync_to_async
     def get_task(self, task_id):
         task = CeleryTaskExecution.objects.filter(id=task_id).first()
-        # task.creator 是 foreign key, 会异步去查询的，在下面的 if task.creator 会报错, 所以这里先取出来
+        # task.creator is a foreign key, which is queried asynchronously; using `if task.creator` below
+        # would raise an error, so fetch it here first
         if task and task.creator != ' ':
             return task
         else:
@@ -80,7 +81,8 @@ class TaskLogWebsocket(AsyncJsonWebsocketConsumer, OrgMixin):
         has_admin_auditor_role = bool(admin_auditor_role_ids & user_role_ids)
         has_perms = await self.has_perms(user, ['audits.view_joblog'])
         user_can_view = task.creator == user or (task.name in self.user_tasks and has_perms)
-        # (有管理员或审计员角色) 或者 (任务是用户自己创建的 或者 有查看任务日志权限), 其他情况没有权限
+        # (has admin or auditor role) OR (task was created by the user, or the user has permission to
+        # view job logs); no permission in any other case
         if not (has_admin_auditor_role or user_can_view):
             await self.send_json({'message': 'No permission', 'task': task_id})
             return

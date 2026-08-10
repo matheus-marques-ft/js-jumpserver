@@ -21,7 +21,7 @@ def get_multi_object_storage(name=None):
         configs[storage.name] = storage.config
     if settings.SERVER_REPLAY_STORAGE:
         configs['SERVER_REPLAY_STORAGE'] = settings.SERVER_REPLAY_STORAGE
-    # 指定存储名时仅构造该存储, 用于优先直连文件所在的存储, 避免遍历探测
+    # When a storage name is specified, only construct that storage; used to connect directly to the file's storage first, avoiding a scan
     if name is not None:
         configs = {name: configs[name]} if name in configs else {}
     if not configs:
@@ -44,11 +44,11 @@ class BaseStorageHandler(object):
         raise NotImplementedError
 
     def get_preferred_storage_name(self):
-        # 文件优先查找的存储名, 返回 None 表示直接遍历所有存储
+        # The preferred storage name to look up the file in; returning None means iterate over all storages directly
         return None
 
     def download(self):
-        # 优先只查文件所属的存储, 未指定或未命中时回退遍历所有存储
+        # First only look in the storage the file belongs to; fall back to iterating over all storages if not specified or not found
         preferred = self.get_preferred_storage_name()
         storage_names = [preferred, None] if preferred else [None]
         msg, found_storage = '', False
@@ -63,7 +63,7 @@ class BaseStorageHandler(object):
                 msg = f'Not found {self.NAME} file'
                 continue
 
-            # 保存到storage的路径
+            # The path saved to storage
             target_path = os.path.join(default_storage.base_location, local_path)
             target_dir = os.path.dirname(target_path)
             if not os.path.isdir(target_dir):

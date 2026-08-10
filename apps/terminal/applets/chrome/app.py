@@ -134,11 +134,11 @@ class WebAPP(object):
         self.account = account
         self.platform = platform
         self._steps = list()
-        # 确保 account_username 和 account_secret 不为 None
+        # Ensure account_username and account_secret are not None
         self._account_username = account.username if account.username else ''
         self._account_secret = account.secret if account.secret else ''
 
-        # 如果是匿名账号，account_username 和 account_secret 为空
+        # If it's an anonymous account, account_username and account_secret are empty
         if account.username == "@ANON":
             self._account_username = ''
             self._account_secret = ''
@@ -197,7 +197,7 @@ class WebAPP(object):
             ret = execute_action(driver, action)
             if not ret:
                 unblock_input()
-                notify_err_message(f"执行失败: target: {action.target} command: {action.command}")
+                notify_err_message(f"Execution failed: target: {action.target} command: {action.command}")
                 block_input()
                 return False
         return True
@@ -214,22 +214,22 @@ def default_chrome_driver_options(languag: str = 'en') -> webdriver.ChromeOption
     options = webdriver.ChromeOptions()
     options.add_argument("--start-maximized")
 
-    # 忽略证书错误相关
+    # Related to ignoring certificate errors
     options.add_argument('--ignore-ssl-errors')
     options.add_argument('--ignore-certificate-errors')
     options.add_argument('--ignore-certificate-errors-spki-list')
     options.add_argument('--allow-running-insecure-content')
 
-    # 禁用开发者工具
+    # Disable developer tools
     options.add_argument("--disable-dev-tools")
-    # 禁用 密码管理器弹窗
+    # Disable the password manager popup
     prefs = {
         "credentials_enable_service": False,
         "profile.password_manager_enabled": False,
         "intl.accept_languages": languag,
     }
     options.add_experimental_option("prefs", prefs)
-    # chromedriver 退出后也不关闭浏览器
+    # Don't close the browser even after chromedriver exits
     options.add_experimental_option("detach", True)
     options.add_experimental_option("excludeSwitches", ['enable-automation'])
     return options
@@ -250,23 +250,23 @@ class AppletApplication(BaseApplication):
         self._chrome_options.add_argument("--user-data-dir={}".format(self._tmp_user_dir.name))
         protocol_setting = self.platform.get_protocol_setting(self.protocol)
         if protocol_setting and protocol_setting.safe_mode:
-            # 加载 extensions
+            # Load extensions
             extension_paths = load_extensions()
             self._chrome_options.add_argument('--load-extension={}'.format(','.join(extension_paths)))
-        # 设置语言
+        # Set language
         self._chrome_options.add_argument('--lang={}'.format(lang))
 
     @wrapper_progress_bar
     def run(self):
         self.service = Service()
-        #  driver 的 console 终端框不显示
+        #  Don't show the driver's console terminal window
         self.service.creationflags = CREATE_NO_WINDOW
         self.driver = webdriver.Chrome(options=self._chrome_options, service=self.service)
         self.driver.implicitly_wait(10)
         if self.app.asset.address != "":
             ok = self.app.execute(self.driver)
             if not ok:
-                print("执行失败")
+                print("Execution failed")
         self.driver.maximize_window()
 
     def wait(self):
@@ -274,7 +274,7 @@ class AppletApplication(BaseApplication):
         parent_id = self.service.process.pid
         pids = get_children_pids(parent_id)
         pids_status = {pid: True for pid in pids}
-        # 退出 chromedriver 进程，等待所有子进程退出
+        # Stop the chromedriver process and wait for all child processes to exit
         self.service.stop()
         while True:
             time.sleep(5)
@@ -287,7 +287,7 @@ class AppletApplication(BaseApplication):
     def close(self):
         if self.driver:
             try:
-                # quit 退出全部打开的窗口
+                # quit closes all open windows
                 self.driver.quit()
             except Exception as e:
                 print(e)

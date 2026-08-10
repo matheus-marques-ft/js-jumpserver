@@ -16,8 +16,10 @@ logger = get_logger(__name__)
 
 def get_session_preferred_storage_name(session):
     """
-    会话所属终端(组件)配置的录像存储名, 录像大概率上传在该存储上, 优先在其中查找
-    terminal 可能已被删除 (on_delete=DO_NOTHING), 取不到时返回 None 表示无优先存储
+    The replay storage name configured on the terminal (component) the session belongs to;
+    the replay was most likely uploaded to that storage, so look there first.
+    The terminal may have already been deleted (on_delete=DO_NOTHING); if it can't be
+    retrieved, return None to indicate there is no preferred storage.
     """
     try:
         terminal = session.terminal
@@ -34,19 +36,19 @@ class ReplayStorageHandler(BaseStorageHandler):
 
     def get_file_path(self, **kwargs):
         storage = kwargs['storage']
-        # 获取外部存储路径名
+        # Get the external storage path name
         session_path = self.obj.find_ok_relative_path_in_storage(storage)
         if not session_path:
             return None, None
 
-        # 通过外部存储路径名后缀，构造真实的本地存储路径
+        # Build the actual local storage path from the external storage path's suffix
         return session_path, self.obj.get_local_path_by_relative_path(session_path)
 
     def find_local(self):
-        # 存在外部存储上，所有可能的路径名
+        # All possible path names on external storage
         session_paths = self.obj.get_all_possible_relative_path()
 
-        # 存在本地存储上，所有可能的路径名
+        # All possible path names on local storage
         local_paths = self.obj.get_all_possible_local_path()
 
         for _local_path in chain(session_paths, local_paths):
@@ -73,14 +75,14 @@ class SessionPartReplayStorageHandler(object):
         local_path = self.obj.get_replay_part_file_local_storage_path(part_filename)
         remote_path = self.obj.get_replay_part_file_relative_path(part_filename)
 
-        # 保存到storage的路径
+        # The path saved to storage
         target_path = os.path.join(default_storage.base_location, local_path)
         target_tmp_path = target_path + f'.tmp{int(time.time())}'
         target_dir = os.path.dirname(target_path)
         if not os.path.isdir(target_dir):
             make_dirs(target_dir, exist_ok=True)
 
-        # 优先只查所属终端配置的存储, 未配置或未命中时回退遍历所有存储
+        # First only look in the storage configured on the owning terminal; fall back to iterating over all storages if not configured or not found
         preferred = get_session_preferred_storage_name(self.obj)
         storage_names = [preferred, None] if preferred else [None]
         ok, err, found_storage = False, None, False

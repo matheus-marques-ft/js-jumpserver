@@ -29,28 +29,28 @@ user_permission_urlpatterns = [
     path('<str:user>/ungroup/assets/tree/', api.UserUngroupAssetsAsTreeApi.as_view(),
          name='user-ungroup-assets-as-tree'),
 
-    # tree-node，不包含资产
+    # tree-node, does not include assets
     path('<str:user>/nodes/tree/', api.UserAllPermedNodesAsTreeApi.as_view(),
          name='user-all-nodes-as-tree'),
     path('<str:user>/nodes/children/tree/', api.UserPermedNodeChildrenAsTreeApi.as_view(),
          name='user-node-children-as-tree'),
 
     # tree-node-with-asset
-    # 异步树
+    # Async tree
     path('<str:user>/nodes/children-with-assets/tree/',
          api.UserPermedNodeChildrenWithAssetsAsTreeApi.as_view(),
          name='user-node-children-with-assets-as-tree'),
     path('<str:user>/nodes/children-with-assets/category/tree/',
          api.UserPermedNodeChildrenWithAssetsAsCategoryTreeApi.as_view(),
          name='user-node-children-with-assets-as-category-tree'),
-    # 同步树
+    # Sync tree
     path('<str:user>/nodes/all-with-assets/tree/',
          api.UserPermedNodesWithAssetsAsTreeApi.as_view(),
          name='user-nodes-with-assets-as-tree'),
 ]
 
 user_group_permission_urlpatterns = [
-    # 查询某个用户组授权的资产和资产组
+    # Query the assets and asset groups granted to a user group
     path('<uuid:pk>/assets/', api.UserGroupGrantedAssetsApi.as_view(),
          name='user-group-assets'),
     path('<uuid:pk>/nodes/', api.UserGroupGrantedNodesApi.as_view(),

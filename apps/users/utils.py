@@ -60,10 +60,10 @@ def redirect_user_first_login_or_index(request, redirect_field_name):
             break
 
     url = safe_next_url(url, request=request)
-    # 防止 next 地址为 None
+    # Prevent the next address from being None
     if not url or url.lower() in ['none']:
         url = reverse('index')
-    # 处理下载地址编码问题 '%2Fui%2F'
+    # Handle the download address encoding issue '%2Fui%2F'
     url = unquote(url)
     return url
 
@@ -177,7 +177,7 @@ class BlockUtilBase:
         username = username.lower()
         key_limit = cls.LIMIT_KEY_TMPL.format(username, '*')
         key_block = cls.BLOCK_KEY_TMPL.format(username)
-        # Redis 尽量不要用通配
+        # Try to avoid wildcard matching with Redis
         cache.delete_pattern(key_limit)
         cache.delete(key_block)
 

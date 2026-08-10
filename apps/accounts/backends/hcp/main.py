@@ -25,7 +25,7 @@ class Vault(BaseVault):
         return self.client.is_active()
 
     def _get(self, entry):
-        # TODO: get data 是不是层数太多了
+        # TODO: is "get data" nested too deeply?
         data = self.client.get(path=entry.full_path).get('data', {})
         data = entry.get_decrypt_secret(data.get('secret'))
         return data

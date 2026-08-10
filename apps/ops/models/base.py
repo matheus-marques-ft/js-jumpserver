@@ -80,7 +80,7 @@ class BaseAnsibleExecution(models.Model):
         self.update_task()
 
     def set_error(self, error):
-        this = self.__class__.objects.get(id=self.id)  # 重新获取一次，避免数据库超时连接超时
+        this = self.__class__.objects.get(id=self.id)  # Re-fetch to avoid a stale/timed-out database connection
         this.status = 'failed'
         this.summary['error'] = str(error)
         this.finish_task()

@@ -26,7 +26,7 @@ class UserCreation:
                 'Authorization': '{} {}'.format('Bearer', data['token'])
             })
         else:
-            print("用户名 或 密码 或 地址 不对")
+            print("Incorrect username, password, or address")
             sys.exit(2)
 
     def get_user_detail(self, name, url):
@@ -54,7 +54,7 @@ class UserCreation:
         if resp.status_code == 201:
             return resp.json()
         else:
-            print("创建系统用户失败: {} {}".format(info['name'], resp.content))
+            print("Failed to create system user: {} {}".format(info['name'], resp.content))
             return None
 
     def set_system_user_auth(self, system_user, info):
@@ -64,7 +64,7 @@ class UserCreation:
         data = {'password': info.get('password')}
         resp = requests.patch(url, data=data, headers=self.headers)
         if resp.status_code > 300:
-            print("设置系统用户密码失败: {} {}".format(
+            print("Failed to set system user password: {} {}".format(
                 system_user.get('name'), resp.content.decode()
             ))
         else:
@@ -83,7 +83,7 @@ class UserCreation:
         if resp.status_code == 201:
             return resp.json()
         else:
-            print("创建管理用户失败: {} {}".format(info['name'], resp.content.decode()))
+            print("Failed to create admin user: {} {}".format(info['name'], resp.content.decode()))
             return None
 
     def set_admin_user_auth(self, admin_user, info):
@@ -93,14 +93,14 @@ class UserCreation:
         data = {'password': info.get('password')}
         resp = requests.patch(url, data=data, headers=self.headers)
         if resp.status_code > 300:
-            print("设置管理用户密码失败: {} {}".format(
+            print("Failed to set admin user password: {} {}".format(
                 admin_user.get('name'), resp.content.decode()
             ))
         else:
             return True
 
     def create_system_users(self):
-        print("#"*10, " 开始创建系统用户 ", "#"*10)
+        print("#"*10, " Starting to create system users ", "#"*10)
         users = []
         f = open('system_users.txt')
         for line in f:
@@ -121,10 +121,10 @@ class UserCreation:
         for i, info in enumerate(users, start=1):
             system_user = self.create_system_user(info)
             if system_user and self.set_system_user_auth(system_user, info):
-                print("[{}] 创建系统用户成功: {}".format(i, system_user['name']))
+                print("[{}] Successfully created system user: {}".format(i, system_user['name']))
 
     def create_admin_users(self):
-        print("\n", "#"*10, " 开始创建管理用户 ", "#"*10)
+        print("\n", "#"*10, " Starting to create admin users ", "#"*10)
         users = []
         f = open('admin_users.txt')
         for line in f:
@@ -141,7 +141,7 @@ class UserCreation:
         for i, info in enumerate(users, start=1):
             admin_user = self.create_admin_user(info)
             if admin_user and self.set_admin_user_auth(admin_user, info):
-                print("[{}] 创建管理用户成功: {}".format(i, admin_user['name']))
+                print("[{}] Successfully created admin user: {}".format(i, admin_user['name']))
 
 
 def main():

@@ -136,7 +136,7 @@ class JsonTextField(JsonMixin, models.TextField):
 
 class EncryptMixin:
     """
-    EncryptMixin要放在最前面
+    EncryptMixin must be placed first
     """
 
     def from_db_value(self, value, expression, connection, context=None):
@@ -146,7 +146,7 @@ class EncryptMixin:
         encryptor = Encryptor(value)
         plain_value = encryptor.decrypt()
 
-        # 可能和Json mix，所以要先解密，再json
+        # May be mixed with Json, so decrypt first, then json
         sp = super()
         if hasattr(sp, "from_db_value"):
             plain_value = sp.from_db_value(plain_value, expression, connection, context)
@@ -156,12 +156,12 @@ class EncryptMixin:
         if value is None:
             return value
 
-        # 先 json 再解密
+        # json first, then decrypt
         sp = super()
         if hasattr(sp, "get_prep_value"):
             value = sp.get_prep_value(value)
 
-        # 替换新的加密方式
+        # Replace with the new encryption method
         return Encryptor(value).encrypt()
 
 
@@ -257,7 +257,7 @@ class BitChoices(models.IntegerChoices, TreeChoices):
 
     @classmethod
     def all(cls):
-        # 权限 12 位 最大值
+        # Maximum value for a 12-bit permission
         return 4095
 
 
@@ -281,7 +281,7 @@ class RelatedManager:
     @classmethod
     def get_to_filter_qs(cls, value, to_model):
         """
-        这个是 instance 去查找 to_model 的 queryset 的 Q
+        This is the Q used by the instance to look up the to_model's queryset
         :param value:
         :param to_model:
         :return:
@@ -341,11 +341,11 @@ class RelatedManager:
     @classmethod
     def _get_filter_attrs_qs(cls, value, to_model):
         filters = []
-        # 特殊情况有这几种，
-        # 1. 像 资产中的 type 和 category，集成自 Platform。所以不能直接查询
-        # 2. 像 资产中的 nodes，不是简单的 m2m，是树 的关系
-        # 3. 像 用户中的 orgs 也不是简单的 m2m，也是计算出来的
-        # get_filter_{}_attr_q 处理复杂的
+        # There are a few special cases,
+        # 1. Like `type` and `category` on assets, which are inherited from Platform, so they can't be queried directly
+        # 2. Like `nodes` on assets, which is not a simple m2m but a tree relationship
+        # 3. Like `orgs` on users, which is also not a simple m2m but is computed
+        # get_filter_{}_attr_q handles the complex cases
         custom_attr_filter = getattr(to_model, "get_json_filter_attr_q", None)
         for attr in value["attrs"]:
             if not isinstance(attr, dict):
@@ -451,8 +451,8 @@ class JSONManyToManyDescriptor:
         manager.set(value)
 
     def is_match(self, obj, attr_rules):
-        # m2m 的情况
-        # 自定义的情况：比如 nodes, category
+        # The m2m case
+        # Custom cases: e.g. nodes, category
         res = True
         to_model = apps.get_model(self.field.to)
         custom_attr_filter = getattr(to_model, "get_json_filter_attr_q", None)
@@ -534,7 +534,7 @@ class JSONManyToManyDescriptor:
 
     def get_filter_q(self, instance):
         """
-        这个是某个 instance 获取 关联 资源的 filter q
+        This is the filter q used by an instance to get its related resources
         :param instance:
         :return:
         """

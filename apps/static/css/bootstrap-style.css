@@ -1,5 +1,5 @@
 /*!
- * 覆盖bootstrap样式，项目CSS禁止修改或添加该CSS内容，否则被覆盖后果自负
+ * Overrides bootstrap styles; project CSS must not modify or add to this CSS content, or you bear the consequences of it being overridden
 **/
 
 body {
@@ -190,7 +190,7 @@ form label {
     min-width: 160px;
 }
 
-/*页签*/
+/* Tabs */
 .nav-tabs {
     border-bottom: none;
 }
@@ -241,7 +241,7 @@ form label {
     margin-left: 2px;
 }
 
-/*表格样式*/
+/* Table style */
 .table {
     border-radius: 0;
     border: 0;
@@ -334,7 +334,7 @@ form label {
     border-radius: 0;
 }
 
-/*分页*/
+/* Pagination */
 .ng-pagination {
     font-size: 12px;
     color: #858585;
@@ -359,7 +359,7 @@ form label {
     color: #23A9F6;
 }
 
-/* 按钮 */
+/* Button */
 .btn {
     border-radius: 2px;
     min-width: 80px;
@@ -752,5 +752,5 @@ fieldset[disabled] .btn-danger.active {
 }
 
 /*!
- * 覆盖bootstrap样式，项目CSS禁止修改或添加该CSS内容，否则被覆盖后果自负
+ * Overrides bootstrap styles; project CSS must not modify or add to this CSS content, or you bear the consequences of it being overridden
 **/

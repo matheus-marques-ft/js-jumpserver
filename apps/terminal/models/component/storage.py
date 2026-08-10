@@ -85,7 +85,7 @@ class CommandStorage(CommonStorageModelMixin, JMSBaseModel):
         config = self.config
         if self.type_es and config.get("INDEX_BY_DATE"):
             engine_mod = import_module(TYPE_ENGINE_MAPPING[self.type])
-            # 这里使用一个全新的 config, 防止修改当前的 config
+            # Use a brand new config here to avoid modifying the current config
             store = engine_mod.CommandStore(self.config)
             store._ensure_index_exists()
             index_prefix = config.get("INDEX") or "jumpserver"

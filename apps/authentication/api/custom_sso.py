@@ -21,7 +21,7 @@ logger = get_logger(__file__)
 custom_sso_authenticate_method = None
 
 if settings.AUTH_CUSTOM_SSO:
-    ''' 保证自定义 SSO 认证方法在服务运行时不能被更改，只在第一次调用时加载一次 '''
+    ''' Ensure the custom SSO authentication method cannot be changed while the service is running; load it only once on first call '''
     try:
         custom_auth_method_path = 'data.auth.custom_sso.authenticate'
         custom_sso_authenticate_method = import_string(custom_auth_method_path)

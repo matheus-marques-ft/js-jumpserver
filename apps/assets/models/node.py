@@ -73,8 +73,8 @@ class FamilyMixin:
     def get_nodes_all_children(cls, nodes, with_self=True):
         pattern = cls.get_nodes_children_key_pattern(nodes, with_self=with_self)
         if not pattern:
-            # 如果 pattern = ''
-            # key__iregex 报错 (1139, "Got error 'empty (sub)expression' from regexp")
+            # If pattern = ''
+            # key__iregex raises an error (1139, "Got error 'empty (sub)expression' from regexp")
             return cls.objects.none()
         return Node.objects.filter(key__iregex=pattern)
 
@@ -326,8 +326,8 @@ class NodeAllAssetsMappingMixin:
 
         lock_key = f'KEY_LOCK_GENERATE_ORG_{org_id}_NODE_ALL_ASSET_ids_MAPPING'
         with DistributedLock(lock_key):
-            # 这里使用无限期锁，原因是如果这里卡住了，就卡在数据库了，说明
-            # 数据库繁忙，所以不应该再有线程执行这个操作，使数据库忙上加忙
+            # An indefinite lock is used here, because if it gets stuck here, it's stuck in the database, meaning
+            # the database is busy, so no other thread should perform this operation, which would make the database even busier
 
             _mapping = cls.get_node_all_asset_ids_mapping_from_cache(org_id)
             if _mapping:
@@ -368,7 +368,7 @@ class NodeAllAssetsMappingMixin:
                 for node_id, node_key in node_ids_key
             }
 
-            # * 直接取出全部. filter(node__org_id=org_id)(大规模下会更慢)
+            # * Fetch all directly. filter(node__org_id=org_id) would be slower at large scale
             nodes_asset_ids = cls.assets.through.objects.all() \
                 .annotate(char_node_id=F('node_id')) \
                 .annotate(char_asset_id=F('asset_id')) \
@@ -409,9 +409,9 @@ class NodeAssetsMixin(NodeAllAssetsMappingMixin):
 
     @classmethod
     def get_node_all_assets_by_key_v2(cls, key):
-        # 最初的写法是：
+        # The original implementation was:
         #   Asset.objects.filter(Q(nodes__key__startswith=f'{node.key}:') | Q(nodes__id=node.id))
-        #   可是 startswith 会导致表关联时 Asset 索引失效
+        #   but startswith causes the Asset index to be unused when joining tables
         from .asset import Asset
         node_ids = cls.objects.filter(
             Q(key__startswith=f'{key}:') | Q(key=key)
@@ -484,7 +484,7 @@ class SomeNodesMixin:
 
     @classmethod
     def org_root(cls):
-        # 如果使用current_org 在set_current_org时会死循环
+        # Using current_org here would cause an infinite loop in set_current_org
         ori_org = get_current_org()
 
         if ori_org and ori_org.is_default():
@@ -584,7 +584,7 @@ class Node(JMSOrgBaseModel, SomeNodesMixin, FamilyMixin, NodeAssetsMixin):
         return self.value
 
     def computed_full_value(self):
-        # 不要在列表中调用该属性
+        # Do not call this property inside a list
         values = self.__class__.objects.filter(
             key__in=self.get_ancestor_keys()
         ).values_list('key', 'value')
@@ -621,7 +621,7 @@ class Node(JMSOrgBaseModel, SomeNodesMixin, FamilyMixin, NodeAssetsMixin):
         return tree_node
 
     def has_offspring_assets(self):
-        # 拥有后代资产
+        # Has descendant assets
         return self.get_all_assets().exists()
 
     def delete(self, using=None, keep_parents=False):
@@ -636,8 +636,8 @@ class Node(JMSOrgBaseModel, SomeNodesMixin, FamilyMixin, NodeAssetsMixin):
         nodes_sorted = sorted(list(nodes), key=sort_key_func)
         nodes_mapper = {n.key: n for n in nodes_sorted}
         if not self.is_org_root():
-            # 如果是org_root，那么parent_key为'', parent为自己，所以这种情况不处理
-            # 更新自己时，自己的parent_key获取不到
+            # If this is org_root, parent_key is '' and parent is itself, so this case is not handled
+            # When updating itself, its own parent_key can't be found
             nodes_mapper.update({self.parent_key: self.parent})
         for node in nodes_sorted:
             parent = nodes_mapper.get(node.parent_key)

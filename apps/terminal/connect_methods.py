@@ -41,10 +41,11 @@ class NativeClient(TextChoices):
 
     @classmethod
     def get_native_clients(cls):
-        # native client 关注的是 endpoint 的 protocol,
-        # 比如 telnet mysql, koko 都支持，到那时暴露的是 ssh 协议
+        # native client cares about the endpoint's protocol,
+        # e.g. telnet and mysql are both supported by koko, in which case the exposed protocol is ssh
         clients = {
             Protocol.ssh: [cls.ssh_client, cls.ssh_guide],
+            Protocol.k8s: [cls.ssh_client, cls.ssh_guide],
             Protocol.sftp: [cls.sftp_client],
             Protocol.rdp: [cls.mstsc],
             Protocol.mysql: [cls.db_client, cls.db_guide],
@@ -162,8 +163,8 @@ class ConnectMethodUtil:
                     Protocol.sqlserver, Protocol.postgresql,
                     Protocol.oracle
                 ],
-                # 限制客户端的协议，比如 koko 虽然也支持 数据库的 ssh 连接，但是不再这里拉起
-                # Listen协议: [Asset协议]
+                # Restrict the client protocols; e.g. koko also supports database ssh connections, but they are not started here
+                # Listen protocol: [Asset protocol]
                 'client_limits': {
                     Protocol.sftp: [Protocol.sftp],
                     Protocol.ssh: [Protocol.ssh, Protocol.telnet],
@@ -248,7 +249,7 @@ class ConnectMethodUtil:
             .filter(action=ConnectMethodACL.ActionChoices.accept)
             .values_list('connect_methods', flat=True)
         ))
-        # 在禁用的基础上放行一些连接方法
+        # On top of the disabled set, allow some connect methods through
         disabled_connect_methods = set(itertools.chain.from_iterable(
             ConnectMethodACL.get_user_acls(user)
             .filter(action=ConnectMethodACL.ActionChoices.reject)
@@ -278,7 +279,7 @@ class ConnectMethodUtil:
 
     @classmethod
     def _filter_disable_protocols_connect_methods(cls, methods):
-        # 过滤一些特殊的协议方式
+        # Filter out some special protocol methods
         if not getattr(settings, 'TERMINAL_KOKO_SSH_ENABLED'):
             disable_ssh_client_protocols = [Protocol.ssh, Protocol.sftp, Protocol.telnet]
             for protocol in disable_ssh_client_protocols:
@@ -302,7 +303,7 @@ class ConnectMethodUtil:
             client_limits = component_protocol.get('client_limits', {})
 
             for asset_protocol in support:
-                # Web 方式
+                # Web method
                 web_methods = spec_web_methods.get(asset_protocol, [])
                 if not web_methods:
                     web_methods = default_web_methods
@@ -317,7 +318,7 @@ class ConnectMethodUtil:
                     for method in web_methods
                 ])
 
-                # 客户端方式
+                # Client method
                 if component_protocol['match'] == 'map':
                     listen = [asset_protocol]
                 else:
@@ -339,14 +340,14 @@ class ConnectMethodUtil:
                         for method in client_methods
                     ])
 
-        # 远程应用方式，这个只有 tinker 提供，并且协议可能是自定义的
+        # Remote application method, only provided by tinker, and the protocol may be custom
         for asset_protocol, applet_methods in applet_methods.items():
             for method in applet_methods:
                 method['listen'] = 'rdp'
                 method['component'] = TerminalType.tinker.value
             methods[asset_protocol].extend(applet_methods)
 
-        # 虚拟应用方式，这个只有 panda 提供，并且协议可能是自定义的
+        # Virtual application method, only provided by panda, and the protocol may be custom
         for protocol, virtual_app_methods in virtual_app_methods.items():
             for method in virtual_app_methods:
                 method['listen'] = Protocol.http

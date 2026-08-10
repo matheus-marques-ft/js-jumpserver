@@ -31,10 +31,10 @@ def encrypt_and_compress_zip_file(filename, secret_password, encrypted_filenames
 
 def zip_files(output_file, file_list):
     """
-    将多个文件打包成zip文件
+    Packages multiple files into a zip file
     Args:
-        output_file (str): 打包后的zip文件路径
-        file_list (list): 需要打包的文件列表
+        output_file (str): path of the resulting zip file
+        file_list (list): list of files to package
     Returns:
         None
     """

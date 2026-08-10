@@ -3,9 +3,9 @@
 const tabs = []
 const debug = console.log
 
-// 监听标签页的创建事件
+// Listen for tab creation events
 chrome.tabs.onCreated.addListener(function (tab) {
-    // 获取当前窗口的所有标签页
+    // Get all tabs in the current window
     debug('New tab add, tabs : ', tabs.map(t => t.id))
     tabs.push(tab)
 });
@@ -24,14 +24,14 @@ chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
 
     const blockUrls = ['chrome://newtab/']
     if (!tab.url || blockUrls.includes(tab.url) || tab.url.startsWith('chrome://')) {
-        alert('安全模式，禁止打开新标签页')
+        alert('Safe mode: opening new tabs is not allowed')
         debug('Blocked url, destroy: ', tab.url)
         chrome.tabs.remove(tabId);
         return
     }
 
-    // 第一个 tab 不做限制
-    // 修改初始 tab 的状态，因为第一个 tab 没有地址栏，可以允许它自由跳转
+    // No restriction on the first tab
+    // Update the initial tab's state, since the first tab has no address bar and can navigate freely
     if (tabs.length === 1) {
         debug('First tab, pass')
         return

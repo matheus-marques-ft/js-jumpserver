@@ -148,8 +148,8 @@ class AppletHostDeployment(JMSBaseModel):
         verbose_name = _("Applet host deployment")
 
     def start(self, **kwargs):
-        # 重新初始化部署，applet host 关联的终端需要删除
-        # 否则 tinker 会因组件注册名称相同，造成冲突，执行任务失败
+        # Re-initialize deployment; the terminal associated with the applet host needs to be deleted
+        # Otherwise tinker will conflict due to the component having the same registered name, causing task execution to fail
         if self.host.terminal:
             terminal = self.host.terminal
             self.host.terminal = None

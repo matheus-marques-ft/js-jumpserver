@@ -79,8 +79,8 @@ AUTH_LDAP_HA_SYNC_RECEIVERS = CONFIG.AUTH_LDAP_HA_SYNC_RECEIVERS
 AUTH_LDAP_HA_USER_LOGIN_ONLY_IN_USERS = CONFIG.AUTH_LDAP_HA_USER_LOGIN_ONLY_IN_USERS
 
 # ==============================================================================
-# 认证 OpenID 配置参数
-# 参考: https://django-oidc-rp.readthedocs.io/en/stable/settings.html
+# Auth OpenID config parameters
+# Reference: https://django-oidc-rp.readthedocs.io/en/stable/settings.html
 # ==============================================================================
 AUTH_OPENID = CONFIG.AUTH_OPENID
 BASE_SITE_URL = CONFIG.BASE_SITE_URL
@@ -224,7 +224,7 @@ AUTH_PASSKEY = CONFIG.AUTH_PASSKEY
 FIDO_SERVER_ID = CONFIG.FIDO_SERVER_ID
 FIDO_SERVER_NAME = CONFIG.FIDO_SERVER_NAME
 KEY_ATTACHMENT = 2  # 0 any, 1 platform, 2 cross-platform 3 none
-# 临时 token
+# Temporary token
 AUTH_TEMP_TOKEN = CONFIG.AUTH_TEMP_TOKEN
 
 # Vault
@@ -252,7 +252,7 @@ VAULT_AWS_ACCESS_SECRET_KEY = CONFIG.VAULT_AWS_ACCESS_SECRET_KEY
 HISTORY_ACCOUNT_CLEAN_LIMIT = CONFIG.HISTORY_ACCOUNT_CLEAN_LIMIT
 
 # Other setting
-# 这个是 User Login Private Token
+# This is the User Login Private Token
 TOKEN_EXPIRATION = CONFIG.TOKEN_EXPIRATION
 OTP_IN_RADIUS = CONFIG.OTP_IN_RADIUS
 
@@ -280,39 +280,39 @@ AUTH_BACKEND_CUSTOM = 'authentication.backends.custom.CustomAuthBackend'
 AUTH_BACKEND_PASSKEY = 'authentication.backends.passkey.PasskeyAuthBackend'
 AUTH_BACKEND_UKEY = 'authentication.backends.ukey.UKeyBackend'
 AUTHENTICATION_BACKENDS = [
-    # 只做权限校验
+    # Permission check only
     RBAC_BACKEND,
-    # 密码形式
+    # Password form
     AUTH_BACKEND_MODEL, AUTH_BACKEND_PUBKEY, AUTH_BACKEND_LDAP, AUTH_BACKEND_LDAP_HA, AUTH_BACKEND_RADIUS,
-    # 跳转形式
+    # Redirect form
     AUTH_BACKEND_CAS, AUTH_BACKEND_OIDC_PASSWORD, AUTH_BACKEND_OIDC_CODE, AUTH_BACKEND_SAML2,
     AUTH_BACKEND_OAUTH2,
-    # 扫码模式
+    # QR code scan mode
     AUTH_BACKEND_WECOM, AUTH_BACKEND_DINGTALK, AUTH_BACKEND_FEISHU, AUTH_BACKEND_LARK, AUTH_BACKEND_SLACK,
-    # Token模式
+    # Token mode
     AUTH_BACKEND_AUTH_TOKEN, AUTH_BACKEND_SSO, AUTH_BACKEND_CUSTOM_SSO, AUTH_BACKEND_TEMP_TOKEN,
     AUTH_BACKEND_PASSKEY,
-    # UKey 模式
+    # UKey mode
     AUTH_BACKEND_UKEY
 ]
 
 
 def get_file_md5(filepath):
     import hashlib
-    # 创建md5对象
+    # Create md5 object
     m = hashlib.md5()
     with open(filepath, 'rb') as f:
         while True:
             data = f.read(4096)
             if not data:
                 break
-            # 更新md5对象
+            # Update md5 object
             m.update(data)
-    # 返回md5对象
+    # Return md5 object
     return m.hexdigest()
 
 
-# 人脸验证
+# Face verification
 FACE_RECOGNITION_ENABLED = CONFIG.FACE_RECOGNITION_ENABLED
 FACE_RECOGNITION_DISTANCE_THRESHOLD = CONFIG.FACE_RECOGNITION_DISTANCE_THRESHOLD
 FACE_RECOGNITION_COSINE_THRESHOLD = CONFIG.FACE_RECOGNITION_COSINE_THRESHOLD
@@ -321,7 +321,7 @@ AUTH_CUSTOM = CONFIG.AUTH_CUSTOM
 AUTH_CUSTOM_FILE_MD5 = CONFIG.AUTH_CUSTOM_FILE_MD5
 AUTH_CUSTOM_FILE_PATH = os.path.join(PROJECT_DIR, 'data', 'auth', 'main.py')
 if AUTH_CUSTOM and AUTH_CUSTOM_FILE_MD5 == get_file_md5(AUTH_CUSTOM_FILE_PATH):
-    # 自定义认证模块
+    # Custom authentication module
     AUTHENTICATION_BACKENDS.append(AUTH_BACKEND_CUSTOM)
 
 MFA_BACKEND_OTP = 'authentication.mfa.otp.MFAOtp'
@@ -341,7 +341,7 @@ MFA_CUSTOM = CONFIG.MFA_CUSTOM
 MFA_CUSTOM_FILE_MD5 = CONFIG.MFA_CUSTOM_FILE_MD5
 MFA_CUSTOM_FILE_PATH = os.path.join(PROJECT_DIR, 'data', 'mfa', 'main.py')
 if MFA_CUSTOM and MFA_CUSTOM_FILE_MD5 == get_file_md5(MFA_CUSTOM_FILE_PATH):
-    # 自定义多因子认证模块
+    # Custom multi-factor authentication module
     MFA_BACKENDS.append(MFA_BACKEND_CUSTOM)
 
 SMS_CUSTOM_FILE_MD5 = CONFIG.SMS_CUSTOM_FILE_MD5
@@ -367,12 +367,12 @@ if AUTH_CUSTOM_SSO and AUTH_CUSTOM_SSO_FILE_MD5:
     except Exception:
         md5 = AUTH_CUSTOM_SSO_FILE_MD5
     if md5 != get_file_md5(AUTH_CUSTOM_SSO_FILE_PATH):
-        # 如果启用了自定义 SSO 认证，但文件 MD5 不匹配，则不启用自定义 SSO 认证
+        # If custom SSO authentication is enabled but the file MD5 doesn't match, don't enable custom SSO authentication
         AUTH_CUSTOM_SSO = False
 AUTH_CUSTOM_SSO_QUERY_PARAMS = [q.strip() for q in CONFIG.AUTH_CUSTOM_SSO_QUERY_PARAMS.split(',')]
 
 
-# 开启证书认证
+# Enable certificate authentication
 AUTH_UKEY = CONFIG.AUTH_UKEY
 AUTH_UKEY_VENDOR = CONFIG.AUTH_UKEY_VENDOR
 AUTH_UKEY_ENROLL_ENABLED = CONFIG.AUTH_UKEY_ENROLL_ENABLED

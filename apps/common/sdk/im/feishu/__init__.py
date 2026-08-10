@@ -44,9 +44,10 @@ class ErrorCode:
 
 class FeishuRequests(BaseRequest):
     """
-    处理系统级错误，抛出 API 异常，直接生成 HTTP 响应，业务代码无需关心这些错误
-    - 确保 status_code == 200
-    - 确保 access_token 无效时重试
+    Handles system-level errors and raises API exceptions that directly
+    generate an HTTP response, so business code doesn't need to worry about them
+    - Ensures status_code == 200
+    - Ensures a retry when access_token is invalid
     """
     invalid_token_errcodes = (
         ErrorCode.INVALID_USER_ACCESS_TOKEN, ErrorCode.INVALID_TENANT_ACCESS_TOKEN,
@@ -81,7 +82,8 @@ class FeishuRequests(BaseRequest):
 
 class FeiShu(RequestMixin):
     """
-    非业务数据导致的错误直接抛异常，说明是系统配置错误，业务代码不用理会
+    Errors not caused by business data are raised directly, since they
+    indicate a system configuration error that business code need not handle
     """
     requests_cls = FeishuRequests
 
@@ -135,7 +137,7 @@ class FeiShu(RequestMixin):
                 logger.info(f'{self.__class__.__name__} send text: user_ids={user_ids} msg={msg}')
                 self._requests.post(self.url_instance.send_message, params=params, json=body)
             except APIException as e:
-                # 只处理可预知的错误
+                # Only handle predictable errors
                 logger.exception(e)
                 invalid_users.append(user_id)
         return invalid_users

@@ -19,27 +19,27 @@ async def once_tcpdump(
             packet = await loop.sock_recv(s, 65535)
         except BlockingIOError:
             await asyncio.sleep(0.1)
-        # 解析IP数据包
+        # Parse the IP packet
         ip_header = packet[14:34]
         ip_hdr = struct.unpack('!BBHHHBBH4s4s', ip_header)
-        # 判断是否为TCP数据包
+        # Check whether it's a TCP packet
         protocol = ip_hdr[6]
         if protocol != 6:
             continue
-        # 解析TCP数据包
+        # Parse the TCP packet
         tcp_header = packet[34:54]
         tcp_hdr = struct.unpack('!HHLLBBHHH', tcp_header)
-        # 获取源地址、源端口号、目标地址、目标端口等信息
+        # Get the source address, source port, destination address, destination port, etc.
         src_ip, dest_ip = map(lambda x: socket.inet_ntoa(x), ip_hdr[8:10])
         src_port, dest_port = tcp_hdr[0], tcp_hdr[1]
-        # 获取数据包类型和长度
+        # Get the packet type and length
         packet_type = socket.htons(ip_hdr[6])
         packet_len = len(packet)
-        # 获取TCP标志位、序号、确认号、部分数据等信息
+        # Get the TCP flags, sequence number, ack number, part of the data, etc.
         seq, ack, flags = tcp_hdr[2], tcp_hdr[3], tcp_hdr[5]
         data = packet[54:]
-        # 如果过滤的参数[源地址、源端口等]为空，则不过滤
-        # 各个过滤参数之间为 `且` 的关系
+        # If filter parameters [source address, source port, etc.] are empty, don't filter
+        # The relationship between the filter parameters is `AND`
         green_light = True
         if src_ips and src_ip not in src_ips:
             green_light = False

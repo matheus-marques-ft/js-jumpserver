@@ -61,27 +61,41 @@ class SSHKeyStrategy(models.TextChoices):
 
 
 class TriggerChoice(models.TextChoices, TreeChoices):
-    # 当资产创建时，直接创建账号，如果是动态账号，需要从授权中查询该资产被授权过的用户，已用户用户名为账号，创建
+    # When an asset is created, the account is created directly; if it is a dynamic
+    # account, the users authorized for this asset need to be queried from the
+    # permissions, and accounts are created using those usernames
     on_asset_create = 'on_asset_create', _('On asset create')
-    # 授权变化包含，用户加入授权，用户组加入授权，资产加入授权，节点加入授权，账号变化
-    # 当添加用户到授权时，查询所有同名账号 automation, 把本授权上的用户 (用户组), 创建到本授权的资产(节点)上
+    # Permission changes include: user added to permission, user group added to
+    # permission, asset added to permission, node added to permission, account changed
+    # When a user is added to a permission, query all account automations with the
+    # same name, and create the users (user groups) on this permission onto the
+    # assets (nodes) of this permission
     on_perm_add_user = 'on_perm_add_user', _('On perm add user')
-    # 当添加用户组到授权时，查询所有同名账号 automation, 把本授权上的用户 (用户组), 创建到本授权的资产(节点)上
+    # When a user group is added to a permission, query all account automations with
+    # the same name, and create the users (user groups) on this permission onto the
+    # assets (nodes) of this permission
     on_perm_add_user_group = 'on_perm_add_user_group', _('On perm add user group')
-    # 当添加资产到授权时，查询授权的所有账号 automation, 创建到本授权的资产上
+    # When an asset is added to a permission, query all account automations of the
+    # permission, and create them onto the asset of this permission
     on_perm_add_asset = 'on_perm_add_asset', _('On perm add asset')
-    # 当添加节点到授权时，查询授权的所有账号 automation, 创建到本授权的节点的资产上
+    # When a node is added to a permission, query all account automations of the
+    # permission, and create them onto the assets of the node of this permission
     on_perm_add_node = 'on_perm_add_node', _('On perm add node')
-    # 当授权的账号变化时，查询授权的所有账号 automation, 创建到本授权的资产(节点)上
+    # When the account of a permission changes, query all account automations of the
+    # permission, and create them onto the assets (nodes) of this permission
     on_perm_add_account = 'on_perm_add_account', _('On perm add account')
-    # 当资产添加到节点时，查询节点的授权规则，查询授权的所有账号 automation, 创建到本授权的资产(节点)上
+    # When an asset is added to a node, query the node's permission rules, query all
+    # account automations of the permission, and create them onto the assets (nodes)
+    # of this permission
     on_asset_join_node = 'on_asset_join_node', _('On asset join node')
-    # 当用户加入到用户组时，查询用户组的授权规则，查询授权的所有账号 automation, 创建到本授权的资产(节点)上
+    # When a user joins a user group, query the user group's permission rules, query
+    # all account automations of the permission, and create them onto the assets
+    # (nodes) of this permission
     on_user_join_group = 'on_user_join_group', _('On user join group')
 
     @classmethod
     def branches(cls):
-        # 和用户和用户组相关的都是动态账号
+        # Anything related to users and user groups is a dynamic account
         #
         return [
             cls.on_asset_create,
@@ -107,7 +121,7 @@ class PushAccountActionChoice(models.TextChoices):
 class AccountBackupType(models.TextChoices):
     """Backup type"""
     email = 'email', _('Email')
-    # 目前只支持sftp方式
+    # Currently only the SFTP method is supported
     object_storage = 'object_storage', _('SFTP')
 
 

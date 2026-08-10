@@ -1,11 +1,11 @@
 #!/bin/bash
 #
-# 该build基于registry.fit2cloud.com/public/python:3
+# This build is based on registry.fit2cloud.com/public/python:3
 utils_dir=$(pwd)
 project_dir=$(dirname "$utils_dir")
 release_dir=${project_dir}/release
 
-# 打包
+# Package
 cd "${project_dir}" || exit 3
 rm -rf "${release_dir:?}"/*
 to_dir="${release_dir}/jumpserver"
@@ -25,7 +25,7 @@ else
   alias sedi='sed -i'
 fi
 
-# 修改版本号文件
+# Update the version number file
 if [[ -n ${VERSION} ]]; then
   sedi "s@VERSION = .*@VERSION = \"${VERSION}\"@g" "${to_dir}/apps/jumpserver/const.py"
 fi

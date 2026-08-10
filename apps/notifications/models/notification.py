@@ -34,8 +34,8 @@ class SystemMsgSubscription(JMSBaseModel):
         verbose_name = _('System message')
 
     def set_message_type_label(self):
-        # 采用手动调用，没设置成 property 的方式
-        # 因为目前只有界面修改时会用到这个属性，避免实例化时占用资源计算
+        # Called manually instead of being set as a property,
+        # because currently this attribute is only used when editing on the interface, avoiding computation cost at instantiation
         from ..notifications import system_msgs
         msg_label = ''
         for msg in system_msgs:

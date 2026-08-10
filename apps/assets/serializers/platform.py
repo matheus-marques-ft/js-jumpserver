@@ -32,7 +32,7 @@ class PlatformAutomationSerializer(serializers.ModelSerializer):
             "remove_account_enabled", "remove_account_method", "remove_account_params",
         ]
         extra_kwargs = {
-            # 启用资产探测
+            # Enable asset detection
             "ping_enabled": {"label": _("Ping enabled"), "help_text": _("Enable asset detection")},
             "ping_method": {"label": _("Ping method")},
             "gather_facts_enabled": {
@@ -261,7 +261,7 @@ class PlatformSerializer(ResourceLabelsMixin, CommonSerializerMixin, WritableNes
         primary = [p for p in protocols if p.get('primary')]
         if not primary:
             protocols[0]['primary'] = True
-        # 这里不设置不行，write_nested 不使用 validated 中的
+        # This must be set here, since write_nested doesn't use the value from validated data
         self.initial_data['protocols'] = protocols
         return protocols
 

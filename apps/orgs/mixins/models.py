@@ -66,7 +66,7 @@ class OrgModelMixin(models.Model):
             org = Organization.get_instance(locking_org)
         else:
             org = get_current_org()
-        # 这里不可以优化成, 因为 root 组织下可以设置组织 id 来保存
+        # This cannot be simplified to the code below, because under the root org, the org id can still be set when saving
         # if org.is_root() and not self.org_id:
         #     raise ...
         if org.is_root():
@@ -97,7 +97,7 @@ class OrgModelMixin(models.Model):
         """
         Check unique constraints on the model and raise ValidationError if any
         failed.
-        Form 提交时会使用这个检验
+        This check is used when the form is submitted
         """
         self.org_id = current_org.id
         if exclude and 'org_id' in exclude:

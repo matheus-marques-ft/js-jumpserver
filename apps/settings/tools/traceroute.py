@@ -14,7 +14,7 @@ ICMP_PROTO = getattr(socket, 'IPPROTO_ICMP', 1)
 
 
 def calculate_checksum(data):
-    # 计算 ICMP 校验和
+    # Compute the ICMP checksum
     checksum = 0
     if len(data) % 2 == 1:
         data += b'\x00'
@@ -37,9 +37,9 @@ async def once_traceroute(target, display, max_hops=30, timeout=3):
     sock_fd = socket.socket(socket.AF_INET, socket.SOCK_RAW, ICMP_PROTO)
     try:
         for ttl in range(1, max_hops+1):
-            # 设置 TTL
+            # Set the TTL
             sock_fd.setsockopt(socket.IPPROTO_IP, socket.IP_TTL, ttl)
-            # 发送 ICMP Echo 请求数据包
+            # Send the ICMP Echo request packet
             packet = struct.pack('!BBHHH', 8, 0, 0, 12345, ttl)
             checksum = calculate_checksum(packet)
             packet = struct.pack('!BBHHH', 8, 0, checksum, 12345, ttl)
@@ -47,21 +47,21 @@ async def once_traceroute(target, display, max_hops=30, timeout=3):
             sock_fd.sendto(packet, (target, 0))
             await asyncio.sleep(0.01)
             try:
-                # 使用 select 等待 raw socket 可读，避免与 loop.sock_recvfrom 混用
+                # Use select to wait for the raw socket to be readable, avoiding mixing with loop.sock_recvfrom
                 recv_packet, addr = await asyncio.to_thread(recv_with_timeout, sock_fd, timeout)
                 end_time = time.monotonic()
-                # 解析目标地址
+                # Parse the destination address
                 dest_ip = addr[0]
-                # 获取跃点信息
+                # Get the hop info
                 hop_info = f'{ttl} {dest_ip} ({dest_ip})'
-                # 获取延迟时间信息
+                # Get the delay time info
                 delay_info = f'{(end_time - start_time) * 1000:.3f} ms'
-                # 打印跃点信息和延迟时间
+                # Print the hop info and delay time
                 await display(f'{hop_info:<4} {delay_info}')
                 if dest_ip == target:
                     return
             except (TimeoutError, socket.timeout):
-                # 发生超时，跳出循环
+                # A timeout occurred, break out of the loop
                 await display(f'{ttl} *')
     finally:
         sock_fd.close()

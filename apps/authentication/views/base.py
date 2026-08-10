@@ -39,7 +39,7 @@ class IMClientMixin:
 class BaseLoginCallbackView(AuthMixin, FlashMessageMixin, IMClientMixin, View):
     user_type = ''
     auth_backend = None
-    # 提示信息
+    # Prompt messages
     msg_client_err = _('Error')
     msg_user_not_bound_err = _('Error')
     msg_not_found_user_from_client_err = _('Error')
@@ -93,7 +93,7 @@ class BaseLoginCallbackView(AuthMixin, FlashMessageMixin, IMClientMixin, View):
             return response
 
         if not user_id:
-            # 正常流程不会出这个错误，hack 行为
+            # This error won't occur in the normal flow; it indicates hacking behavior
             err = self.msg_not_found_user_from_client_err
             response = self.get_failed_response(login_url, title=err, msg=err)
             return response

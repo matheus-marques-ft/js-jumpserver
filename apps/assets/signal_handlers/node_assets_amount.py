@@ -20,13 +20,13 @@ logger = get_logger(__file__)
 @receiver(m2m_changed, sender=Asset.nodes.through)
 @on_transaction_commit
 def on_node_asset_change(sender, action, instance, reverse, pk_set, **kwargs):
-    # 不允许 `pre_clear` ，因为该信号没有 `pk_set`
-    # [官网](https://docs.djangoproject.com/en/3.1/ref/signals/#m2m-changed)
+    # `pre_clear` is not allowed, because this signal doesn't have `pk_set`
+    # [official docs](https://docs.djangoproject.com/en/3.1/ref/signals/#m2m-changed)
     refused = (PRE_CLEAR,)
     if action in refused:
         raise ValueError
 
-    # 这里监听 post_add, pre_remove, 如果pre_add 和 post_remove, 那么 node_ids 就已经获取不到了
+    # We listen for post_add and pre_remove here; with pre_add and post_remove, node_ids would no longer be available
     mapper = {POST_ADD: add, PRE_REMOVE: sub}
     if action not in mapper:
         return

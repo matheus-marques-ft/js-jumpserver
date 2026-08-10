@@ -52,7 +52,7 @@ class CommandQueryMixin:
         return None
 
     def get_queryset(self):
-        # 解决访问 /docs/ 问题
+        # Fix issue when accessing /docs/
         if hasattr(self, 'swagger_fake_view'):
             return self.command_store.model.objects.none()
         date_from, date_to = self.get_date_range()
@@ -67,7 +67,7 @@ class CommandQueryMixin:
         return queryset
 
     def filter_queryset(self, queryset):
-        # 解决es存储命令时，父类根据filter_fields过滤出现异常的问题，返回的queryset类型list
+        # Fix exception in parent class filtering by filter_fields when using ES command storage; the returned queryset type is a list
         return queryset
 
     def get_date_range(self):
@@ -91,7 +91,7 @@ class CommandQueryMixin:
 
 
 class CommandViewSet(JMSBulkModelViewSet):
-    """接受app发送来的command log, 格式如下
+    """Accepts command log sent from the app, format as follows
     {
         "user": "admin",
         "asset": "localhost",
@@ -120,7 +120,7 @@ class CommandViewSet(JMSBulkModelViewSet):
 
             qs = storage.get_command_queryset()
             commands = self.filter_queryset(qs)
-            merged_commands.extend(commands[:])  # ES 默认只取 10 条数据
+            merged_commands.extend(commands[:])  # ES only takes 10 records by default
         order = self.request.query_params.get('order', None)
         if order == 'timestamp':
             merged_commands.sort(key=lambda command: command.timestamp)
@@ -139,7 +139,7 @@ class CommandViewSet(JMSBulkModelViewSet):
         session_id = self.request.query_params.get('session_id')
 
         if session_id and not command_storage_id:
-            # 会话里的命令列表肯定会提供 session_id，这里防止 merge 的时候取全量的数据
+            # The command list within a session always provides session_id; this prevents fetching the full dataset during merge
             return self.merge_all_storage_list(request, *args, **kwargs)
         queryset = self.get_queryset()
         queryset = self.filter_queryset(queryset)
@@ -150,7 +150,7 @@ class CommandViewSet(JMSBulkModelViewSet):
             serializer = self.get_serializer(page, many=True)
             return self.get_paginated_response(serializer.data)
 
-        # 适配像 ES 这种没有指定分页只返回少量数据的情况
+        # Adapt to cases like ES where pagination isn't specified and only a small amount of data is returned
         queryset = queryset[:]
 
         queryset = self.load_remote_addr(queryset)

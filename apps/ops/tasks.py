@@ -111,7 +111,7 @@ def run_ops_job_execution(execution_id, **kwargs):
 )
 @after_app_ready_start
 def clean_celery_periodic_tasks():
-    """清除celery定时任务"""
+    """Clean up celery periodic tasks"""
     logger.info('Start clean celery periodic tasks.')
     register_tasks = PeriodicTask.objects.all()
     for task in register_tasks:
@@ -193,7 +193,7 @@ def clean_job_execution_period():
         logger.info(
             f"clean job_execution db record success! delete {days} days {del_res[0]} records")
 
-# 测试使用，注释隐藏
+# For testing use, commented out
 # @shared_task
 # def longtime_add(x, y):
 #     print('long time task begins')

@@ -30,7 +30,7 @@ def allow_access(private_file):
     if not path_perm:
         return False
     if path_perm == 'none' or request.user.has_perms([path_perm]):
-        # 不需要权限检查，任何人都可以访问
+        # No permission check needed, anyone can access
         return True
     if path_perm == 'default':
         return request.user.is_authenticated and request.user.is_staff

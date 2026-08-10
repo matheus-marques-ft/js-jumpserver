@@ -366,8 +366,8 @@ class PlatformAutomation(models.Model):
 
 class Platform(LabeledMixin, JMSBaseModel):
     """
-    对资产提供 约束和默认值
-    对资产进行抽象
+    Provides constraints and default values for assets
+    Abstracts assets
     """
 
     class CharsetChoices(models.TextChoices):
@@ -384,14 +384,14 @@ class Platform(LabeledMixin, JMSBaseModel):
         PlatformPackage, on_delete=models.SET_NULL, related_name='platforms',
         null=True, blank=True, verbose_name=_("Platform package")
     )
-    # 资产有关的
+    # Asset-related
     charset = models.CharField(
         default=CharsetChoices.utf8, choices=CharsetChoices.choices,
         max_length=8, verbose_name=_("Charset")
     )
     gateway_enabled = models.BooleanField(default=True, verbose_name=_("Gateway enabled"))
     ds_enabled = models.BooleanField(default=False, verbose_name=_("DS enabled"))
-    # 账号有关的
+    # Account-related
     su_enabled = models.BooleanField(default=False, verbose_name=_("Su enabled"))
     su_method = models.CharField(max_length=32, blank=True, null=True, verbose_name=_("Su method"))
     custom_fields = models.JSONField(null=True, default=list, verbose_name=_("Custom fields"))

@@ -176,7 +176,7 @@ class LdapWebsocket(AsyncJsonWebsocketConsumer, OrgMixin):
 
         password = serializer.validated_data.get(f"{prefix}BIND_PASSWORD")
         if not password and config['server_uri'] == getattr(settings, f"{prefix}SERVER_URI"):
-            # 只有在没有修改服务器地址的情况下，才使用原有的密码
+            # Only use the original password if the server address hasn't been changed
             config['password'] = getattr(settings, f"{prefix}BIND_PASSWORD")
         else:
             config['password'] = password

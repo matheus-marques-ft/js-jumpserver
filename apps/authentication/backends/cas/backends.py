@@ -19,7 +19,7 @@ class CASBackend(RedirectAuthBackend, _CASBackend):
         return settings.AUTH_CAS
 
     def authenticate(self, request, ticket, service):
-        # 这里做个hack ,让父类始终走CAS_CREATE_USER=True的逻辑，然后调用 authentication/mixins.py 中的 custom_get_or_create 方法
+        # Hack here: force the parent class to always take the CAS_CREATE_USER=True path, then call the custom_get_or_create method in authentication/mixins.py
         settings.CAS_CREATE_USER = True
         user = super().authenticate(request, ticket, service)
         if user is None:

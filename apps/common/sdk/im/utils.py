@@ -27,7 +27,7 @@ class DictWrapper:
         self.raw_data = data
 
     def __getitem__(self, item):
-        # 网络请求返回的数据，不能完全信任，所以字典操作包在异常里
+        # Data returned by network requests can't be fully trusted, so dict access is wrapped in a try/except
         try:
             return self.raw_data[item]
         except KeyError as e:

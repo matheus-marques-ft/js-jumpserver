@@ -79,8 +79,8 @@ class CommandFilterRule(OrgModelMixin):
     content = models.TextField(verbose_name=_("Content"), help_text=_("One command per line"))
     ignore_case = models.BooleanField(default=True, verbose_name=_('Ignore case'))
     action = models.IntegerField(default=ActionChoices.deny, choices=ActionChoices.choices, verbose_name=_("Action"))
-    # 动作: 附加字段
-    # - confirm: 命令复核人
+    # Action: extra fields
+    # - confirm: command reviewer
     reviewers = models.ManyToManyField(
         'users.User', related_name='review_cmd_filter_rules', blank=True,
         verbose_name=_("Reviewers")

@@ -1000,7 +1000,7 @@ class RewriteOrderingFilter(OrderingFilter):
 
     def get_default_ordering(self, view):
         ordering = super().get_default_ordering(view)
-        # 如果 view.ordering = [] 表示不排序, 这样可以节约性能 (比如: 用户授权的资产)
+        # If view.ordering = [], it means no ordering, which can save performance (e.g. user-authorized assets)
         if ordering is not None:
             return ordering
         ordering_fields = getattr(view, "ordering_fields", self.ordering_fields)

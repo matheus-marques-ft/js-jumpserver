@@ -9,7 +9,7 @@ $ pip install cryptography --global-option=build_ext --global-option="-L/opt/hom
 $ xcode-select --install
 
 
-# libxmlsec 报错
+# libxmlsec error
 wget 'https://raw.githubusercontent.com/Homebrew/homebrew-core/7f35e6ede954326a10949891af2dba47bbe1fc17/Formula/libxmlsec1.rb'
 brew install ./libxmlsec1.rb
 

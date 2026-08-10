@@ -287,7 +287,7 @@ def main():
         script=dict(required=True),
         output=dict(default='default', choices=['dict', 'default']),
         changed=dict(type='bool', default=True),
-        # 防止 params 中的密码出现在日志中
+        # Prevent passwords in params from appearing in logs
         params=dict(type='dict', no_log=True),
         transaction=dict(type='bool', default=False),
         tds_version=dict(type='str', required=False, default=None),
@@ -315,7 +315,7 @@ def main():
     report_changed = module.params['changed']
     sql_params = module.params['params']
     transaction = module.params['transaction']
-    # TODO 待 ansible 官方支持这两个参数
+    # TODO: pending official ansible support for these two parameters
     tds_version = module.params['tds_version'] or None
     encryption = module.params['encryption'] or None
     login_timeout = module.params['login_timeout']

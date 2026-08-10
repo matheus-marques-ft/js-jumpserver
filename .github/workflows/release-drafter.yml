@@ -20,8 +20,12 @@ jobs:
         run: |
           TAG=$(basename ${GITHUB_REF})
           VERSION=${TAG/v/}
-          wget https://raw.githubusercontent.com/jumpserver/installer/master/quick_start.sh
-          sed -i "s@VERSION=dev@VERSION=v${VERSION}@g" quick_start.sh
+          wget https://raw.githubusercontent.com/matheus-marques-ft/js-installer/main/quick_start.sh
+          sed -i "s@^GITHUB_HOST=.*@GITHUB_HOST=https://github.com@" quick_start.sh
+          sed -i "s@^GITHUB_OWNER=.*@GITHUB_OWNER=matheus-marques-ft@" quick_start.sh
+          sed -i "s@^REPO_PREFIX=.*@REPO_PREFIX=js-@" quick_start.sh
+          sed -i "s@^INSTALLER_REPO=.*@INSTALLER_REPO=installer@" quick_start.sh
+          sed -i "s@^VERSION=.*@VERSION=v${VERSION}@" quick_start.sh
           echo "::set-output name=TAG::$TAG"
           echo "::set-output name=VERSION::$VERSION"
       - name: Create Release
@@ -43,16 +47,3 @@ jobs:
           asset_path: ./quick_start.sh
           asset_name: quick_start.sh
           asset_content_type: application/text
-
-  build-and-release:
-    needs: create-realese
-    name: Build and Release
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Build it and upload
-        uses: jumpserver/action-build-upload-assets@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.create-realese.outputs.upload_url }}

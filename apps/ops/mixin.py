@@ -129,7 +129,7 @@ class PeriodTaskModelMixin(models.Model):
             return self.start_time
 
         scheduler = task.scheduler
-        # 根据不同的调度类型计算下次执行时间
+        # Calculate the next run time based on the schedule type
         if isinstance(scheduler, CrontabSchedule):
             schedule = crontab(
                 minute=scheduler.minute,
@@ -156,7 +156,7 @@ class PeriodTaskModelMixin(models.Model):
             return scheduler.clocked_time
 
         else:
-            raise ValueError("不支持的任务调度类型")
+            raise ValueError("Unsupported task schedule type")
 
     class Meta:
         abstract = True

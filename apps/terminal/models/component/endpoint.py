@@ -12,7 +12,7 @@ from common.utils.ip import contains_ip
 class Endpoint(JMSBaseModel):
     name = models.CharField(max_length=128, verbose_name=_('Name'), unique=True)
     host = models.CharField(max_length=256, blank=True, verbose_name=_('Host'))
-    # value=0 表示 disabled
+    # value=0 means disabled
     https_port = PortField(default=443, verbose_name=_('HTTPS port'))
     http_port = PortField(default=80, verbose_name=_('HTTP port'))
     ssh_port = PortField(default=2222, verbose_name=_('SSH port'))
@@ -76,7 +76,7 @@ class Endpoint(JMSBaseModel):
     @classmethod
     def handle_endpoint_host(cls, endpoint, request=None):
         if not endpoint.host and request:
-            # 动态添加 current request host
+            # Dynamically add the current request host
             host_port = request.get_host()
             # IPv6
             if host_port.startswith('['):

@@ -47,7 +47,7 @@ class Playbook(JMSBaseModel):
                         if len(lines) > 0:
                             for line in lines:
                                 result.append({'file': f, 'line': line[0], 'keyword': line[1]})
-                # 遇到无法读取的文件，跳过
+                # Skip files that cannot be read
                 except UnicodeEncodeError:
                     continue
 

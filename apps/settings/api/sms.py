@@ -129,9 +129,9 @@ class SMSTestingAPI(GenericAPIView):
 
     def get_params_by_backend(self, backend, data):
         """
-        返回两部分参数
-            1、实例化参数
-            2、发送测试短信参数
+        Return two sets of parameters
+            1. Instantiation parameters
+            2. Parameters for sending the test SMS
         """
         get_params_func = getattr(self, 'get_%s_params' % backend)
         return get_params_func(data)

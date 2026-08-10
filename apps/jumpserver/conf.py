@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 #
 """
-配置分类：
-1. Django使用的配置文件，写到settings中
-2. 程序需要, 用户不需要更改的写到settings中
-3. 程序需要, 用户需要更改的写到本config中
+Config classification:
+1. Config files used by Django go into settings
+2. Settings the program needs but the user doesn't need to change go into settings
+3. Settings the program needs and the user may need to change go into this config
 """
 import base64
 import copy
@@ -50,7 +50,7 @@ def import_string(dotted_path):
 
 
 def is_absolute_uri(uri):
-    """ 判断一个uri是否是绝对地址 """
+    """ Determine whether a uri is an absolute address """
     if not isinstance(uri, str):
         return False
 
@@ -62,7 +62,7 @@ def is_absolute_uri(uri):
 
 
 def build_absolute_uri(base, uri):
-    """ 构建绝对uri地址 """
+    """ Build an absolute uri address """
     if uri is None:
         return base
 
@@ -129,7 +129,7 @@ class ConfigCrypto:
 
     @classmethod
     def get_secret_encryptor(cls):
-        # 使用 SM4 加密配置文件敏感信息
+        # Use SM4 to encrypt sensitive values in the config file
         # https://the-x.cn/cryptography/Sm4.aspx
         secret_encrypt_key = os.environ.get('SECRET_ENCRYPT_KEY', '')
         if not secret_encrypt_key:
@@ -226,14 +226,14 @@ class Config(dict):
         'THROTTLE_RATES_USER': '4096/min',
         'THROTTLE_RATES_SERVICE_ACCOUNT': '20480/min',
 
-        # 文件上传下载限流 (防止DOS攻击)
+        # File upload/download throttling (to prevent DOS attacks)
         'THROTTLE_FILE_TRANSFER': '50/hour',
 
         # Security
         'X_FRAME_OPTIONS': 'SAMEORIGIN',
         'VERIFY_EXTERNAL_SSL': True,
 
-        # 未使用的配置
+        # Unused config
         'CAPTCHA_TEST_MODE': None,
         'DISPLAY_PER_PAGE': 25,
 
@@ -249,11 +249,11 @@ class Config(dict):
         'VIEW_ASSET_ONLINE_SESSION_INFO': True,
         'LOGIN_URL': reverse_lazy('authentication:login'),
 
-        'CONNECTION_TOKEN_ONETIME_EXPIRATION': 5 * 60,  # 默认(new)
-        'CONNECTION_TOKEN_EXPIRATION': 5 * 60,  # 默认(old)
+        'CONNECTION_TOKEN_ONETIME_EXPIRATION': 5 * 60,  # default (new)
+        'CONNECTION_TOKEN_EXPIRATION': 5 * 60,  # default (old)
 
-        'CONNECTION_TOKEN_REUSABLE_EXPIRATION': 60 * 60 * 24 * 30,  # 最大(new)
-        'CONNECTION_TOKEN_EXPIRATION_MAX': 60 * 60 * 24 * 30,  # 最大(old)
+        'CONNECTION_TOKEN_REUSABLE_EXPIRATION': 60 * 60 * 24 * 30,  # max (new)
+        'CONNECTION_TOKEN_EXPIRATION_MAX': 60 * 60 * 24 * 30,  # max (old)
         'CONNECTION_TOKEN_REUSABLE': False,
 
         # Custom Config
@@ -279,7 +279,7 @@ class Config(dict):
         'AUTH_UKEY_CA_CERT_CONTENT': '',
         'AUTH_UKEY_CA_KEY_PASS': '',
 
-        # 临时密码
+        # Temporary password
         'AUTH_TEMP_TOKEN': False,
 
         # Vault
@@ -360,8 +360,8 @@ class Config(dict):
         'AUTH_LDAP_HA_USER_LOGIN_ONLY_IN_USERS': False,
         'AUTH_LDAP_HA_OPTIONS_OPT_REFERRALS': -1,
 
-        # OpenID 配置参数
-        # OpenID 公有配置参数 (version <= 1.5.8 或 version >= 1.5.8)
+        # OpenID config parameters
+        # OpenID common config parameters (version <= 1.5.8 or version >= 1.5.8)
         'AUTH_OPENID': False,
         'BASE_SITE_URL': None,
         'AUTH_OPENID_CLIENT_ID': 'client-id',
@@ -376,7 +376,7 @@ class Config(dict):
         'AUTH_OPENID_PKCE': False,
         'AUTH_OPENID_CODE_CHALLENGE_METHOD': 'S256',
 
-        # OpenID 新配置参数 (version >= 1.5.9)
+        # New OpenID config parameters (version >= 1.5.9)
         'AUTH_OPENID_PROVIDER_ENDPOINT': 'https://oidc.example.com/',
         'AUTH_OPENID_PROVIDER_AUTHORIZATION_ENDPOINT': 'https://oidc.example.com/authorize',
         'AUTH_OPENID_PROVIDER_TOKEN_ENDPOINT': 'https://oidc.example.com/token',
@@ -392,13 +392,13 @@ class Config(dict):
         'AUTH_OPENID_USE_NONCE': True,
         'AUTH_OPENID_ALWAYS_UPDATE_USER': True,
 
-        # Keycloak 旧配置参数 (version <= 1.5.8 (discarded))
+        # Old Keycloak config parameters (version <= 1.5.8 (discarded))
         'AUTH_OPENID_KEYCLOAK': True,
         'AUTH_OPENID_SERVER_URL': 'https://keycloak.example.com',
         'AUTH_OPENID_REALM_NAME': None,
         'OPENID_ORG_IDS': [DEFAULT_ID],
 
-        # Raidus 认证
+        # Radius authentication
         'AUTH_RADIUS': False,
         'RADIUS_SERVER': 'localhost',
         'RADIUS_PORT': 1812,
@@ -408,7 +408,7 @@ class Config(dict):
         'OTP_IN_RADIUS': False,
         'RADIUS_ORG_IDS': [DEFAULT_ID],
 
-        # Cas 认证
+        # CAS authentication
         'AUTH_CAS': False,
         'CAS_SERVER_URL': "https://example.com/cas/",
         'CAS_ROOT_PROXIED_AS': 'https://example.com',
@@ -422,7 +422,7 @@ class Config(dict):
         'AUTH_SSO': False,
         'AUTH_SSO_AUTHKEY_TTL': 60 * 15,
 
-        # SAML2 认证
+        # SAML2 authentication
         'AUTH_SAML2': False,
         'SAML2_LOGOUT_COMPLETELY': True,
         'AUTH_SAML2_ALWAYS_UPDATE_USER': True,
@@ -447,7 +447,7 @@ class Config(dict):
         'AUTH_SAML2_AUTHENTICATION_FAILURE_REDIRECT_URI': '/',
         'SAML2_ORG_IDS': [DEFAULT_ID],
 
-        # OAuth2 认证
+        # OAuth2 authentication
         'AUTH_OAUTH2': False,
         'AUTH_OAUTH2_LOGO_PATH': 'img/login_oauth2_logo.png',
         'AUTH_OAUTH2_PROVIDER': 'OAuth2',
@@ -471,7 +471,7 @@ class Config(dict):
         'FIDO_SERVER_ID': '',
         'FIDO_SERVER_NAME': 'JumpServer',
 
-        # 企业微信
+        # WeCom (Enterprise WeChat)
         'AUTH_WECOM': False,
         'WECOM_CORPID': '',
         'WECOM_AGENTID': '',
@@ -483,7 +483,7 @@ class Config(dict):
         },
         'WECOM_ORG_IDS': [DEFAULT_ID],
 
-        # 钉钉
+        # DingTalk
         'AUTH_DINGTALK': False,
         'DINGTALK_AGENTID': '',
         'DINGTALK_APPKEY': '',
@@ -495,7 +495,7 @@ class Config(dict):
         },
         'DINGTALK_ORG_IDS': [DEFAULT_ID],
 
-        # 飞书
+        # Feishu
         'AUTH_FEISHU': False,
         'FEISHU_APP_ID': '',
         'FEISHU_APP_SECRET': '',
@@ -532,7 +532,7 @@ class Config(dict):
         'LOGIN_REDIRECT_TO_BACKEND': '',  # 'OPENID / CAS / SAML2
         'LOGIN_REDIRECT_MSG_ENABLED': True,
 
-        # 人脸识别
+        # Face recognition
         'FACE_RECOGNITION_ENABLED': False,
         'FACE_RECOGNITION_DISTANCE_THRESHOLD': 0.35,
         'FACE_RECOGNITION_COSINE_THRESHOLD': 0.95,
@@ -584,7 +584,7 @@ class Config(dict):
         'OTP_DIGEST': 'sha1',
         'EMAIL_SUFFIX': 'example.com',
 
-        # Terminal配置
+        # Terminal config
         'TERMINAL_PASSWORD_AUTH': True,
         'TERMINAL_PUBLIC_KEY_AUTH': True,
         'TERMINAL_SSH_KEY_LIMIT_COUNT': 10,
@@ -594,17 +594,17 @@ class Config(dict):
         'TERMINAL_SESSION_KEEP_DURATION': 200,
         'TERMINAL_HOST_KEY': '',
         'TERMINAL_COMMAND_STORAGE': {},
-        # 未来废弃(目前迁移会用)
+        # To be deprecated in the future (currently used by migrations)
         'TERMINAL_RDP_ADDR': '',
-        # 保留(Luna还在用)
+        # Kept (still used by Luna)
         'TERMINAL_MAGNUS_ENABLED': True,
         'TERMINAL_KOKO_SSH_ENABLED': True,
         'TERMINAL_RAZOR_ENABLED': True,
         'TERMINAL_OMNIDB_ENABLED': True,
 
-        # 安全配置
+        # Security config
         'SAFE_MODE': False,
-        'SECURITY_MFA_AUTH': 0,  # 0 不开启 1 全局开启 2 管理员开启
+        'SECURITY_MFA_AUTH': 0,  # 0 disabled 1 enabled globally 2 enabled for admins
         'SECURITY_MFA_AUTH_ENABLED_FOR_THIRD_PARTY': True,
         'SECURITY_MFA_BY_EMAIL': False,
         'SECURITY_COMMAND_EXECUTION': False,
@@ -655,16 +655,16 @@ class Config(dict):
         'ONLY_ALLOW_EXIST_USER_AUTH': False,
         'ONLY_ALLOW_AUTH_FROM_SOURCE': False,
         'PRIVACY_MODE': False,
-        # 用户登录限制的规则
+        # Rules for limiting user login
         'SECURITY_LOGIN_LIMIT_COUNT': 7,
         'SECURITY_LOGIN_LIMIT_TIME': 30,
-        # 登录IP限制的规则
+        # Rules for limiting login IP
         'SECURITY_LOGIN_IP_BLACK_LIST': [],
         'SECURITY_LOGIN_IP_WHITE_LIST': [],
         'SECURITY_LOGIN_IP_LIMIT_COUNT': 99999,
         'SECURITY_LOGIN_IP_LIMIT_TIME': 30,
 
-        # 启动前
+        # Before startup
         'HTTP_BIND_HOST': '0.0.0.0',
         'HTTP_LISTEN_PORT': 8080,
         'WS_LISTEN_PORT': 8070,
@@ -721,9 +721,9 @@ class Config(dict):
         'SERVER_REPLAY_STORAGE': {},
         'SECURITY_DATA_CRYPTO_ALGO': None,
         'GMSSL_ENABLED': False,
-        # 操作日志变更字段的存储ES配置
+        # ES storage config for operate log changed fields
         'OPERATE_LOG_ELASTICSEARCH_CONFIG': {},
-        # 记录清理清理
+        # Record cleanup
         'LOGIN_LOG_KEEP_DAYS': 180,
         'TASK_LOG_KEEP_DAYS': 180,
         'OPERATE_LOG_KEEP_DAYS': 180,
@@ -737,7 +737,7 @@ class Config(dict):
         'TICKETS_ENABLED': True,
         'TICKETS_DIRECT_APPROVE': False,
 
-        # 废弃的
+        # Deprecated
         'DEFAULT_ORG_SHOW_ALL_USERS': True,
         'ORG_CHANGE_TO_URL': '',
         'WINDOWS_SKIP_ALL_MANUAL_PASSWORD': False,
@@ -749,7 +749,7 @@ class Config(dict):
         'PERIOD_TASK_ENABLED': True,
         'TERMINAL_TELNET_REGEX': '',
 
-        # 导航栏 帮助
+        # Navbar help
         'HELP_DOCUMENT_URL': 'https://jumpserver.com/docs',
         'HELP_SUPPORT_URL': 'https://www.lxware.hk/pages/about',
 
@@ -757,16 +757,16 @@ class Config(dict):
         'HEALTH_CHECK_TOKEN': '',
         'PROMETHEUS_METRICS_TOKEN': '',
 
-        # Applet 等软件的下载地址
+        # Download host for Applet and other software
         'APPLET_DOWNLOAD_HOST': '',
 
-        # FTP 文件上传下载备份阈值，单位(M)，当值小于等于0时，不备份
+        # FTP file upload/download backup threshold, unit (M); no backup when the value is <= 0
         'FTP_FILE_MAX_STORE': 0,
 
-        # API 分页
-        'MAX_LIMIT_PER_PAGE': 10000,  # 给导出用
+        # API pagination
+        'MAX_LIMIT_PER_PAGE': 10000,  # for exports
         'MAX_PAGE_SIZE': 1000,
-        'DEFAULT_PAGE_SIZE': 200,  # 给没有请求分页的用
+        'DEFAULT_PAGE_SIZE': 200,  # for requests without pagination
 
         'LIMIT_SUPER_PRIV': False,
 
@@ -823,7 +823,7 @@ class Config(dict):
 
         'FLOWER_ENABLED': True,
 
-        # x-forwarded-for 相关
+        # Related to x-forwarded-for
         'TRUSTED_IP_VERIFY_ENABLED': False,
         'TRUSTED_IP_SOURCE_HEADER': '',
         'TRUSTED_IP_SIGN_HEADER': '',
@@ -850,11 +850,11 @@ class Config(dict):
     @staticmethod
     def convert_keycloak_to_openid(keycloak_config):
         """
-        兼容OpenID旧配置 (即 version <= 1.5.8)
-        因为旧配置只支持OpenID协议的Keycloak实现,
-        所以只需要根据旧配置和Keycloak的Endpoint说明文档，
-        构造出新配置中标准OpenID协议中所需的Endpoint即可
-        (Keycloak说明文档参考: https://www.keycloak.org/docs/latest/securing_apps/)
+        Compatible with the old OpenID config (i.e. version <= 1.5.8)
+        Since the old config only supports the Keycloak implementation of the OpenID protocol,
+        we just need to build the Endpoints required by the standard OpenID protocol in the
+        new config, based on the old config and the Keycloak Endpoint documentation
+        (Keycloak documentation reference: https://www.keycloak.org/docs/latest/securing_apps/)
         """
 
         openid_config = copy.deepcopy(keycloak_config)
@@ -866,7 +866,7 @@ class Config(dict):
             return
 
         if auth_openid and not auth_openid_realm_name:
-            # 开启的是标准 OpenID 配置，关掉 Keycloak 配置
+            # Standard OpenID config is enabled, turn off Keycloak config
             openid_config.update({
                 'AUTH_OPENID_KEYCLOAK': False
             })
@@ -893,14 +893,14 @@ class Config(dict):
             openid_config[key] = value
 
         # # convert value # #
-        """ 兼容值的绝对路径、相对路径 (key 为 AUTH_OPENID_PROVIDER_*_ENDPOINT 的配置) """
+        """ Support both absolute and relative paths for the value (for keys under AUTH_OPENID_PROVIDER_*_ENDPOINT config) """
         base = openid_config.get('AUTH_OPENID_PROVIDER_ENDPOINT')
         for key, value in openid_config.items():
             result = re.match(r'^AUTH_OPENID_PROVIDER_.*_ENDPOINT$', key)
             if result is None:
                 continue
             if value is None:
-                # None 在 url 中有特殊含义 (比如对于: end_session_endpoint)
+                # None has special meaning in the url (e.g. for: end_session_endpoint)
                 continue
 
             value = build_absolute_uri(base, value)
@@ -938,16 +938,16 @@ class Config(dict):
 
     def compatible(self):
         """
-        对配置做兼容处理
-        1. 对`key`的兼容 (例如：版本升级)
-        2. 对`value`做兼容 (例如：True、true、1 => True)
+        Apply compatibility handling to the config
+        1. Compatibility for `key` (e.g.: version upgrades)
+        2. Compatibility for `value` (e.g.: True, true, 1 => True)
 
-        处理顺序要保持先对key做处理, 再对value做处理,
-        因为处理value的时候，只根据最新版本支持的key进行
+        The processing order must handle the key first and the value second,
+        because value handling only proceeds based on the keys supported by the latest version
         """
-        # 兼容 OpenID 配置
+        # OpenID config compatibility
         self.compatible_auth_openid()
-        # 兼容 Redis 配置
+        # Redis config compatibility
         self.compatible_redis()
 
     def convert_type(self, k, v):
@@ -955,7 +955,7 @@ class Config(dict):
         if default_value is None:
             return v
         tp = type(default_value)
-        # 对bool特殊处理
+        # Special handling for bool
         if tp is bool and isinstance(v, str):
             if v.lower() in ("true", "1"):
                 return True
@@ -994,12 +994,12 @@ class Config(dict):
         return value
 
     def get(self, item, default=None):
-        # 再从配置文件中获取
+        # Then get it from the config file
         value = self.get_from_config(item)
         if value is None:
             value = self.get_from_env(item)
 
-        # 因为要递归，所以优先从上次返回的递归中获取
+        # Since this is recursive, prefer whatever the previous recursive call returned
         if default is None:
             default = self.defaults.get(item)
         if value is None and item in self.old_config_map:
@@ -1192,6 +1192,6 @@ class ConfigManager:
             """
             raise ImportError(msg)
 
-        # 对config进行兼容处理
+        # Apply compatibility handling to the config
         config.compatible()
         return config

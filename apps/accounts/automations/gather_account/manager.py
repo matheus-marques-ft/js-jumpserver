@@ -125,7 +125,8 @@ class AnalyseAccountRisk:
             if not date:
                 continue
 
-            # 服务器收集的时间和数据库时间一致，不进行比较，无法检测风险 不太对，先注释
+            # If the server-collected time matches the database time, skip the comparison
+            # since risk can't be detected that way — not quite right, commenting out for now
             # pre_date = ori_account and getattr(ori_account, field)
             # if pre_date == date:
             #     continue
@@ -138,7 +139,7 @@ class AnalyseAccountRisk:
         self.save_or_update_risks(risks)
 
     def save_or_update_risks(self, risks):
-        # 提前取出来，避免每次都查数据库
+        # Fetch these ahead of time to avoid querying the database every time
         asset_ids = {r["asset_id"] for r in risks}
         assets_risks = AccountRisk.objects.filter(asset_id__in=asset_ids)
         assets_risks = {f"{r.asset_id}_{r.username}_{r.risk}": r for r in assets_risks}
@@ -275,7 +276,7 @@ class GatherAccountsManager(AccountBasePlaybookManager):
 
     def prefetch_origin_account_usernames(self):
         """
-        提起查出来，避免每次 sql 查询
+        Fetch these in advance to avoid a SQL query every time
         :return:
         """
         assets = self.asset_usernames_mapper.keys()
@@ -294,10 +295,10 @@ class GatherAccountsManager(AccountBasePlaybookManager):
 
     def update_gather_accounts_status(self, asset):
         """
-        远端账号，收集中的账号，vault 中的账号。
-        要根据账号新增见啥，标识 收集账号的状态, 让管理员关注
+        Remote accounts, gathered accounts, and accounts in the vault.
+        Based on newly added accounts, mark the gathered account's status so admins pay attention.
 
-        远端账号 -> 收集账号 -> 特权账号
+        Remote account -> Gathered account -> Privileged account
         """
         remote_users = self.asset_usernames_mapper[str(asset.id)]
         ori_users = self.ori_asset_usernames[str(asset.id)]
@@ -307,8 +308,8 @@ class GatherAccountsManager(AccountBasePlaybookManager):
             status=ConfirmOrIgnore.ignored
         )
 
-        # 远端账号 比 收集账号多的
-        # 新增创建，不用处理状态
+        # Remote accounts that outnumber gathered accounts
+        # These are newly created, no status handling needed
         new_found_users = remote_users - ori_ga_users
         if new_found_users:
             self.summary["new_accounts"] += len(new_found_users)
@@ -320,9 +321,9 @@ class GatherAccountsManager(AccountBasePlaybookManager):
                     }
                 )
 
-        # 远端上 比 收集账号少的
-        # 标识 remote_present=False, 标记为待处理
-        # 远端资产上不存在的，标识为待处理，需要管理员介入
+        # Gathered accounts that are no longer found on the remote side
+        # Mark remote_present=False, flag as pending
+        # Accounts that no longer exist on the remote asset are flagged pending and need admin intervention
         lost_users = ori_ga_users - remote_users
         if lost_users:
             queryset.filter(username__in=lost_users).update(
@@ -339,36 +340,39 @@ class GatherAccountsManager(AccountBasePlaybookManager):
             risk_analyser = AnalyseAccountRisk(self.check_risk)
             risk_analyser.lost_accounts(asset, lost_users)
 
-        # 收集的账号 比 账号列表多的, 有可能是账号中删掉了, 但这时候状态已经是 confirm 了
-        # 标识状态为 待处理, 让管理员去确认
+        # Gathered accounts that outnumber the account list — the account may have been
+        # deleted, but its status is already confirmed at this point
+        # Mark status as pending so an admin can confirm
         ga_added_users = ori_ga_users - ori_users
         if ga_added_users:
             queryset.filter(username__in=ga_added_users).update(status=ConfirmOrIgnore.pending)
 
-        # 收集的账号 比 账号列表少的
-        # 这个好像不不用对比，原始情况就这样
+        # Gathered accounts that are fewer than the account list
+        # This doesn't seem to need comparing — that's just how it originally is
 
-        # 远端账号 比 账号列表少的
-        # 创建收集账号，标识 remote_present=False, 状态待处理
+        # Remote accounts that are fewer than the account list
+        # Create a gathered account, mark remote_present=False, status pending
 
-        # 远端账号 比 账号列表多的
-        # 正常情况, 不用处理，因为远端账号会创建到收集账号，收集账号再去对比
+        # Remote accounts that outnumber the account list
+        # Normal case, no handling needed — remote accounts get created into gathered
+        # accounts, which are then compared
 
-        # 不过这个好像也处理一下 status，因为已存在，这是状态应该是确认
+        # Though this should probably also handle status — since it already exists,
+        # the status should be confirmed
         (
             queryset.filter(username__in=ori_users)
             .exclude(status=ConfirmOrIgnore.confirmed)
             .update(status=ConfirmOrIgnore.confirmed)
         )
 
-        # 远端存在的账号，标识为已存在
+        # Accounts that exist on the remote side are marked as present
         (
             queryset.filter(username__in=remote_users, remote_present=False).update(
                 remote_present=True
             )
         )
 
-        # 资产上没有的，标识为为存在
+        # Accounts not found on the asset are marked as not present (and vice versa)
         (
             queryset.exclude(username__in=ori_users)
             .filter(present=True)
@@ -421,7 +425,8 @@ class GatherAccountsManager(AccountBasePlaybookManager):
                         self.update_gathered_account(ori_account, d)
                     ori_found = username in ori_users
                     need_analyser_gather_account.append((asset, ga, d, ori_found))
-                # 这里顺序不能调整，risk 外键关联了 gathered_account 主键 id，所以在创建 risk 需要保证 gathered_account 已经创建完成
+                # The order here must not be changed — risk has a foreign key to gathered_account's
+                # primary key id, so gathered_account must be fully created before creating risk
                 self.create_gathered_account.finish()
                 self.update_gathered_account.finish()
                 for analysis_data in need_analyser_gather_account:

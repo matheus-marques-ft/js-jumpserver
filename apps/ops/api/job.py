@@ -110,7 +110,7 @@ class JobViewSet(LoginAssetACLCheckMixin, OrgBulkModelViewSet):
             .filter(creator=self.request.user) \
             .exclude(type=Types.upload_file)
 
-        # Job 列表不显示 adhoc, retrieve 要取状态
+        # The Job list should not show adhoc; retrieve needs to fetch the status
         if self.action != 'retrieve':
             return queryset.filter(instant=False)
         return queryset
@@ -293,7 +293,7 @@ class JobExecutionViewSet(LoginAssetACLCheckMixin, OrgBulkModelViewSet):
                 if not worker.startswith('ansible'):
                     continue
                 if task_id not in [at['id'] for at in inspect.active().get(worker, [])]:
-                    # 在队列中未执行使用revoke执行
+                    # Not yet executed in the queue, use revoke to cancel it
                     task.revoke(terminate=True)
                     instance.set_error('Job stop by "revoke task {}"'.format(task_id))
                     return Response({'task_id': task_id}, status=200)

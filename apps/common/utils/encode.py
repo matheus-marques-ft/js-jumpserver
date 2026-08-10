@@ -38,7 +38,7 @@ class Singleton(type):
 
 
 class Signer(metaclass=Singleton):
-    """用来加密,解密,和基于时间戳的方式验证token"""
+    """Used to encrypt, decrypt, and verify tokens based on a timestamp"""
 
     def __init__(self, secret_key=None):
         self.secret_key = secret_key
@@ -145,7 +145,7 @@ def parse_ssh_private_key_str(text: bytes, password=None) -> str:
     private_key = _parse_ssh_private_key(text, password=password)
     if private_key is None:
         return ""
-    # 解析之后，转换成 openssh 格式的私钥
+    # After parsing, convert to an openssh-format private key
     private_key_bytes = private_key.private_bytes(
         serialization.Encoding.PEM,
         serialization.PrivateFormat.OpenSSH,
@@ -212,9 +212,9 @@ def validate_ssh_public_key(text):
 
 
 def content_md5(data):
-    """计算data的MD5值，经过Base64编码并返回str类型。
+    """Computes the MD5 hash of data, Base64-encodes it, and returns a str.
 
-    返回值可以直接作为HTTP Content-Type头部的值
+    The return value can be used directly as the value of an HTTP Content-Type header
     """
     if isinstance(data, str):
         data = hashlib.md5(data.encode('utf-8'))

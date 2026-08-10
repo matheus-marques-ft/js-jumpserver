@@ -5,7 +5,7 @@ from django.utils.translation import gettext_lazy as _
 
 
 class MenuPermission(models.Model):
-    """ 附加权限位类，用来定义无资源类的权限，不做实体资源 """
+    """ Additional permission bit class, used to define resource-less permissions; not tied to any real resource """
     id = models.UUIDField(default=uuid.uuid4, primary_key=True)
 
     class Meta:

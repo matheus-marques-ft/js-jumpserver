@@ -98,7 +98,7 @@ class RolesSerializerMixin(serializers.Serializer):
             perms = RBACPermission.parse_action_model_perms(action, model_cls)
             if request.user.has_perms(perms):
                 continue
-            # 没有权限就去掉
+            # Remove it if there's no permission
             for field_name in fields_names:
                 fields.pop(field_name, None)
         return fields
@@ -170,24 +170,24 @@ class UserSerializer(
 
     class Meta:
         model = User
-        # mini 是指能识别对象的最小单元
+        # mini means the minimal unit that can identify the object
         fields_mini = ["id", "name", "username"]
-        # 只能写的字段, 这个虽然无法在框架上生效，但是更多对我们是提醒
+        # Write-only fields; although this doesn't take effect at the framework level, it's mainly a reminder to us
         fields_write_only = ["password", "public_key", ]
-        # xpack 包含的字段
+        # Fields included by xpack
         fields_xpack = [
             "wecom_id", "dingtalk_id", "feishu_id", "lark_id", "slack_id",
             "is_org_admin", "orgs_roles", "org_roles"
         ]
-        # small 指的是 不需要计算的直接能从一张表中获取到的数据
+        # small refers to data that doesn't need computation and can be fetched directly from a single table
         fields_small = (
                 fields_mini
                 + fields_write_only
                 + [
                     "email", "wechat", "phone", "mfa_level",
                     "source", *fields_xpack,
-                    "created_by", "updated_by", "comment",  # 通用字段
-                    "ukey_sn",  # UKey SN号
+                    "created_by", "updated_by", "comment",  # Common fields
+                    "ukey_sn",  # UKey serial number
                 ]
         )
         fields_date = [
@@ -196,11 +196,11 @@ class UserSerializer(
         ]
         fields_bool = [
             "is_superuser", "is_org_admin", "is_service_account",
-            "is_valid", "is_expired", "is_active",  # 布尔字段
+            "is_valid", "is_expired", "is_active",  # Boolean fields
             "is_otp_secret_key_bound", "can_public_key_auth", "can_ukey_auth",
             "mfa_enabled", "need_update_password", "is_face_code_set",
         ]
-        # 包含不太常用的字段，可以没有
+        # Includes less commonly used fields, may be absent
         fields_verbose = (
                 fields_small
                 + fields_date
@@ -212,11 +212,11 @@ class UserSerializer(
                     "avatar_url",
                 ]
         )
-        # 外键的字段
+        # Foreign key fields
         fields_fk = []
-        # 多对多字段
+        # Many-to-many fields
         fields_m2m = ["groups", "system_roles", "org_roles", "orgs_roles", "labels"]
-        # 在serializer 上定义的字段
+        # Fields defined on the serializer
         fields_custom = ["login_blocked", "password_strategy"]
         fields = fields_verbose + fields_fk + fields_m2m + fields_custom
         fields_unexport = ["avatar_url", "is_service_account"]
@@ -303,10 +303,10 @@ class UserSerializer(
     def validate_password(self, password):
         password_strategy = self.initial_data.get("password_strategy")
         if self.instance is None and password_strategy != PasswordStrategy.custom:
-            # 创建用户，使用邮件设置密码
+            # Creating a user, set the password via email
             return
         if self.instance and not password:
-            # 更新用户, 未设置密码
+            # Updating a user, password not set
             return
         return password
 
@@ -346,7 +346,7 @@ class UserSerializer(
         )
         if not disallow_fields:
             return attrs
-        # 用户自己不能更新自己的一些字段
+        # Users cannot update some of their own fields
         logger.debug("Disallow update self fields: %s", disallow_fields)
         for field in disallow_fields:
             attrs.pop(field, None)

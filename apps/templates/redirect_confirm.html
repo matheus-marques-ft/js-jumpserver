@@ -17,13 +17,13 @@
             cursor: pointer;
         }
 
-        /* 重定向中的样式 */
+        /* Styles for the redirect page */
         .confirm-container {
             transition: opacity 0.3s ease-out;
         }
     </style>
     <div>
-        <!-- 确认内容 -->
+        <!-- Confirmation content -->
         <div class="confirm-container" id="confirmContainer">
             <p>
                 <div class="alert {% if error %} alert-danger {% else %} alert-info {% endif %}" id="messages">
@@ -55,11 +55,11 @@
 
     <script>
         if (sessionStorage.getItem('page_refreshed')) {
-            // 用户刷新了页面，清除标记并跳转到首页
+            // The user refreshed the page, clear the flag and redirect to the home page
             sessionStorage.removeItem('page_refreshed');
             window.location.href = '/';
         } else {
-            // 第一次加载，设置标记
+            // First load, set the flag
             window.addEventListener('beforeunload', function() {
                 sessionStorage.setItem('page_refreshed', 'true');
             });
@@ -78,7 +78,7 @@
             setTimeout(() => {
                 if (targetUrl.startsWith('jms://')) {
                     if (startedCountdown) {
-                        // 已经开始倒计时，直接跳转但不再重置倒计时
+                        // Countdown already started, redirect directly without resetting the countdown
                         window.location.href = targetUrl;
                         return;
                     }

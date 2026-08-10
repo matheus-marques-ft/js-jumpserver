@@ -239,7 +239,7 @@ class DingTalkOAuthLoginCallbackView(AuthMixin, DingTalkOAuthMixin, View):
         )
         userid, __ = dingtalk.get_user_id_by_code_for_oauth(code)
         if not userid:
-            # 正常流程不会出这个错误，hack 行为
+            # This error won't occur in the normal flow; it indicates hacking behavior
             msg = _('Failed to get user from DingTalk')
             response = self.get_failed_response(login_url, title=msg, msg=msg)
             return response

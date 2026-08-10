@@ -18,8 +18,8 @@ class GatheredAccount(JMSOrgBaseModel):
     username = models.CharField(max_length=128, blank=True, db_index=True, verbose_name=_('Username'))
     address_last_login = models.CharField(null=True, max_length=45, default='', verbose_name=_("Address login"))
     date_last_login = models.DateTimeField(null=True, verbose_name=_("Date login"))
-    remote_present = models.BooleanField(default=True, verbose_name=_("Remote present"))  # 远端资产上是否还存在
-    present = models.BooleanField(default=False, verbose_name=_("Present"))  # 系统资产上是否还存在
+    remote_present = models.BooleanField(default=True, verbose_name=_("Remote present"))  # Whether it still exists on the remote asset
+    present = models.BooleanField(default=False, verbose_name=_("Present"))  # Whether it still exists on the system asset
     date_password_change = models.DateTimeField(null=True, verbose_name=_("Date change password"))
     date_password_expired = models.DateTimeField(null=True, verbose_name=_("Date password expired"))
     status = models.CharField(max_length=32, default=ConfirmOrIgnore.pending, blank=True,
@@ -39,7 +39,7 @@ class GatheredAccount(JMSOrgBaseModel):
                 return
 
             for account in accounts:
-                # 这里是否可以考虑，标记成未从堡垒机登录风险 ？
+                # Should we consider flagging this as a "not logged in via the bastion host" risk?
                 if not is_date_more_than(gathered_account.date_last_login, account.date_last_login, '5m'):
                     continue
                 account.date_last_login = gathered_account.date_last_login
@@ -68,7 +68,8 @@ class GatheredAccount(JMSOrgBaseModel):
     @classmethod
     def sync_accounts(cls, gathered_accounts):
         """
-        更新为已存在的账号，或者创建新的账号, 原来的 sync 重构了，如果存在则自动更新一些信息
+        Update the existing account, or create a new one; the original sync was
+        refactored so that if it exists, some information is automatically updated
         """
         assets = [gathered_account.asset_id for gathered_account in gathered_accounts]
         usernames = [gathered_account.username for gathered_account in gathered_accounts]

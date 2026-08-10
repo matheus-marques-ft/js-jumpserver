@@ -15,13 +15,13 @@ from common.decorators import bulk_create_decorator, bulk_update_decorator
 from settings.models import LeakPasswords
 
 
-# 已设置手动 finish
+# Manual finish() call is set up elsewhere
 @bulk_create_decorator(AccountRisk)
 def create_risk(data):
     return AccountRisk(**data)
 
 
-# 已设置手动 finish
+# Manual finish() call is set up elsewhere
 @bulk_update_decorator(AccountRisk, update_fields=["details", "status"])
 def update_risk(risk):
     return risk
@@ -45,24 +45,24 @@ class CheckSecretHandler(BaseCheckHandler):
 
     @staticmethod
     def is_weak_password(password):
-        # 判断密码长度
+        # Check password length
         if len(password) < 8:
             return True
 
-        # 判断是否只有一种字符类型
+        # Check whether it contains only a single character type
         if password.isdigit() or password.isalpha():
             return True
 
-        # 判断是否只包含数字或字母
+        # Check whether it contains only digits or only letters
         if password.islower() or password.isupper():
             return True
 
-        # 判断是否包含常见弱密码
+        # Check whether it is a common weak password
         common_passwords = ["123456", "password", "12345678", "qwerty", "abc123"]
         if password.lower() in common_passwords:
             return True
 
-        # 正则表达式判断字符多样性（数字、字母、特殊字符）
+        # Use a regex to check character diversity (digits, letters, special characters)
         if (
                 not re.search(r"[A-Za-z]", password)
                 or not re.search(r"[0-9]", password)

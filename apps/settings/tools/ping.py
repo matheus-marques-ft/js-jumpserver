@@ -181,7 +181,7 @@ async def verbose_ping(dest_ips, timeout=2, count=5, psize=64, display=None):
     await display(f'Total valid address: {len(ips)}\r\n')
     for dest_ip in ips:
         await display(f'PING {dest_ip}: 56 data bytes')
-        # 切换异步协程
+        # Yield to other async coroutines
         await asyncio.sleep(0.01)
         error_count = 0
         for i in range(count):
@@ -199,7 +199,7 @@ async def verbose_ping(dest_ips, timeout=2, count=5, psize=64, display=None):
                 delay *= 1000
                 await display("64 bytes from %s: time=%.3f ms" % (dest_ip, delay))
             await asyncio.sleep(1)
-        # 只要有包通过，就认为address是通的
+        # As long as one packet gets through, the address is considered reachable
         result[dest_ip] = 'failed' if error_count == count else 'ok'
         await display(f'{count} packets transmitted, '
                       f'{count - error_count} packets received, '

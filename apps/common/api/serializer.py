@@ -7,7 +7,7 @@ __all__ = ['SerializerMixin']
 
 
 class SerializerMixin:
-    """ 根据用户请求动作的不同，获取不同的 `serializer_class `"""
+    """ Get a different `serializer_class` depending on the user's request action """
 
     action: str
     request: Request

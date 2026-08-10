@@ -10,11 +10,11 @@ __all__ = ['AssetPermissionUtil']
 
 
 class AssetPermissionUtil(object):
-    """ 资产授权相关的方法工具 """
+    """ Utility methods related to asset permissions """
 
     @timeit
     def get_permissions_for_user(self, user, with_group=True, flat=False, with_expired=False):
-        """ 获取用户的授权规则 """
+        """ Get the permission rules for the user """
         perm_ids = set()
         # user
         user_perm_ids = AssetPermission.users.through.objects.filter(user_id=user.id) \
@@ -31,7 +31,7 @@ class AssetPermissionUtil(object):
         return perms
 
     def get_permissions_for_user_groups(self, user_groups, flat=False, with_expired=False):
-        """ 获取用户组的授权规则 """
+        """ Get the permission rules for the user groups """
         if isinstance(user_groups, list):
             group_ids = [g.id for g in user_groups]
         else:
@@ -45,7 +45,7 @@ class AssetPermissionUtil(object):
         return perms
 
     def get_permissions_for_assets(self, assets, with_node=True, flat=False):
-        """ 获取资产的授权规则"""
+        """ Get the permission rules for the assets """
         perm_ids = set()
         assets = self.convert_to_queryset_if_need(assets, Asset)
         asset_ids = [str(a.id) for a in assets]
@@ -62,7 +62,7 @@ class AssetPermissionUtil(object):
         return perms
 
     def get_permissions_for_nodes(self, nodes, with_ancestor=False, flat=False):
-        """ 获取节点的授权规则 """
+        """ Get the permission rules for the nodes """
         nodes = self.convert_to_queryset_if_need(nodes, Node)
         if with_ancestor:
             nodes = Node.get_ancestor_queryset(nodes)
@@ -75,7 +75,7 @@ class AssetPermissionUtil(object):
         return perms
 
     def get_permissions_for_user_asset(self, user, asset):
-        """ 获取同时包含用户、资产的授权规则 """
+        """ Get the permission rules that include both the user and the asset """
         user_perm_ids = self.get_permissions_for_user(user, flat=True)
         asset_perm_ids = self.get_permissions_for_assets([asset], flat=True)
         perm_ids = set(user_perm_ids) & set(asset_perm_ids)

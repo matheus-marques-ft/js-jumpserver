@@ -27,7 +27,7 @@ def push_accounts_if_need(accounts=()):
 
     template_accounts = defaultdict(list)
     for ac in accounts:
-        # 再强调一次吧
+        # Emphasize once more
         if ac.source != Source.TEMPLATE:
             continue
         template_accounts[ac.source_id].append(ac)
@@ -69,7 +69,7 @@ def on_account_delete(sender, instance, **kwargs):
 
 
 class VaultSignalHandler(object):
-    """ 处理 Vault 相关的信号 """
+    """ Handle Vault-related signals """
 
     @staticmethod
     def save_to_vault(sender, instance, created, **kwargs):

@@ -72,7 +72,7 @@ class ContentType(DjangoContentType):
 
 
 class Permission(DjangoPermission):
-    """ 权限类 """
+    """ Permission class """
 
     class Meta:
         proxy = True

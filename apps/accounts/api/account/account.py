@@ -217,7 +217,7 @@ class AccountViewSet(OrgBulkModelViewSet):
 
 class AccountSecretsViewSet(AccountRecordViewLogMixin, AccountViewSet):
     """
-    因为可能要导出所有账号,所以单独建立了一个 viewset
+    Since we may need to export all accounts, a separate viewset was created
     """
     serializer_classes = {
         'default': serializers.AccountSecretSerializer,

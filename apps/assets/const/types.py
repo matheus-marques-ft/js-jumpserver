@@ -281,7 +281,7 @@ class AllTypes(ChoicesMixin):
 
         nodes = [cls.get_root_nodes()] if get_root else []
         for category, type_cls in cls.category_types():
-            # Category 格式化
+            # Format the Category
             meta = {'type': 'category', 'category': category.value, '_type': category.value}
             category_node = cls.choice_to_node(category, 'ROOT', meta=meta)
             category_count = category_type_mapper.get(category, 0)
@@ -289,7 +289,7 @@ class AllTypes(ChoicesMixin):
                 category_node['name'] += f' ({category_count})'
             nodes.append(category_node)
 
-            # Type 格式化
+            # Format the Type
             types = type_cls.get_types()
             for tp in types:
                 meta = {'type': 'type', 'category': category.value, '_type': tp.value}
@@ -302,7 +302,7 @@ class AllTypes(ChoicesMixin):
                     tp_node['isParent'] = False
                 nodes.append(tp_node)
 
-                # Platform 格式化
+                # Format the Platform
                 for p in platforms:
                     platform_node = cls.platform_to_node(p, tp_node['id'], include_asset)
                     if with_resource_amount:
@@ -359,7 +359,7 @@ class AllTypes(ChoicesMixin):
 
     @classmethod
     def create_or_update_by_platform_data(cls, platform_data, platform_cls=None, automation_cls=None):
-        # 不直接用 Platform 是因为可能在 migrations 中使用
+        # Not using Platform directly because this may be used in migrations
         from assets.models import Platform, PlatformAutomation
         if platform_cls is None:
             platform_cls = Platform

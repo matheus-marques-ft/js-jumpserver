@@ -64,7 +64,7 @@ class SSOViewSet(AuthMixin, JMSGenericViewSet):
         next_url = safe_next_url(next_url, request=request)
 
         operator = request.user.username
-        # TODO `created_by` 和 `created_by` 可以通过 `ThreadLocal` 统一处理
+        # TODO `created_by` and `created_by` could be handled uniformly via `ThreadLocal`
         token = SSOToken.objects.create(user=user, created_by=operator, updated_by=operator)
         query = {
             AUTH_KEY: token.authkey,
@@ -76,8 +76,8 @@ class SSOViewSet(AuthMixin, JMSGenericViewSet):
     @action(methods=[GET], detail=False, filter_backends=[AuthKeyQueryDeclaration], permission_classes=[AllowAny])
     def login(self, request: Request, *args, **kwargs):
         """
-        此接口违反了 `Restful` 的规范
-        `GET` 应该是安全的方法，但此接口是不安全的
+        This endpoint violates the `Restful` convention
+        `GET` should be a safe method, but this endpoint is not safe
         """
         status_code = status.HTTP_400_BAD_REQUEST
         request.META['HTTP_X_JMS_LOGIN_TYPE'] = 'W'
@@ -115,7 +115,7 @@ class SSOViewSet(AuthMixin, JMSGenericViewSet):
 
             LoginIpBlockUtil(ip).clean_block_if_need()
             LoginBlockUtil(username, ip).clean_failed_count()
-        except (ACLError, LoginConfirmBaseError):  # 无需记录日志
+        except (ACLError, LoginConfirmBaseError):  # No need to log
             pass
         except (AuthFailedError, SSOAuthKeyTTLError) as e:
             error_msg = e.msg

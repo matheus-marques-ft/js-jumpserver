@@ -54,7 +54,7 @@ def generate_data(username, request, login_type=None):
 
 
 def create_user_session(request, user_id, instance: UserLoginLog):
-    # TODO 目前只记录 web 登录的 session
+    # TODO Currently only records the session for web logins
     if instance.type != LoginTypeChoices.web:
         return
     session_key = request.session.session_key or '-'

@@ -199,7 +199,7 @@ class ES(object):
             return False
 
         try:
-            # 获取索引信息，如果没有定义，直接返回
+            # Get the index information; if it's not defined, return directly
             data = self.es.indices.get_mapping(index=self.index)
         except (NotFoundError8, NotFoundError7):
             return False
@@ -306,7 +306,7 @@ class ES(object):
         return getattr(self.es, item)
 
     def all(self):
-        """返回所有数据"""
+        """Return all data"""
         raise NotImplementedError("Not support")
 
     def ping(self, timeout=None):
@@ -417,10 +417,10 @@ class ES(object):
                 if k in match_fields:
                     search.append(item)
 
-        # 处理时间
+        # Handle time
         time_field_name, time_range = self.handler_time_field(kwargs)
 
-        # 处理组织
+        # Handle organization
         should = []
         org_id = match.get('org_id')
 
@@ -441,7 +441,7 @@ class ES(object):
             })
             should.append({'match': {'org_id': real_default_org_id}})
 
-        # 构建 body
+        # Build the body
         body = {
             'query': {
                 'bool': {
@@ -480,7 +480,7 @@ class QuerySet(DJQuerySet):
         self._slice = None  # (from_, size)
         self._storage = es_instance
 
-        # 命令列表模糊搜索时报错
+        # Raises an error when fuzzy-searching the command list
         super().__init__()
 
     @lazyproperty
@@ -507,7 +507,7 @@ class QuerySet(DJQuerySet):
             return {}
         names, multi_args, multi_kwargs = zip(*filter_calls)
 
-        # input 输入
+        # input
         multi_args = tuple(reduce(lambda x, y: x + y, (sub for sub in multi_args if sub), ()))
         args = self._grouped_search_args(multi_args)
         striped_args = [{k.replace('__icontains', ''): v} for k, values in args.items() for v in values]

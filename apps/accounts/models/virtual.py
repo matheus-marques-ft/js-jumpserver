@@ -71,7 +71,7 @@ class VirtualAccount(JMSOrgBaseModel):
 
     @classmethod
     def get_manual_account(cls, input_username='', input_secret='', input_secret_type='', from_permed=True):
-        """ @INPUT 手动登录的账号(any) """
+        """ @INPUT Manually logged-in account (any) """
         from .account import Account
         from accounts.utils import validate_account_username
         if from_permed:
@@ -91,7 +91,7 @@ class VirtualAccount(JMSOrgBaseModel):
 
     @classmethod
     def get_same_account(cls, user, asset, input_secret='', input_secret_type='', from_permed=True):
-        """ @USER 动态用户的账号(self) """
+        """ @USER Dynamic user's account (self) """
         from .account import Account
         username = user.username
 

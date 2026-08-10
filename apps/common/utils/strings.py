@@ -18,7 +18,7 @@ def get_text_diff(old_text, new_text):
 
 
 def color_fmt(msg, color=None):
-    # ANSI 颜色代码
+    # ANSI color codes
     colors = {
         'red': '\033[91m',
         'green': '\033[92m',
@@ -26,13 +26,13 @@ def color_fmt(msg, color=None):
         'blue': '\033[94m',
         'purple': '\033[95m',
         'cyan': '\033[96m',
-        'default': '\033[0m'  # 结束颜色的默认值
+        'default': '\033[0m'  # default value to end the color
     }
 
-    # 获取颜色代码，如果没有指定颜色或颜色不支持，使用默认颜色
+    # Get the color code; if no color is specified or it's unsupported, use the default color
     color_code = colors.get(color, colors['default'])
-    # 打印带颜色的消息
-    return f"{color_code}{msg}{colors['default']}"  # 确保在消息结束后重置颜色
+    # Print the colored message
+    return f"{color_code}{msg}{colors['default']}"  # ensure the color resets after the message ends
 
 
 def color_print(msg, color=None):

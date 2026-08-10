@@ -15,8 +15,8 @@ def safe_render_to_string(template_name, context=None, request=None, using=None)
         template_code = f.read()
         safe_engine = Engine(
             debug=False,
-            libraries={},  # 禁用自定义 tag 库
-            builtins=[],  # 不自动加载内置标签
+            libraries={},  # Disable custom tag libraries
+            builtins=[],  # Don't auto-load built-in tags
         )
         try:
             template = safe_engine.from_string(template_code)
@@ -27,8 +27,8 @@ def safe_render_to_string(template_name, context=None, request=None, using=None)
 
 
 def _get_data_template_path(template_name: str):
-    # 保存到 data/template/<原路径>.html
-    # 例如 template_name users/_msg_x.html -> data/template/users/_msg_x.html
+    # Saved to data/template/<original path>.html
+    # For example, template_name users/_msg_x.html -> data/template/users/_msg_x.html
     rel_path = template_name.replace('/', os.sep)
     return safe_join(settings.DATA_DIR, 'template', rel_path)
 
@@ -38,7 +38,7 @@ def _get_edit_template_path(template_name: str):
 
 
 def custom_render_to_string(template_name, context=None, request=None, using=None):
-    # 如果自定的义模板存在，则使用自定义模板，否则使用系统模板
+    # If a custom template exists, use the custom template; otherwise use the system template
     custom_template = _get_data_template_path(template_name)
     if os.path.exists(custom_template):
         template = safe_render_to_string(custom_template, context=context, request=request, using=using)

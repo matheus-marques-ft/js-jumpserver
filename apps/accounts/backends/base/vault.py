@@ -36,7 +36,7 @@ class BaseVault(ABC):
         raise NotImplementedError
 
     def get(self, instance):
-        """ 返回 secret 值 """
+        """ Return the secret value """
         return self._get(self.build_entry(instance))
 
     def create(self, instance):

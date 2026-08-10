@@ -160,7 +160,7 @@ class SessionSerializer(BulkOrgResourceModelSerializer):
         )
 
         validated_data['user'] = str(user)
-        # web 资产 url 太长，超出限制
+        # web asset url is too long, exceeding the limit
         validated_data['asset'] = str(asset)[:128]
         return super().create(validated_data)
 

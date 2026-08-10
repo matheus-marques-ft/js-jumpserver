@@ -44,5 +44,5 @@ def on_session_pre_save(sender, instance, **kwargs):
 def on_session_finished(sender, instance: Session, created, **kwargs):
     if not instance.is_finished:
         return
-    # 清理一次可能因 task 未执行的缓存数据
+    # Clean up cached data that may exist because the task didn't run
     Session.unlock_session(instance.id)

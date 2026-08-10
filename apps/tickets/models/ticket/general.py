@@ -173,7 +173,7 @@ class StatusMixin:
     def _finish_or_next(self, current_step, state):
         next_step = current_step.next()
 
-        # 提前结束，或者最后一步
+        # Ends early, or is the last step
         if state in [TicketState.rejected, TicketState.closed] or not next_step:
             self.state = state
             self.status = Ticket.Status.closed
@@ -259,7 +259,7 @@ class StatusMixin:
 
     @property
     def processor(self):
-        """ 返回最后一步的处理人 """
+        """ Return the processor of the last step """
         return self.current_step.processor
 
     def has_current_assignee(self, assignee):
@@ -290,7 +290,7 @@ class Ticket(StatusMixin, JMSBaseModel):
         max_length=16, choices=TicketStatus.choices,
         default=TicketStatus.open, verbose_name=_('Status')
     )
-    # 申请人
+    # Applicant
     applicant = models.ForeignKey(
         'users.User', related_name='applied_tickets', null=True,
         on_delete=models.SET_NULL, verbose_name=_("Applicant")
@@ -343,7 +343,7 @@ class Ticket(StatusMixin, JMSBaseModel):
     def name(self, value):
         self.title = value
 
-    # TODO 先单独处理一下
+    # TODO: handle this separately for now
     @property
     def org_name(self):
         org = Organization.get_instance(self.org_id)
@@ -430,8 +430,8 @@ class Ticket(StatusMixin, JMSBaseModel):
             except IntegrityError as e:
                 logger.error(f'Set ticket serial number error: {e}')
                 if e.args[0] == 1062:
-                    # 虽然做了 `select_for_update` 但是每天的第一条工单仍可能造成冲突
-                    # 但概率小，这里只报错，用户重新提交即可
+                    # Although `select_for_update` is used, the first ticket of the day may still conflict
+                    # The probability is low, so we just raise an error here and let the user resubmit
                     raise JMSException(detail=_('Please try again'), code='please_try_again')
                 raise e
 

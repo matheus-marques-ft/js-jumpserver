@@ -4,7 +4,7 @@ from authentication.backends.base import JMSBaseAuthBackend
 
 
 class RBACBackend(JMSBaseAuthBackend):
-    """ 只做权限校验 """
+    """ Only performs permission validation """
     @staticmethod
     def is_enabled():
         return True
@@ -16,7 +16,8 @@ class RBACBackend(JMSBaseAuthBackend):
         return False
 
     def has_perm(self, user_obj, perm, obj=None):
-        # 扫描软件对 * 毕竟敏感，所以改成 none, 虽说这个 * 是我们自定义的标识
+        # Scanners tend to be sensitive about '*', so it's changed to 'none' here,
+        # even though this '*' is actually a marker we defined ourselves
         if perm == 'none':
             return True
         if not user_obj.is_active or not perm:

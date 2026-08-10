@@ -122,7 +122,7 @@
         const currentMFAInputRef = $('#mfa-' + name + ' .input-style')
         currentMFAInputRef.prop('disabled', false).attr('name', 'code')
 
-        // 登录页时，不应该默认focus
+        // On the login page, it should not focus by default
         const usernameRef = $('input[name="username"]')
         if (!usernameRef || usernameRef.length === 0) {
             setTimeout(() => {

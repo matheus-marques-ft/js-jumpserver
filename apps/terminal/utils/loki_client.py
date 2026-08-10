@@ -6,7 +6,7 @@ from websockets.sync.client import connect as ws_connect
 
 
 def get_loki_client():
-    # TODO: 补充 auth 认证相关
+    # TODO: add auth authentication related logic
     return LokiClient(base_url=settings.LOKI_BASE_URL)
 
 

@@ -80,7 +80,7 @@ SPECTACULAR_SETTINGS = {
         'persistAuthorization': True,
         'displayOperationId': True,
     },
-    # 添加自定义字段扩展
+    # Add custom field extensions
     'SERIALIZER_EXTENSIONS': [
         'jumpserver.views.schema.ObjectRelatedFieldExtension',
         'jumpserver.views.schema.LabeledChoiceFieldExtension',

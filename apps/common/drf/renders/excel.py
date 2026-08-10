@@ -22,11 +22,11 @@ class ExcelFileRenderer(BaseFileRenderer):
         self.ws.row_dimensions[self.row_count].height = 20
         column_count = 0
         for cell_value in row:
-            # 处理非法字符
+            # Handle illegal characters
             column_count += 1
             cell_value = ILLEGAL_CHARACTERS_RE.sub(r'', str(cell_value))
             cell = self.ws.cell(row=self.row_count, column=column_count, value=str(cell_value))
-            # 设置单元格格式为纯文本, 防止执行公式
+            # Set the cell format to plain text, to prevent formula execution
             cell.data_type = 's'
 
     def after_render(self):

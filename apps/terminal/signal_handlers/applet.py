@@ -21,7 +21,7 @@ logger = get_logger(__file__)
 def on_applet_host_create(sender, instance, created=False, **kwargs):
     if not created:
         return
-    # 新建时，清除原来的首选，避免一直调度到一个上面
+    # Clear the previous preference on creation, to avoid always scheduling to the same one
     Applet.clear_host_prefer()
     applets = Applet.objects.all()
     instance.applets.set(applets)
@@ -34,7 +34,7 @@ def on_applet_host_update_or_create(sender, instance, created=False, **kwargs):
     if instance.auto_create_accounts:
         applet_host_generate_accounts.delay(instance.id)
 
-    # 使用同名账号的，直接给他打开登录那项吧
+    # For those using the same-named account, just enable the login option for it
     if instance.using_same_account:
         alias = AliasAccount.USER.value
         same_account, __ = VirtualAccount.objects.get_or_create(

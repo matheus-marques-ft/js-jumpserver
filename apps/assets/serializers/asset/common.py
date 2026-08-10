@@ -60,7 +60,7 @@ class AssetLabelSerializer(serializers.ModelSerializer):
         model = Label
         fields = ['id', 'name', 'value']
         extra_kwargs = {
-            # 取消默认唯一键的校验
+            # Disable the default unique-key validation
             'id': {'validators': []},
             'name': {'required': False},
             'value': {'required': False},
@@ -82,7 +82,7 @@ class AssetAccountSerializer(AccountSerializer):
     clone_id = None
 
     def to_internal_value(self, data):
-        # 导入时，data有时为str
+        # During import, data is sometimes a str
         if isinstance(data, str):
             return super().to_internal_value(data)
 
@@ -304,7 +304,7 @@ class AssetSerializer(BulkOrgResourceModelSerializer, ResourceLabelsMixin, Writa
         return super().is_valid(raise_exception=raise_exception)
 
     def validate_protocols(self, protocols_data):
-        # 目的是去重
+        # The purpose is to deduplicate
         protocols_data_map = {p['name']: p for p in protocols_data}
         for p in protocols_data:
             port = p.get('port', 0)

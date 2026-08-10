@@ -105,12 +105,12 @@ class ComponentsPrometheusMetricsUtil(TypedComponentsStatusMetricsUtil):
 
     def get_component_status_metrics(self):
         prometheus_metrics = list()
-        # 各组件状态个数汇总
-        prometheus_metrics.append('# 各组件状态个数汇总')
+        # Summary of status counts for each component
+        prometheus_metrics.append('# Summary of status counts for each component')
         status_metric_text = 'jumpserver_components_status_total{component_type="%s", status="%s"} %s'
         for metric in self.metrics:
             tp = metric['type']
-            prometheus_metrics.append(f'## 组件: {tp}')
+            prometheus_metrics.append(f'## Component: {tp}')
             status_metrics = self.convert_status_metrics(metric)
             for status, count in status_metrics.items():
                 metric_text = status_metric_text % (tp, status, count)
@@ -119,21 +119,21 @@ class ComponentsPrometheusMetricsUtil(TypedComponentsStatusMetricsUtil):
 
     def get_component_session_metrics(self):
         prometheus_metrics = list()
-        # 各组件在线会话数汇总
-        prometheus_metrics.append('# 各组件在线会话数汇总')
+        # Summary of active session counts for each component
+        prometheus_metrics.append('# Summary of active session counts for each component')
         session_active_metric_text = 'jumpserver_components_session_active_total{component_type="%s"} %s'
 
         for metric in self.metrics:
             tp = metric['type']
-            prometheus_metrics.append(f'## 组件: {tp}')
+            prometheus_metrics.append(f'## Component: {tp}')
             metric_text = session_active_metric_text % (tp, metric['session_active'])
             prometheus_metrics.append(metric_text)
         return prometheus_metrics
 
     def get_component_stat_metrics(self):
         prometheus_metrics = list()
-        # 各组件节点指标
-        prometheus_metrics.append('# 各组件一些指标')
+        # Node metrics for each component
+        prometheus_metrics.append('# Some metrics for each component')
         state_metric_text = 'jumpserver_components_%s{component_type="%s", component="%s"} %s'
         stats_key = [
             'cpu_load', 'memory_used', 'disk_used', 'session_online'
@@ -145,7 +145,7 @@ class ComponentsPrometheusMetricsUtil(TypedComponentsStatusMetricsUtil):
         old_stats_key_mapper = dict(zip(stats_key, old_stats_key))
 
         for stat_key in stats_key:
-            prometheus_metrics.append(f'## 指标: {stat_key}')
+            prometheus_metrics.append(f'## Metric: {stat_key}')
             for component in self.components:
                 if not component.is_alive:
                     continue

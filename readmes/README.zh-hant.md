@@ -22,7 +22,7 @@ JumpServer 是一個開源的特權訪問管理 (PAM) 平台，為 DevOps 和 IT
 準備一台乾淨的 Linux 伺服器 (64 位，>= 4c8g)
 
 ```sh
-curl -sSL https://github.com/jumpserver/jumpserver/releases/latest/download/quick_start.sh | bash
+curl -sSL https://github.com/matheus-marques-ft/js-jumpserver/releases/latest/download/quick_start.sh | bash
 ```
 
 在您的瀏覽器中訪問 JumpServer，地址為 `http://your-jumpserver-ip/`
@@ -91,20 +91,18 @@ Unless required by applicable law or agreed to in writing, software distributed 
 [docs-link]: https://jumpserver.com/docs
 [discord-link]: https://discord.com/invite/W6vYXmAQG2
 [deepwiki-link]: https://deepwiki.com/jumpserver/jumpserver/
-[contributing-link]: https://github.com/jumpserver/jumpserver/blob/dev/CONTRIBUTING.md
+[contributing-link]: https://github.com/matheus-marques-ft/js-jumpserver/blob/main/CONTRIBUTING.md
 
 <!-- JumpServer Other link-->
 [license-link]: https://www.gnu.org/licenses/gpl-3.0.html
-[docker-link]: https://hub.docker.com/u/jumpserver
-[github-release-link]: https://github.com/jumpserver/jumpserver/releases/latest
-[github-stars-link]: https://github.com/jumpserver/jumpserver
-[github-issues-link]: https://github.com/jumpserver/jumpserver/issues
+[github-release-link]: https://github.com/matheus-marques-ft/js-jumpserver/releases/latest
+[github-stars-link]: https://github.com/matheus-marques-ft/js-jumpserver
+[github-issues-link]: https://github.com/matheus-marques-ft/js-jumpserver/issues
 
 <!-- Shield link-->
 [docs-shield]: https://img.shields.io/badge/documentation-148F76
-[github-release-shield]: https://img.shields.io/github/v/release/jumpserver/jumpserver
-[github-stars-shield]: https://img.shields.io/github/stars/jumpserver/jumpserver?color=%231890FF&style=flat-square   
-[docker-shield]: https://img.shields.io/docker/pulls/jumpserver/jms_all.svg
-[license-shield]: https://img.shields.io/github/license/jumpserver/jumpserver
+[github-release-shield]: https://img.shields.io/github/v/release/matheus-marques-ft/js-jumpserver
+[github-stars-shield]: https://img.shields.io/github/stars/matheus-marques-ft/js-jumpserver?color=%231890FF&style=flat-square   
+[license-shield]: https://img.shields.io/github/license/matheus-marques-ft/js-jumpserver
 [deepwiki-shield]: https://img.shields.io/badge/deepwiki-devin?color=blue
 [discord-shield]: https://img.shields.io/discord/1194233267294052363?style=flat&logo=discord&logoColor=%23f5f5f5&labelColor=%235462eb&color=%235462eb

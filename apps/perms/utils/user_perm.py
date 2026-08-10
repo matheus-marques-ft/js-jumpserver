@@ -27,11 +27,12 @@ class AssetPermissionPermAssetUtil:
     def get_all_assets(self):
         node_assets = self.get_perm_nodes_assets()
         direct_assets = self.get_direct_assets()
-        # 比原来的查到所有 asset id 再搜索块很多，因为当资产量大的时候，搜索会很慢
+        # Much faster than the original approach of finding all asset ids and then searching,
+        # since searching is slow when the number of assets is large
         return (node_assets | direct_assets).order_by().distinct()
 
     def get_perm_nodes(self):
-        """ 获取所有授权节点 """
+        """ Get all granted nodes """
         nodes_ids = AssetPermission.objects \
             .filter(id__in=self.perm_ids) \
             .values_list('nodes', flat=True)
@@ -41,14 +42,14 @@ class AssetPermissionPermAssetUtil:
 
     @timeit
     def get_perm_nodes_assets(self):
-        """ 获取所有授权节点下的资产 """
+        """ Get the assets under all granted nodes """
         nodes = self.get_perm_nodes()
         assets = PermNode.get_nodes_all_assets(*nodes, distinct=False)
         return assets
 
     @timeit
     def get_direct_assets(self):
-        """ 获取直接授权的资产 """
+        """ Get the directly granted assets """
         asset_ids = AssetPermission.assets.through.objects \
             .filter(assetpermission_id__in=self.perm_ids) \
             .values_list('asset_id', flat=True)
@@ -143,7 +144,7 @@ class UserPermAssetUtil(AssetPermissionPermAssetUtil):
         return assets
 
     def get_node_all_assets(self, node_id):
-        """ 获取节点下的所有资产 """
+        """ Get all assets under the node """
         node = PermNode.objects.get(id=node_id)
         node.compute_node_from_and_assets_amount(self.user)
         if node.node_from == node.NodeFrom.granted:
@@ -157,19 +158,19 @@ class UserPermAssetUtil(AssetPermissionPermAssetUtil):
         return node, assets
 
     def _get_indirect_perm_node_assets(self, node):
-        """ 获取间接授权节点下的直接资产 """
+        """ Get the directly granted assets under an indirectly granted node """
         assets = self.get_direct_assets()
         assets = assets.filter(nodes__id=node.id).order_by().distinct()
         return assets
 
     @timeit
     def _get_indirect_perm_node_all_assets(self, node):
-        """  获取间接授权节点下的所有资产
-        此算法依据 `UserAssetGrantedTreeNodeRelation` 的数据查询
-            1. 查询该节点下的直接授权节点
-            2. 查询该节点下授权资产关联的节点
+        """  Get all assets under an indirectly granted node
+        This algorithm queries data based on `UserAssetGrantedTreeNodeRelation`:
+            1. Query the directly granted child nodes under this node
+            2. Query the nodes associated with granted assets under this node
         """
-        # 查询节点下直接授权的子节点
+        # Query the directly granted child nodes under this node
         asset_ids = set()
         children_from_granted = UserAssetGrantedTreeNodeRelation.objects \
             .filter(user=self.user) \
@@ -181,7 +182,7 @@ class UserPermAssetUtil(AssetPermissionPermAssetUtil):
         _asset_ids = _assets.values_list('id', flat=True)
         asset_ids.update(list(_asset_ids))
 
-        # 查询节点下资产授权的节点
+        # Query the nodes with asset grants under this node
         children_from_assets = UserAssetGrantedTreeNodeRelation.objects \
             .filter(user=self.user) \
             .filter(node_key__startswith=f'{node.key}:', node_from=node.NodeFrom.asset) \
@@ -219,7 +220,7 @@ class UserPermNodeUtil:
         return PermNode.get_ungrouped_node(assets_amount)
 
     def get_top_level_nodes(self, with_unfolded_node=False):
-        # 是否有节点展开, 展开的节点
+        # Whether any node is unfolded, and the unfolded node
         unfolded_node = None
         nodes = self.get_special_nodes()
         real_nodes = self._get_perm_node_children_from_relation(key='')
@@ -252,10 +253,10 @@ class UserPermNodeUtil:
         node = PermNode.objects.get(key=key)
         node.compute_node_from_and_assets_amount(self.user)
         if node.node_from == node.NodeFrom.granted:
-            """ 直接授权的节点, 直接从完整资产树获取子节点 """
+            """ Directly granted node: get child nodes directly from the full asset tree """
             children = PermNode.objects.filter(parent_key=key)
         elif node.node_from in (node.NodeFrom.asset, node.NodeFrom.child):
-            """ 间接授权的节点, 从 Relation 表中获取子节点 """
+            """ Indirectly granted node: get child nodes from the Relation table """
             children = self._get_perm_node_children_from_relation(key)
         else:
             children = PermNode.objects.none()
@@ -263,7 +264,7 @@ class UserPermNodeUtil:
         return children
 
     def _get_perm_node_children_from_relation(self, key):
-        """ 获取授权节点的子节点, 从用户授权节点关系表中获取 """
+        """ Get the child nodes of a granted node, from the user granted node relation table """
         children = PermNode.objects.filter(granted_node_rels__user=self.user, parent_key=key)
         children = children.annotate(**PermNode.annotate_granted_node_rel_fields).distinct()
         for node in children:
@@ -281,7 +282,7 @@ class UserPermNodeUtil:
             node.assets_amount = node.granted_assets_amount
             key_node_mapper[node.key] = node
             if node.node_from == node.NodeFrom.granted:
-                """ 直接授权的节点, 增加后代节点的过滤条件 """
+                """ Directly granted node: add a filter condition for descendant nodes """
                 q_nodes_descendant |= Q(key__startswith=f'{node.key}:')
         if q_nodes_descendant:
             descendant_nodes = PermNode.objects.filter(q_nodes_descendant)

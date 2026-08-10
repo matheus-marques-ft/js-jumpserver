@@ -1,4 +1,4 @@
-| Repo                                       | Description                |
-|--------------------------------------------|----------------------------|
-| [Lina](https://github.com/jumpserver/lina) | JumpServer Web UI 项目       |
-| [Luna](https://github.com/jumpserver/luna) | JumpServer Web Terminal 项目 |
+| Repo                                                    | Description                |
+|----------------------------------------------------------|----------------------------|
+| [Lina](https://github.com/matheus-marques-ft/js-lina)     | JumpServer Web UI project       |
+| [Luna](https://github.com/matheus-marques-ft/js-luna)     | JumpServer Web Terminal project |

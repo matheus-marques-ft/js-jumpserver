@@ -52,10 +52,10 @@ class Session(OrgModelMixin):
     SUFFIX_MAP = {2: '.replay.gz', 3: '.cast.gz', 4: '.replay.mp4', 5: '.replay.json'}
     DEFAULT_SUFFIXES = ['.replay.gz', '.cast.gz', '.gz', '.replay.mp4']
 
-    # Todo: 将来干掉 local_path, 使用 default storage 实现
+    # Todo: get rid of local_path in the future, implement using default storage
     def get_all_possible_local_path(self):
         """
-        获取所有可能的本地存储录像文件路径
+        Get all possible local storage replay file paths
         :return:
         """
         return [self.get_local_storage_path_by_suffix(suffix)
@@ -63,7 +63,7 @@ class Session(OrgModelMixin):
 
     def get_all_possible_relative_path(self):
         """
-        获取所有可能的外部存储录像文件路径
+        Get all possible external storage replay file paths
         :return:
         """
         return [self.get_relative_path_by_suffix(suffix)
@@ -72,7 +72,7 @@ class Session(OrgModelMixin):
     def get_local_storage_path_by_suffix(self, suffix='.cast.gz'):
         """
         local_path: replay/2021-12-08/session_id.cast.gz
-        通过后缀名获取本地存储的录像文件路径
+        Get the local storage replay file path by suffix
         :param suffix: .cast.gz | '.replay.gz'
         :return:
         """
@@ -82,7 +82,7 @@ class Session(OrgModelMixin):
     def get_relative_path_by_suffix(self, suffix='.cast.gz'):
         """
         relative_path: 2021-12-08/session_id.cast.gz
-        通过后缀名获取外部存储录像文件路径
+        Get the external storage replay file path by suffix
         :param suffix: .cast.gz | '.replay.gz' | '.replay.json'
         :return:
         """
@@ -106,8 +106,8 @@ class Session(OrgModelMixin):
     def find_ok_relative_path_in_storage(self, storage):
         session_paths = self.get_all_possible_relative_path()
         for rel_path in session_paths:
-            # storage 为多个外部存储时, 可能会因部分不可用，
-            # 抛出异常, 影响录像的获取
+            # When storage is composed of multiple external storages, some may be unavailable,
+            # which can raise an exception and affect retrieving the replay
             try:
                 if storage.exists(rel_path):
                     return rel_path
@@ -137,7 +137,7 @@ class Session(OrgModelMixin):
         if self.is_finished:
             return False
         if self.type != SessionType.normal:
-            # 会话监控仅支持 normal，不支持 tunnel 和 command
+            # Session monitoring only supports normal, not tunnel and command
             return False
         support_types = [TerminalType.lion, TerminalType.koko, TerminalType.razor]
         if self.terminal.type in support_types:
@@ -162,7 +162,7 @@ class Session(OrgModelMixin):
     @classmethod
     def lock_session(cls, session_id):
         key = cls.LOCK_CACHE_KEY_PREFIX.format(session_id)
-        # 会话锁定时间为 None，表示永不过期
+        # A session lock time of None means it never expires
         # You can set TIMEOUT to None so that, by default, cache keys never expire.
         # https://docs.djangoproject.com/en/4.1/topics/cache/
         cache.set(key, True, timeout=None)
@@ -194,7 +194,7 @@ class Session(OrgModelMixin):
             rel_path = self.get_relative_path_by_suffix(suffix)
             local_path = self.get_local_storage_path_by_suffix(suffix)
         else:
-            # 文件名依赖 上传的文件名，不再使用默认的文件名
+            # The filename depends on the uploaded filename; the default filename is no longer used
             filename = f.name
             rel_path = self.get_replay_part_file_relative_path(filename)
             local_path = self.get_replay_part_file_local_storage_path(filename)
@@ -266,7 +266,7 @@ class Session(OrgModelMixin):
     def duration(self) -> str:
         date_end = self.date_end or timezone.now()
         delta = date_end - self.date_start
-        # 去掉毫秒的显示
+        # Remove the millisecond display
         delta = timedelta(seconds=int(delta.total_seconds()))
         return str(delta)
 

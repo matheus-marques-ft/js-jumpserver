@@ -27,7 +27,7 @@ class TicketStatusApi(mixins.AuthMixin, APIView):
             username = e.username
             self.send_auth_signal(success=False, username=username, reason=reason)
             auth_ticket_id = request.session.pop('auth_ticket_id', '')
-            # 若为三方登录，此时应退出登录
+            # If this is a third-party login, log out at this point
             auth_logout(request)
             request.session['auth_ticket_id'] = auth_ticket_id
             return Response(e.as_data(), status=200)

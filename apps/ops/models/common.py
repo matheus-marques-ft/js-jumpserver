@@ -1,4 +1,4 @@
-# 内置环境变量
+# Built-in environment variables
 BUILTIN_VARIABLES = {
 
 }

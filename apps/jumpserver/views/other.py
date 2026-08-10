@@ -56,7 +56,7 @@ class WsView(APIView):
 
 class UIView(View):
     def get(self, request):
-        msg = "如果你能看到这个页面，证明你的配置是有问题的，请参考文档设置好nginx, UI由Lina项目提供"
+        msg = "If you can see this page, it proves your configuration is incorrect. Please refer to the docs to set up nginx properly; the UI is served by the Lina project"
         return HttpResponse(msg)
 
 

@@ -19,7 +19,7 @@ urlpatterns = [
     path('login/guard/', views.UserLoginGuardView.as_view(), name='login-guard'),
     path('logout/', views.UserLogoutView.as_view(), name='logout'),
 
-    # 原来在users中的
+    # Originally located in users
     path('password/forget/previewing/', users_view.UserForgotPasswordPreviewingView.as_view(),
          name='forgot-previewing'),
     path('password/forgot/', users_view.UserForgotPasswordView.as_view(), name='forgot-password'),

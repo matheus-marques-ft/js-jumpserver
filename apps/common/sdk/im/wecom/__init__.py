@@ -32,22 +32,23 @@ class URL:
 
 class ErrorCode:
     # https://open.work.weixin.qq.com/api/doc/90000/90139/90313#%E9%94%99%E8%AF%AF%E7%A0%81%EF%BC%9A81013
-    RECIPIENTS_INVALID = 81013  # UserID、部门ID、标签ID全部非法或无权限。
+    RECIPIENTS_INVALID = 81013  # UserID, department ID, and tag ID are all invalid or unauthorized.
 
     # https: // open.work.weixin.qq.com / devtool / query?e = 82001
-    RECIPIENTS_EMPTY = 82001  # 指定的成员/部门/标签全部为空
+    RECIPIENTS_EMPTY = 82001  # The specified members/departments/tags are all empty
 
     # https://open.work.weixin.qq.com/api/doc/90000/90135/91437
     INVALID_CODE = 40029
 
-    INVALID_TOKEN = 40014  # 无效的 access_token
+    INVALID_TOKEN = 40014  # Invalid access_token
 
 
 class WeComRequests(BaseRequest):
     """
-    处理系统级错误，抛出 API 异常，直接生成 HTTP 响应，业务代码无需关心这些错误
-    - 确保 status_code == 200
-    - 确保 access_token 无效时重试
+    Handles system-level errors and raises API exceptions that directly
+    generate an HTTP response, so business code doesn't need to worry about them
+    - Ensures status_code == 200
+    - Ensures a retry when access_token is invalid
     """
     invalid_token_errcodes = (ErrorCode.INVALID_TOKEN,)
 
@@ -80,7 +81,8 @@ class WeComRequests(BaseRequest):
 
 class WeCom(RequestMixin):
     """
-    非业务数据导致的错误直接抛异常，说明是系统配置错误，业务代码不用理会
+    Errors not caused by business data are raised directly, since they
+    indicate a system configuration error that business code need not handle
     """
 
     def __init__(self, corpid, corpsecret, agentid, timeout=None):
@@ -106,7 +108,8 @@ class WeCom(RequestMixin):
         """
         https://open.work.weixin.qq.com/api/doc/90000/90135/90236
 
-        对于业务代码，只需要关心由 用户id 或 消息不对 导致的错误，其他错误不予理会
+        For business code, only errors caused by an invalid user id or a bad
+        message need to be handled; other errors can be ignored
         """
         users = tuple(users)
         body = {
@@ -130,7 +133,7 @@ class WeCom(RequestMixin):
 
         errcode = data['errcode']
         if errcode in (ErrorCode.RECIPIENTS_INVALID, ErrorCode.RECIPIENTS_EMPTY):
-            # 全部接收人无权限或不存在
+            # All recipients are unauthorized or do not exist
             return users
         self._requests.check_errcode_is_0(data)
 
@@ -209,7 +212,7 @@ class WeComTool(object):
     def check_state(self, state, request=None):
         return cache.get(state) == self.WECOM_STATE_VALUE or \
             request.session.get(self.WECOM_STATE_SESSION_KEY) == state or \
-            request.GET.get('state') == state  # 在企业微信桌面端打开的话，重新创建了个 session，会导致 session 校验失败
+            request.GET.get('state') == state  # Opening in the WeCom desktop client recreates the session, which causes session verification to fail
 
     def wrap_redirect_url(self, next_url):
         params = {

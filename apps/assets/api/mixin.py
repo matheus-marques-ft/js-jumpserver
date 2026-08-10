@@ -29,7 +29,7 @@ class SerializeToTreeNodeMixin:
 
         def _open(node):
             if not self.is_sync:
-                # 异步加载资产树时，默认展开节点
+                # When loading the asset tree asynchronously, expand nodes by default
                 return True
             if not node.parent_key:
                 return True
@@ -85,7 +85,7 @@ class SerializeToTreeNodeMixin:
             pid = node_key or get_pid(asset, platform)
             if not pid:
                 continue
-            # 根节点最多显示 1000 个资产
+            # Show at most 1000 assets under the root node
             if pid.isdigit():
                 if root_assets_count > 1000:
                     continue

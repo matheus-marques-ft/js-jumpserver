@@ -26,8 +26,8 @@ class SiteMessageUtil:
             )
 
             if is_broadcast:
-                # 广播消息时只为在线用户创建，未登录的用户不创建消息，
-                # 等用户登录后在 SiteMessage.create_site_msg_for_user_if_need 按需创建
+                # For broadcast messages, only create them for online users; messages are not created for users who are not logged in,
+                # they are created on demand in SiteMessage.create_site_msg_for_user_if_need once the user logs in
                 from audits.models import UserSession
                 user_ids = UserSession.objects.all().values_list('user_id', flat=True).distinct()
             elif group_ids:
@@ -39,7 +39,7 @@ class SiteMessageUtil:
                 user_ids = [*user_ids, *user_ids_from_group]
 
             site_msg.users.add(*user_ids)
-            # 只有调用 save 才能触发 post_save 信号
+            # Only calling save triggers the post_save signal
             site_msg.save()
         return site_msg
 
@@ -72,7 +72,7 @@ class SiteMessageUtil:
     
     @classmethod
     def get_user_display_msgs(cls, user_id):
-        # 获取用户未读的且需要展示的消息
+        # Get the user's unread messages that need to be displayed
         msgs = SiteMessage.objects.filter(user_id=user_id, has_read=False).exclude(
             content__display_mode=MessageContent.DisplayMode.default
         ).prefetch_related('content')
@@ -81,9 +81,10 @@ class SiteMessageUtil:
     @classmethod
     def create_site_msgs_for_user_if_need(cls, user_id):
         '''
-        创建用户未读的且需要展示的消息
-        广播消息时只为在线用户创建，未登录的用户不创建消息，等用户登录后在这里按需创建
-        只创建用户没有的、最近24小时内的、需要广播的消息
+        Create the user's unread messages that need to be displayed.
+        For broadcast messages, only create them for online users; messages are not created for users who are not logged in,
+        they are created on demand here once the user logs in.
+        Only create messages the user doesn't already have, that were created within the last 24 hours, and that need to be broadcast.
         '''
         contents = MessageContent.objects.filter(
             is_broadcast=True,

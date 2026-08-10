@@ -98,7 +98,7 @@ def register_periodic_task(task_name, task_func, interval_key, enabled_key, cron
         interval = None
 
     if crontab:
-        interval = None  # 优先使用 crontab
+        interval = None  # Prefer using crontab
 
     tasks = {
         task_name: {

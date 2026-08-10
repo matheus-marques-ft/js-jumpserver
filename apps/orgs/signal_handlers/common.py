@@ -62,10 +62,10 @@ def on_org_create(sender, instance, created=False, **kwargs):
     expire_user_orgs()
 
 
-# 创建对应的root
+# Create the corresponding root
 @receiver(post_save, sender=Organization)
 def on_org_create_or_update(sender, instance, **kwargs):
-    # 必须放到最开始, 因为下面调用Node.save方法时会获取当前组织的org_id(即instance.org_id), 如果不过期会找不到
+    # Must be placed at the very beginning, because calling Node.save below fetches the current org's org_id (i.e. instance.org_id); if it isn't expired first, it won't be found
     expire_orgs_mapping_for_memory(instance.id)
 
     old_org = get_current_org()
@@ -81,7 +81,7 @@ def on_org_create_or_update(sender, instance, **kwargs):
 def delete_org_root_node_on_org_delete(sender, instance, **kwargs):
     expire_orgs_mapping_for_memory(instance.id)
 
-    # 删除该组织下所有 节点
+    # Delete all nodes under this organization
     with tmp_to_org(instance):
         root_node = Node.org_root()
         if root_node:
@@ -97,7 +97,7 @@ def expire_user_orgs_on_org_delete(sender, instance, **kwargs):
 @on_transaction_commit
 def on_user_created_set_default_org(sender, instance, created, **kwargs):
     if not instance.id:
-        # 用户已被手动删除，instance.orgs 时会使用 id 进行查找报错，所以判断不存在id时不做处理
+        # The user has already been manually deleted; accessing instance.orgs would look up by id and error out, so do nothing when the id doesn't exist
         return
     if not created:
         return
@@ -160,7 +160,7 @@ def _remove_user_resource(model, users, org, user_field_name='users'):
 
 def _clear_users_from_org(org, users):
     """
-    清理用户在该组织下的相关数据, 包括用户组, 资产授权, 用户授权
+    Clean up the user's related data under this organization, including user groups, asset permissions, and user permissions
     """
     if not users:
         return

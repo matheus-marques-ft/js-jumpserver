@@ -32,10 +32,11 @@ class BaseAutomationSerializer(AssetBaseAutomationSerializer):
 
 class AutomationListSerializerMixin(serializers.Serializer):
     """
-    列表页用:只返回 assets/nodes 的数量(由 RelationCountMixin 批量 annotate),
-    不返回 assets/nodes 大数组和 recipients,避免列表 payload 膨胀。
-    明细(retrieve)仍使用完整序列化器返回相关字段。
-    子类 Meta 需声明 relation_count_fields 并把数量字段放进 fields。
+    Used for the list page: only returns the counts of assets/nodes (bulk-annotated
+    by RelationCountMixin), and does not return the large assets/nodes arrays or
+    recipients, to avoid bloating the list payload.
+    Detail (retrieve) still uses the full serializer to return the related fields.
+    Subclass Meta must declare relation_count_fields and put the count fields into fields.
     """
     assets_amount = serializers.IntegerField(read_only=True, label=_('Assets amount'))
     nodes_amount = serializers.IntegerField(read_only=True, label=_('Nodes amount'))

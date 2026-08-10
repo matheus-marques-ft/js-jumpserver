@@ -196,7 +196,7 @@ class OperatorLogHandler(metaclass=Singleton):
         resource_id = getattr(resource, 'pk', '')
         before, after = self.data_processing(before, after)
         if not force and (before == after):
-            # 前后都没变化，没必要生成日志，除非手动强制保存
+            # No change before and after, no need to generate a log unless force-saved manually
             return
 
         org_id = self.get_org_id(user, object_name)
@@ -222,7 +222,7 @@ class OperatorLogHandler(metaclass=Singleton):
 
 
 op_handler = OperatorLogHandler()
-# 理论上操作日志的唯一入口
+# In theory, the single entry point for operate logs
 create_or_update_operate_log = op_handler.create_or_update_operate_log
 cache_instance_before_data = op_handler.cache_instance_before_data
 get_instance_current_with_cache_diff = op_handler.get_instance_current_with_cache_diff

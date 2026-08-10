@@ -149,9 +149,9 @@ class SessionViewSet(ReportExportMixin, OrgBulkModelViewSet):
             # url => error message
             return Response({'error': url}, status=404)
 
-        # 如果获取的录像文件类型是 .replay.json 则使用 part 的方式下载
+        # If the replay file type is .replay.json, download using the part method
         if url.endswith('.replay.json'):
-            # part 的方式录像存储, 通过 part_storage 的方式下载
+            # Replay stored using the part method, downloaded via part_storage
             part_storage = SessionPartReplayStorageHandler(session)
             offline_abs_path = part_storage.prepare_offline_tar_file()
         else:
@@ -186,7 +186,7 @@ class SessionViewSet(ReportExportMixin, OrgBulkModelViewSet):
 
         queryset = Session.objects.filter(is_finished=False) \
             .filter(asset_id=asset) \
-            .filter(protocol='rdp')  # 当前只统计 rdp 协议的会话
+            .filter(protocol='rdp')  # Currently only counts sessions using the rdp protocol
         if '(' in account and ')' in account:
             queryset = queryset.filter(account=account)
         else:
@@ -243,7 +243,7 @@ class SessionReplayViewSet(AsyncApiMixin, viewsets.ViewSet):
 
         if serializer.is_valid():
             file = serializer.validated_data['file']
-            # 兼容旧版本 API 未指定 version 为 2 的情况
+            # Compatible with the older API case where version was not specified as 2
             version = serializer.validated_data.get('version', 2)
             name, err = session.save_replay_to_storage_with_version(file, version)
             if not name:
@@ -270,7 +270,7 @@ class SessionReplayViewSet(AsyncApiMixin, viewsets.ViewSet):
             ## .replay.mp4 .part.mp4
             tp = 'mp4'
         elif url.endswith('replay.json'):
-            # 新版本将返回元数据信息
+            # The newer version returns metadata information
             tp = 'parts'
         elif (getattr(session.terminal, 'type', None) in all_guacamole_types) or \
                 (session.protocol in ('rdp', 'vnc')):
@@ -329,7 +329,7 @@ class SessionReplayViewSet(AsyncApiMixin, viewsets.ViewSet):
 
 class SessionJoinValidateAPI(views.APIView):
     """
-    监控用
+    For monitoring use
     """
     serializer_class = serializers.SessionJoinValidateSerializer
     rbac_perms = {

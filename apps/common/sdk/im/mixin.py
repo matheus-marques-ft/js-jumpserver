@@ -20,7 +20,7 @@ class RequestMixin:
 
 class BaseRequest(RequestMixin):
     """
-    定义了 `access_token` 的过期刷新框架
+    Defines the expiration/refresh framework for `access_token`
     """
     invalid_token_errcodes = ()
     code_key = 'errcode'
@@ -36,7 +36,8 @@ class BaseRequest(RequestMixin):
     def check_errcode_is_0(cls, data: DictWrapper):
         errcode = data[cls.code_key]
         if errcode != 0:
-            # 如果代码写的对，配置没问题，这里不该出错，系统性错误，直接抛异常
+            # If the code is correct and the config is fine, this shouldn't
+            # error out; it's a systemic error, so raise directly
             errmsg = data[cls.msg_key]
             logger.error(f'Response 200 but errcode is not 0: '
                          f'errcode={errcode} '
@@ -46,7 +47,7 @@ class BaseRequest(RequestMixin):
     @staticmethod
     def check_http_is_200(response):
         if response.status_code != 200:
-            # 正常情况下不会返回非 200 响应码
+            # Under normal circumstances a non-200 status code should not be returned
             logger.error(f'Response error: '
                          f'status_code={response.status_code} '
                          f'url={response.url}'
@@ -55,19 +56,19 @@ class BaseRequest(RequestMixin):
 
     def request_access_token(self):
         """
-        获取新的 `access_token` 的方法，子类需要实现
+        Method to obtain a new `access_token`; subclasses need to implement this
         """
         raise NotImplementedError
 
     def get_access_token_cache_key(self):
         """
-        获取 `access_token` 的缓存 key， 子类需要实现
+        Gets the cache key for `access_token`; subclasses need to implement this
         """
         raise NotImplementedError
 
     def add_token(self, kwargs: dict):
         """
-        添加 token ，子类需要实现
+        Adds the token; subclasses need to implement this
         """
         raise NotImplementedError
 
@@ -109,7 +110,7 @@ class BaseRequest(RequestMixin):
 
     def token_request(self, method, url, **kwargs):
         for i in range(3):
-            # 循环为了防止 access_token 失效
+            # Loop to guard against access_token expiring
             self.add_token(kwargs)
             data = self.raw_request(method, url, **kwargs)
 

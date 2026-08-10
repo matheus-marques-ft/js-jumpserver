@@ -303,7 +303,7 @@ class ReplayStorageSerializer(BaseStorageSerializer):
 
     def validate_is_default(self, value):
         if self.initial_data.get('type') == const.ReplayStorageType.sftp.value:
-            # sftp不能设置为默认存储
+            # sftp cannot be set as the default storage
             return False
         else:
             return value

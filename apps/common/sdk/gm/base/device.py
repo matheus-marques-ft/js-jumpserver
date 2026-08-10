@@ -16,7 +16,7 @@ class Device:
         if self.__device is not None:
             return
 
-        # 如果设置里指定了 要覆盖
+        # If specified in settings, override it
         if settings.GM_DRIVER_PATH:
             driver_path = settings.GM_DRIVER_PATH
 

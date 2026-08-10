@@ -29,7 +29,7 @@ class ServerPerformanceMessage(SystemMessage):
             formatted_errors = []
             for error in errors:
                 item, kwargs = error
-                # format 不能提前，否则会用系统默认语言翻译
+                # Do not format ahead of time, otherwise it will be translated using the system default language
                 msg = item.format(**kwargs)
                 formatted_errors.append(msg)
             terms_with_errors.append((term, formatted_errors))
@@ -45,7 +45,7 @@ class ServerPerformanceMessage(SystemMessage):
     @classmethod
     def post_insert_to_db(cls, subscription: SystemMsgSubscription):
         from rbac.models import Role, RoleBinding
-        # Todo: 需要更改这里
+        # Todo: need to change this
         admin_role = Role.BuiltinRole.system_admin.get_role()
         admins_ids = RoleBinding.objects.filter(role=admin_role).values_list('user_id', flat=True)
         admins = User.objects.filter(id__in=admins_ids)

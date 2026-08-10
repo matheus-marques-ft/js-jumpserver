@@ -78,7 +78,7 @@ class BaseHandler:
         if self.ticket.type != TicketType.apply_asset:
             return diff_context
 
-        # 企业微信，钉钉审批不做diff
+        # No diff for WeCom/DingTalk approvals
         if not hasattr(self.ticket, 'old_rel_snapshot'):
             return diff_context
 
@@ -95,7 +95,7 @@ class BaseHandler:
         return {'headers': headers, 'content': content}
 
     def _create_state_change_comment(self, state):
-        # 打开或关闭工单，备注显示是自己，其他是受理人
+        # When opening or closing the ticket, the comment shows the current user; otherwise it shows the processor
         if state in [TicketState.pending, TicketState.closed]:
             user = self.ticket.applicant
         else:

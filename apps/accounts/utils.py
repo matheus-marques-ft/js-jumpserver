@@ -48,7 +48,7 @@ class SecretGenerator:
 
 
 def validate_password_for_ansible(password):
-    """校验 Ansible 不支持的特殊字符"""
+    """Validate special characters not supported by Ansible"""
     if password.startswith("{{") and password.endswith("}}"):
         raise serializers.ValidationError(
             _(

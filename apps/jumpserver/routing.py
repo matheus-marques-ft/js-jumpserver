@@ -38,7 +38,7 @@ def get_signature_user(scope):
         return
     if scope['type'] == 'websocket':
         scope['method'] = 'GET'
-    # 因为 ws 使用的是 scope，所以需要转换成 request 对象，用于认证校验
+    # Since ws uses scope, it needs to be converted into a request object for auth validation
     request = ASGIRequest(scope, None)
     backends = [SignatureAuthentication(),
                 AccessTokenAuthentication()]

@@ -1,8 +1,8 @@
 from rest_framework import serializers
 
 example_info = [
-    {"name": "name", "label": "姓名", "required": False, "default": "广州老广", "type": "str"},
-    {"name": "age", "label": "年龄", "required": False, "default": 18, "type": "int"},
+    {"name": "name", "label": "Name", "required": False, "default": "John Doe", "type": "str"},
+    {"name": "age", "label": "Age", "required": False, "default": 18, "type": "int"},
 ]
 
 type_field_map = {
@@ -50,7 +50,7 @@ def create_serializer_class(serializer_name, fields_info):
         data = {k: field_info.get(k) for k in fields_name}
         field_type = data.pop('type', 'str')
 
-        # 用户定义 default 和 required 可能会冲突, 所以要处理一下
+        # The user-defined default and required may conflict, so handle it
         default = data.get('default', None)
         if default is None:
             data.pop('default', None)

@@ -32,7 +32,7 @@ class GMDeviceSM4EcbCrypto(BaseCrypto):
     def to_16(key):
         while len(key) % 16 != 0:
             key += b'\0'
-        return key  # 返回bytes
+        return key  # returns bytes
 
     def __init__(self, key, device: Device):
         key = padding_key(key, 16)

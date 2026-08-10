@@ -11,7 +11,7 @@ logger = get_logger(__file__)
 mfa_custom_method = None
 
 if settings.MFA_CUSTOM:
-    """ 保证自定义的方法在服务运行时不能被更改，只在第一次调用时加载一次 """
+    """ Ensure the custom method cannot be changed while the service is running; load it only once on first call """
     try:
         mfa_custom_method_path = 'data.mfa.main.check_code'
         mfa_custom_method = import_string(mfa_custom_method_path)

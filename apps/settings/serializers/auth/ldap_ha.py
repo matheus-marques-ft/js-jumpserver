@@ -24,7 +24,7 @@ class LDAPHATestConfigSerializer(serializers.Serializer):
 
 
 class LDAPHASettingSerializer(LDAPSerializerMixin, serializers.Serializer):
-    # encrypt_fields 现在使用 write_only 来判断了
+    # encrypt_fields is now determined via write_only
     PREFIX_TITLE = _('LDAP HA')
 
     AUTH_LDAP_HA_SERVER_URI = serializers.CharField(

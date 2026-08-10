@@ -8,8 +8,8 @@ from common.db.models import BaseCreateUpdateModel, CASCADE_SIGNAL_SKIP
 
 class SSOToken(BaseCreateUpdateModel):
     """
-    类似腾讯企业邮的 [单点登录](https://exmail.qq.com/qy_mng_logic/doc#10036)
-    出于安全考虑，这里的 `token` 使用一次随即过期。但我们保留每一个生成过的 `token`。
+    Similar to Tencent Enterprise Mail's [single sign-on](https://exmail.qq.com/qy_mng_logic/doc#10036)
+    For security reasons, the `token` here expires immediately after one use. However, we keep every `token` that has been generated.
     """
     authkey = models.UUIDField(primary_key=True, default=uuid.uuid4, verbose_name=_('Token'))
     expired = models.BooleanField(default=False, verbose_name=_('Expired'))

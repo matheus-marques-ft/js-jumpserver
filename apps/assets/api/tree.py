@@ -26,7 +26,7 @@ __all__ = [
 
 class NodeChildrenApi(generics.ListCreateAPIView):
     """
-    节点的增删改查
+    Create, read, update, delete nodes
     """
     serializer_class = serializers.NodeSerializer
     search_fields = ('value',)
@@ -50,7 +50,7 @@ class NodeChildrenApi(generics.ListCreateAPIView):
             value = self.instance.get_next_child_preset_name()
         with NodeAddChildrenLock(self.instance):
             node = self.instance.create_child(value=value, _id=_id)
-            # 避免查询 full value
+            # Avoid querying full value
             node._full_value = node.value
             serializer.instance = node
 
@@ -100,7 +100,7 @@ class NodeChildrenApi(generics.ListCreateAPIView):
 
 class NodeChildrenAsTreeApi(SerializeToTreeNodeMixin, NodeChildrenApi):
     """
-    节点子节点作为树返回，
+    Return the node's children as a tree,
     [
       {
         "id": "",
@@ -173,7 +173,7 @@ class CategoryTreeApi(SerializeToTreeNodeMixin, generics.ListAPIView):
 
     def list(self, request, *args, **kwargs):
         include_asset = self.request.query_params.get('assets', '0') == '1'
-        # 资源数量统计可选项 (asset, account, none)
+        # Resource count statistics option (asset, account, none)
         count_resource = self.request.query_params.get('count_resource', 'asset')
 
         if not self.request.query_params.get('key'):

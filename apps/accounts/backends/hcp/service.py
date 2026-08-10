@@ -44,7 +44,7 @@ class VaultKVClient(object):
         self.client.sys.enable_secrets_engine(
             backend_type='kv',
             path=self.mount_point,
-            options={'version': 2}  # TODO: version 是否从配置中读取?
+            options={'version': 2}  # TODO: should version be read from the configuration?
         )
         self.client.secrets.kv.v2.configure(
             max_versions=self.max_versions,
@@ -67,11 +67,11 @@ class VaultKVClient(object):
         self._update_or_create(path=path, data=data)
 
     def update(self, path, data: dict):
-        """ 未更新的数据会被删除 """
+        """ Data that is not updated will be deleted """
         self._update_or_create(path=path, data=data)
 
     def patch(self, path, data: dict):
-        """ 未更新的数据不会被删除 """
+        """ Data that is not updated will not be deleted """
         self.client.secrets.kv.v2.patch(
             path=path,
             secret=data,

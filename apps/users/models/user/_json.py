@@ -22,7 +22,7 @@ class JSONFilterMixin:
         if match == "m2m_all":
             user_id = (
                 bindings.values("user_id")
-                .annotate(count=Count("user_id")) # 这里不能有 distinct 会导致 count 不准确, acls 中过滤用户时会出现问题
+                .annotate(count=Count("user_id")) # There must be no distinct here, otherwise the count would be inaccurate and cause problems when filtering users in acls
                 .filter(count=len(value))
                 .values_list("user_id", flat=True)
             )

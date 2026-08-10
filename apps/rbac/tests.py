@@ -3,21 +3,21 @@ from django.test import TestCase
 # Create your tests here.
 
 # TODO: Model
-# 用户             User
-# 角色             Role
-# 权限             Permission
-# 用户-角色 关系    RoleBinding
-# 角色-权限 关系    Role
+# User               User
+# Role               Role
+# Permission         Permission
+# User-Role relation RoleBinding
+# Role-Permission relation Role
 
 
 # TODO:
-#  1. 创建用户、邀请用户 (给用户添加角色)
-#  2. 创建角色 (创建角色并指定权限集)
-#  3. APIView 控制用户访问权限 (获取用户访问API行为的codename，获取用户角色-权限，判断是否包含)
-#  4. 获取权限集 (分类获取 scope: system、org、app)
-#  5. 定义权限位 (整理所有权限位并分类，同时在Model中重新定义权限名称)
-#  7. 添加内置角色
-#  6. 修改用户Model/Serializer/API，删除旧role字段，关联新role
-#  8. 权限位名称翻译 (整理一个dict，key为codename，value为翻译)
-#  9. 修改用户-组织关联的角色，修改表结构
-#  10. 前端获取所有权限，给每个按钮添加对应的权限控制指令
+#  1. Create user, invite user (add role to user)
+#  2. Create role (create role and assign a permission set)
+#  3. APIView controls user access permission (get the codename for the user's API access action, get the user's role-permissions, check whether it's included)
+#  4. Get permission set (get by category, scope: system, org, app)
+#  5. Define permission bits (organize and categorize all permission bits, and redefine permission names in the Model)
+#  7. Add built-in roles
+#  6. Update user Model/Serializer/API, remove the old role field, link to the new role
+#  8. Translate permission bit names (build a dict, key is codename, value is the translation)
+#  9. Update the role associated with the user-org relation, update the table schema
+#  10. Frontend fetches all permissions and adds the corresponding permission control directive to each button

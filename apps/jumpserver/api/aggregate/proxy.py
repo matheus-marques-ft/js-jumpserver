@@ -18,7 +18,7 @@ BASE_URL = "http://localhost:8080"
 
 class ProxyMixin(APIView):
     """
-    通用资源代理 API，支持动态路径、自动文档生成
+    Generic resource proxy API, supports dynamic paths and auto-generated documentation
     """
     permission_classes = [IsAuthenticated]
 
@@ -68,7 +68,7 @@ class ProxyMixin(APIView):
             if 'application/json' in content_type:
                 data = resp.json()
             else:
-                data = resp.text  # 或者 bytes：resp.content
+                data = resp.text  # or bytes: resp.content
 
             return Response(data=data, status=resp.status_code)
         except requests.RequestException as e:

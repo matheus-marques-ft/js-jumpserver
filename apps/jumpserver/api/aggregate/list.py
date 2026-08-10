@@ -64,7 +64,7 @@ class ResourceListApi(ProxyMixin, APIView):
           OPTIONS /api/v1/resources/{resource}/?action=get to get every type resource's field type and help text.
         """,
     )
-    # ↓↓↓ Swagger 自动文档 ↓↓↓
+    # ↓↓↓ Swagger auto-generated documentation ↓↓↓
     def get(self, request, resource):
         return self._proxy(request, resource)
 

@@ -78,7 +78,7 @@ class RebuildTreeMixin:
         return force
 
     def compute_is_force_refresh(self):
-        """ 5s 内连续刷新三次转为强制刷新 """
+        """ Force a refresh if refreshed three times in a row within 5 seconds """
         force_timeout = 5
         force_max_count = 3
         force_cache_key = '{user_id}:{path}'.format(user_id=self.user.id, path=self.request.path)

@@ -38,8 +38,8 @@ class VaultQuerySetMixin(models.QuerySet):
 
     def update(self, **kwargs):
         """
-           1. 替换 secret 为 _secret
-           2. 触发 post_save 信号
+           1. Replace secret with _secret
+           2. Trigger the post_save signal
         """
         if 'secret' in kwargs:
             kwargs.update({
@@ -47,7 +47,7 @@ class VaultQuerySetMixin(models.QuerySet):
             })
         rows = super().update(**kwargs)
 
-        # 为了获取更新后的对象所以单独查询一次
+        # Query separately to get the updated object
         ids = self.values_list('id', flat=True)
         objs = self.model.objects.filter(id__in=ids)
         for obj in objs:
@@ -56,7 +56,7 @@ class VaultQuerySetMixin(models.QuerySet):
 
 
 class VaultManagerMixin(models.Manager):
-    """ 触发 bulk_create 和 bulk_update 操作下的 post_save 信号 """
+    """ Trigger the post_save signal under bulk_create and bulk_update operations """
 
     def bulk_create(self, objs, batch_size=None, ignore_conflicts=False):
         objs = super().bulk_create(objs, batch_size=batch_size, ignore_conflicts=ignore_conflicts)
@@ -79,7 +79,7 @@ class VaultModelMixin(models.Model):
     class Meta:
         abstract = True
 
-    # 缓存 secret 值, lazy-property 不能用
+    # Cache the secret value, lazy-property cannot be used
     __secret = None
 
     @property
@@ -89,7 +89,7 @@ class VaultModelMixin(models.Model):
         from accounts.backends import vault_client
         secret = vault_client.get(self)
         if not secret and not self.secret_has_save_to_vault:
-            # vault_client 获取不到, 并且 secret 没有保存到 vault, 就从 self._secret 获取
+            # If vault_client cannot get it and the secret has not been saved to the vault, get it from self._secret
             secret = self._secret
         self.__secret = secret
         return self.__secret
@@ -97,8 +97,8 @@ class VaultModelMixin(models.Model):
     @secret.setter
     def secret(self, value):
         """
-        保存的时候通过 post_save 信号监听进行处理,
-        先保存到 db, 再保存到 vault 同时删除本地 db _secret 值
+        When saving, this is handled via the post_save signal listener:
+        first saved to the db, then saved to the vault while deleting the local db _secret value
         """
         self._secret = value
         self.__secret = value
@@ -117,7 +117,7 @@ class VaultModelMixin(models.Model):
         return self._secret == self._secret_save_to_vault_mark
 
     def save(self, *args, **kwargs):
-        """ 通过 post_save signal 处理 _secret 数据 """
+        """ Handle the _secret data via the post_save signal """
         update_fields = kwargs.get('update_fields')
         if update_fields and 'secret' in update_fields:
             update_fields.remove('secret')

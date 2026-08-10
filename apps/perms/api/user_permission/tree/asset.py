@@ -16,7 +16,7 @@ __all__ = [
 
 
 class AssetTreeMixin(RebuildTreeMixin, SerializeToTreeNodeMixin):
-    """ 将资产序列化成树节点的结构返回 """
+    """ Serialize assets into a tree node structure and return them """
     filter_queryset: callable
     get_queryset: callable
 
@@ -25,19 +25,19 @@ class AssetTreeMixin(RebuildTreeMixin, SerializeToTreeNodeMixin):
     def list(self, request, *args, **kwargs):
         assets = self.filter_queryset(self.get_queryset())
         if request.query_params.get('search'):
-            """ 限制返回数量, 搜索的条件不精准时，会返回大量的无意义数据 """
+            """ Limit the number of results, since imprecise search conditions can return a large amount of meaningless data """
             assets = assets[:999]
         data = self.serialize_assets(assets, 'root')
         return Response(data=data)
 
 
 class UserAllPermedAssetsAsTreeApi(AssetTreeMixin, UserAllPermedAssetsApi):
-    """ 用户 '直接授权的资产' 作为树 """
+    """ The user's 'directly granted assets' as a tree """
     pass
 
 
 class UserUngroupAssetsAsTreeApi(UserAllPermedAssetsAsTreeApi):
-    """ 用户 '未分组节点的资产(直接授权的资产)' 作为树 """
+    """ The user's 'ungrouped node assets (directly granted assets)' as a tree """
 
     def get_assets(self):
         if settings.PERM_SINGLE_ASSET_TO_UNGROUP_NODE:

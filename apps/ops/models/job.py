@@ -416,7 +416,7 @@ class JobExecution(JMSOrgBaseModel):
         return os.path.join(settings.ANSIBLE_DIR, job_name, uniq)
 
     def set_error(self, error):
-        this = self.__class__.objects.get(id=self.id)  # 重新获取一次，避免数据库超时连接超时
+        this = self.__class__.objects.get(id=self.id)  # Fetch again to avoid a stale/timed-out database connection
         this.status = JobStatus.failed
         this.summary.update({'error': str(error)})
         this.finish_task()

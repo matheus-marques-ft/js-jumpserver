@@ -2,10 +2,10 @@ from django.conf import settings
 
 
 class BackendBase:
-    # User 表中的字段
+    # Field in the User table
     account_field = None
 
-    # Django setting 中的字段名
+    # Field name in Django settings
     is_enable_field_in_settings = None
 
     def get_accounts(self, users):

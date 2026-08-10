@@ -6,7 +6,7 @@ from users.views.profile.password import UserVerifyPasswordView
 
 
 def test_rsa_encrypt_decrypt(message='test-password-$%^&*'):
-    """ 测试加密/解密 """
+    """ Test encryption/decryption """
     print('Need to encrypt message: {}'.format(message))
     rsa_private_key, rsa_public_key = gen_key_pair()
     print('RSA public key: \n{}'.format(rsa_public_key))

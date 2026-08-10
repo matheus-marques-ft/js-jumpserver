@@ -10,7 +10,7 @@ class FTPFileStorageHandler(BaseStorageHandler):
 
     def find_local(self):
         local_path = self.obj.filepath
-        # 去default storage中查找
+        # Look it up in the default storage
         if default_storage.exists(local_path):
             url = default_storage.url(local_path)
             return local_path, url

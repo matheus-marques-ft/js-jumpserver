@@ -65,7 +65,7 @@ def build_absolute_uri_for_oidc(request, path=None):
     if path is None:
         path = '/'
     if settings.BASE_SITE_URL:
-        # OIDC 专用配置项
+        # OIDC-specific configuration item
         redirect_uri = urljoin(settings.BASE_SITE_URL, path)
         return redirect_uri
     return build_absolute_uri(request, path=path)
@@ -87,7 +87,7 @@ def get_auth_methods():
             'enabled': settings.AUTH_OPENID,
             'url': reverse('authentication:openid:login'),
             'logo': static('img/login_oidc_logo.png'),
-            'auto_redirect': True  # 是否支持自动重定向
+            'auto_redirect': True  # Whether automatic redirection is supported
         },
         {
             'name': 'CAS',

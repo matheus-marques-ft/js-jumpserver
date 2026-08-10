@@ -37,7 +37,7 @@ class UserCreatedMsg(UserMessage):
 
         user_info = {'username': user.username, 'name': user.name, 'email': user.email}
         with activate_user_language(self.user):
-            # 转换成 defaultdict，否则 format 时会报 KeyError
+            # Convert to defaultdict, otherwise format would raise a KeyError
             user_info = defaultdict(str, **user_info)
             mail_context = {k: v.format_map(user_info) for k, v in mail_context.items()}
 

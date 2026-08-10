@@ -12,7 +12,7 @@ class OtherSettingSerializer(serializers.Serializer):
         help_text=_("Perm single to ungroup node")
     )
 
-    # 准备废弃
+    # About to be deprecated
     # PERIOD_TASK_ENABLED = serializers.BooleanField(
     #     required=False, label=_("Enable period task")
     # )

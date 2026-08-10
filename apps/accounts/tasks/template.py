@@ -24,7 +24,7 @@ def template_sync_related_accounts(template_id, user_id=None):
     with tmp_to_org(org_id):
         accounts = Account.objects.filter(source_id=template_id)
     if not accounts:
-        print('\033[35m>>> 没有需要同步的账号, 结束任务')
+        print('\033[35m>>> No accounts need to be synced, ending task')
         print('\033[0m')
         return
 
@@ -35,7 +35,7 @@ def template_sync_related_accounts(template_id, user_id=None):
     secret_type = template.secret_type
     privileged = template.privileged
     print(
-        f'\033[32m>>> 开始同步模板名称、用户名、密钥类型到相关联的账号 ({datetime.now().strftime("%Y-%m-%d %H:%M:%S")})')
+        f'\033[32m>>> Starting sync of template name, username, and secret type to related accounts ({datetime.now().strftime("%Y-%m-%d %H:%M:%S")})')
     with tmp_to_org(org_id):
         for account in accounts:
             account.name = name
@@ -49,19 +49,19 @@ def template_sync_related_accounts(template_id, user_id=None):
             except Exception as e:
                 account.source_id = None
                 account.save(update_fields=['source_id'])
-                print(f'\033[31m- 同步失败: [{account}] 原因: [{e}]')
+                print(f'\033[31m- Sync failed: [{account}] Reason: [{e}]')
                 failed += 1
         accounts = Account.objects.filter(id__in=succeeded_account_ids)
         if accounts:
-            print(f'\033[33m>>> 批量更新账号密文 ({datetime.now().strftime("%Y-%m-%d %H:%M:%S")})')
+            print(f'\033[33m>>> Bulk updating account secrets ({datetime.now().strftime("%Y-%m-%d %H:%M:%S")})')
             template.bulk_sync_account_secret(accounts, user_id)
 
     total = succeeded + failed
     print(
-        f'\033[33m>>> 同步完成:, '
-        f'共计: {total}, '
-        f'成功: {succeeded}, '
-        f'失败: {failed}, '
+        f'\033[33m>>> Sync complete:, '
+        f'Total: {total}, '
+        f'Succeeded: {succeeded}, '
+        f'Failed: {failed}, '
         f'({datetime.now().strftime("%Y-%m-%d %H:%M:%S")}) '
     )
     print('\033[0m')

@@ -34,5 +34,5 @@ class Vault(BaseVault):
         pass
 
     def _clean_db_secret(self, instance):
-        """ Ignore *重要* 不能删除本地 secret """
+        """ Ignore *IMPORTANT* the local secret must not be deleted """
         pass

@@ -8,7 +8,7 @@ build_arg_defaults:
 
 
 images:
-  # ansible-builder 仅支持 RPM 系镜像 (dnf)，不能用 python:3.11-slim 等 Debian 镜像
+  # ansible-builder only supports RPM-based images (dnf); Debian-based images such as python:3.11-slim cannot be used
   base_image:
     name: quay.io/centos/centos:stream9
 
@@ -17,7 +17,7 @@ dependencies:
     package_system: python3.11
     python_path: /usr/bin/python3.11
 
-  # 与 pyproject.toml [tool.uv.sources] 保持一致，不要用 PyPI 官方包
+  # Keep in sync with pyproject.toml [tool.uv.sources]; do not use the official PyPI package
   ansible_core:
     package_pip: https://github.com/jumpserver-dev/ansible/archive/refs/tags/v2.16.18.3.zip
   ansible_runner:
@@ -38,11 +38,11 @@ additional_build_files:
 
 additional_build_steps:
   prepend_base:
-    # pip 镜像需在 base 阶段最早注入，后续各 stage 的 pip install 都会走国内源
+    # The pip mirror must be injected as early as possible in the base stage, so that pip install in every subsequent stage goes through the mirror
     - COPY _build/configs/pip.conf /etc/pip.conf
     - COPY _build/scripts/use-china-mirrors.sh /tmp/use-china-mirrors.sh
     - RUN chmod +x /tmp/use-china-mirrors.sh && /tmp/use-china-mirrors.sh centos
-    # freetds-devel、sshpass 等在 EPEL；postgresql-devel 等开发包常需 CRB
+    # freetds-devel, sshpass, etc. are in EPEL; dev packages such as postgresql-devel often require CRB
     - RUN $PKGMGR config-manager --set-enabled crb
     - RUN $PKGMGR install -y epel-release
     - RUN /tmp/use-china-mirrors.sh epel && $PKGMGR makecache -y
@@ -55,5 +55,5 @@ additional_build_steps:
     - ENV ANSIBLE_FORCE_COLOR=True
     - ENV LC_ALL=C.UTF-8
     - ENV LANG=C.UTF-8
-    # bindep [compile] 已避免工具链进入最终层；此处仅清理 PKGMGR_PRESERVE_CACHE 写入的 dnf 缓存
+    # bindep [compile] already keeps the toolchain out of the final layer; this only cleans up the dnf cache written by PKGMGR_PRESERVE_CACHE
     - RUN $PKGMGR clean all && rm -rf /var/cache/dnf /var/cache/yum /root/.cache

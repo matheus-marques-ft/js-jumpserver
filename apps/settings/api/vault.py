@@ -32,7 +32,7 @@ class VaultTestingAPI(GenericAPIView):
         for k, v in data.items():
             if v:
                 continue
-            # 页面没有传递值, 从 settings 中获取
+            # The page didn't pass a value, get it from settings
             data[k] = getattr(settings, k, None)
         return data
 

@@ -65,7 +65,7 @@ class TicketDirectApproveView(TemplateView):
         cache.delete(token)
 
     def get_context_data(self, **kwargs):
-        # 放入工单信息
+        # Add ticket info
         kwargs.update({
             'content': kwargs['ticket_info'].get('content', []),
             'prompt_msg': _('Click the button below to approve or reject'),

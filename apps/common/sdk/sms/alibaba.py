@@ -26,12 +26,12 @@ class AlibabaSMS(BaseSMSClient):
 
     def __init__(self, access_key_id: str, access_key_secret: str):
         config = open_api_models.Config(
-            # 您的AccessKey ID,
+            # Your AccessKey ID,
             access_key_id=access_key_id,
-            # 您的AccessKey Secret,
+            # Your AccessKey Secret,
             access_key_secret=access_key_secret
         )
-        # 访问的域名
+        # Domain to access
         config.endpoint = 'dysmsapi.aliyuncs.com'
         self.client = Dysmsapi20170525Client(config)
 
@@ -48,7 +48,7 @@ class AlibabaSMS(BaseSMSClient):
                         f'template_code={template_code} '
                         f'template_param={template_param}')
             response = self.client.send_sms(send_sms_request)
-            # 这里只判断是否成功，失败抛出异常
+            # Only check whether it succeeded here; raise an exception on failure
             if response.body.code != 'OK':
                 raise JMSException(detail=response.body.message, code=response.body.code)
         except TeaException as e:

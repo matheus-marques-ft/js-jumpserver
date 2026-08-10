@@ -49,14 +49,14 @@ class CommandGroup(JMSOrgBaseModel):
             cmd = re.escape(cmd)
             cmd = cmd.replace('\\ ', '\s+')
 
-            # 有空格就不能 铆钉单词了
+            # If there's a space, word boundaries can't be anchored
             if ' ' in _cmd:
                 regex.append(cmd)
                 continue
             if not cmd:
                 continue
 
-            # 如果是单个字符
+            # If it's a single character
             if cmd[-1].isalpha():
                 regex.append(r'\b{0}\b'.format(cmd))
             else:

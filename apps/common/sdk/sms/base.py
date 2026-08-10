@@ -5,7 +5,7 @@ logger = get_logger(__file__)
 
 class BaseSMSClient:
     """
-    短信终端的基类
+    Base class for SMS clients
     """
 
     SIGN_AND_TMPL_SETTING_FIELD_PREFIX: str

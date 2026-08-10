@@ -48,7 +48,7 @@ def create_or_update_celery_periodic_tasks(tasks):
                 every=detail['interval'],
                 period=IntervalSchedule.SECONDS,
             )
-            # 不能使用 get_or_create，因为可能会有多个
+            # Cannot use get_or_create, because there may be multiple
             interval = IntervalSchedule.objects.filter(**kwargs).first()
             if interval is None:
                 interval = IntervalSchedule.objects.create(**kwargs)
@@ -119,7 +119,7 @@ def get_celery_status():
     ping_data = i.ping() or {}
     active_nodes = [k for k, v in ping_data.items() if v.get('ok') == 'pong']
     active_queue_worker = set([n.split('@')[0] for n in active_nodes if n])
-    # Celery Worker 数量: 2
+    # Celery Worker count: 2
     if len(active_queue_worker) < 2:
         print("Not all celery worker worked")
         return False

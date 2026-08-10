@@ -22,12 +22,12 @@ def test():
     return tree
     tree.compute_tree_node_assets_amount()
 
-    print(f'校对算法准确性 ......')
+    print(f'Verifying algorithm accuracy ......')
     for node in nodes:
         tree_node = tree.key_tree_node_mapper[node.key]
         if tree_node.assets_amount != node.assets_amount:
             print(f'ERROR: {tree_node.assets_amount} {node.assets_amount}')
         # print(f'OK {tree_node.asset_amount} {node.assets_amount}')
 
-    print(f'数据库时间: {t2 - t1}')
+    print(f'Database time: {t2 - t1}')
     return tree

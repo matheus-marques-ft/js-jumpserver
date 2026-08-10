@@ -97,7 +97,7 @@ class CredentialError(
                 self.reason_code = error
                 self.reason_params = {}
                 self.msg = const.reason_choices.get(error, default_msg)
-        # 先处理 msg 在 super，记录日志时原因才准确
+        # Process msg before calling super, so the reason is accurate when logging
         super().__init__(error=error, username=username, ip=ip, request=request)
 
 

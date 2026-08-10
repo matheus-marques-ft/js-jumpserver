@@ -1,6 +1,6 @@
-//jumpserver 自定义js 2015-01-29
+//jumpserver custom js 2015-01-29
 
-//此函数用于checkbox的全选和反选
+//This function is used for checkbox select-all and deselect-all
 var checked = false;
 
 function check_all(form) {
@@ -30,7 +30,7 @@ function checkAll(id, name) {
     }
 }
 
-//提取指定行的数据，JSON格式
+//Extract the data of the specified row, in JSON format
 function GetRowData(row) {
     var rowData = {};
     for (var j = 0; j < row.cells.length; j++) {
@@ -46,7 +46,7 @@ function GetRowData(row) {
     return rowData;
 }
 
-//此函数用于在多选提交时至少要选择一行
+//This function ensures at least one row is selected when submitting a multi-select
 function GetTableDataBox() {
     var tabProduct = document.getElementById("editable");
     var tableData = [];
@@ -64,7 +64,7 @@ function GetTableDataBox() {
     }
 
     if (id_list.length === 0) {
-        alert('请至少选择一行！');
+        alert('Please select at least one row!');
     }
     returnData.push(tableData);
     returnData.push(id_list.length);
@@ -441,14 +441,14 @@ function parseTableFilter(value) {
         if (!v) {
             continue
         }
-        // 如果是最后一个元素，直接push，不需要再处理了, 因为最后一个肯定不是key
+        // If it's the last element, just push it, no further processing needed, because the last one is definitely not a key
         if (i === valuesArray.length - 1) {
             cleanValues.push(v);
             continue
         }
         v = v.split(' ');
-        // 如果长度是1，直接push上
-        // 如果长度不是1，根据空格分隔后，最后面的是key
+        // If the length is 1, just push it
+        // If the length is not 1, after splitting by space, the last part is the key
         if (v.length === 1) {
             cleanValues.push(v[0]);
         } else {
@@ -785,17 +785,17 @@ jumpserver.initServerSideDataTable = function (options) {
 };
 
 /**
- * 替换所有匹配exp的字符串为指定字符串
- * @param exp 被替换部分的正则
- * @param newStr 替换成的字符串
+ * Replace all strings matching exp with the specified string
+ * @param exp regex for the part to be replaced
+ * @param newStr the string to replace it with
  */
 String.prototype.replaceAll = function (exp, newStr) {
     return this.replace(new RegExp(exp, "gm"), newStr);
 };
 
 /**
- * 原型：字符串格式化
- * @param args 格式化参数值
+ * Prototype: string formatting
+ * @param args formatting argument values
  */
 String.prototype.format = function (args) {
     var result = this;
@@ -916,7 +916,7 @@ function getRuleLabel(rule) {
     return label
 }
 
-// 校验密码-改变规则颜色
+// Validate password - change rule color
 function checkPasswordRules(password, minLength) {
     if (wordMinLength(password, minLength)) {
         $('#' + rules_short_map_id['min']).css('color', 'green')
@@ -949,35 +949,35 @@ function checkPasswordRules(password, minLength) {
     }
 }
 
-// 最小长度
+// Minimum length
 function wordMinLength(word, minLength) {
     //var minLength = {{ min_length }};
     var re = new RegExp("^(.{" + minLength + ",})$");
     return word.match(re)
 }
 
-// 大写字母
+// Uppercase letters
 function wordUpperCase(word) {
     return word.match(/([A-Z]+)/)
 }
 
-// 小写字母
+// Lowercase letters
 function wordLowerCase(word) {
     return word.match(/([a-z]+)/)
 }
 
-// 数字字符
+// Numeric characters
 function wordNumber(word) {
     return word.match(/([\d]+)/)
 }
 
-// 特殊字符
+// Special characters
 function wordSpecialChar(word) {
     return word.match(/[`,~,!,@,#,\$,%,\^,&,\*,\(,\),\-,_,=,\+,\{,\},\[,\],\|,\\,;,',:,",\,,\.,<,>,\/,\?]+/)
 }
 
 
-// 显示弹窗密码规则
+// Show popup password rules
 function popoverPasswordRules(password_check_rules, $el) {
     var message = "";
     jQuery.each(password_check_rules, function (idx, rule) {
@@ -987,7 +987,7 @@ function popoverPasswordRules(password_check_rules, $el) {
     $el.html(message)
 }
 
-// 初始化弹窗popover
+// Initialize the popup popover
 function initPopover($container, $progress, $idPassword, $el, password_check_rules, i18n_fallback) {
     options = {};
     // User Interface
@@ -1158,9 +1158,9 @@ function readFile(ref) {
     var files = ref.prop('files');
     var hasFile = files && files.length > 0;
     if (hasFile) {
-        var reader = new FileReader();//新建一个FileReader
-        reader.readAsText(files[0], "UTF-8");//读取文件
-        reader.onload = function (evt) { //读取完文件之后会回来这里
+        var reader = new FileReader();//create a new FileReader
+        reader.readAsText(files[0], "UTF-8");//read the file
+        reader.onload = function (evt) { //comes back here once the file has been read
             ref.trigger("onload", evt.target.result);
         };
     } else {
@@ -1283,7 +1283,7 @@ function initDateRangePicker(selector, options) {
         applyLabel: "应用",
         cancelLabel: "取消",
         resetLabel: "重置",
-        daysOfWeek: ["日", "一", "二", "三", "四", "五", "六"],//汉化处理
+        daysOfWeek: ["日", "一", "二", "三", "四", "五", "六"],//localization
         monthNames: ["一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"],
     };
     var enLocale = {

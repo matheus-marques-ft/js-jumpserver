@@ -93,7 +93,9 @@ class CMPP2SMSSettingSerializer(BaseSMSSettingSerializer):
         if template_code.find('{code}') == -1:
             raise serializers.ValidationError(_('The template needs to contain {code}'))
         if len(sign_name + template_code) > 65:
-            # 保证验证码内容在一条短信中(长度小于70字), 签名两边的括号和空格占3个字，再减去2个即可(验证码占用4个但占位符6个
+            # Ensure the verification code content fits in a single SMS (length under 70 characters); the parentheses
+            # and spaces around the signature take up 3 characters, so subtracting 2 is enough (the code itself takes
+            # 4 characters but the placeholder takes 6)
             raise serializers.ValidationError(_('Signature + Template must not exceed 65 words'))
         return attrs
 
@@ -114,7 +116,8 @@ class CustomSMSSettingSerializer(BaseSMSSettingSerializer):
     def validate(self, attrs):
         need_params = {'{phone_numbers}', '{code}'}
         params = attrs.get('CUSTOM_SMS_API_PARAMS', {})
-        # 这里用逗号分隔是保证需要的参数必须是完整的，不能分开在不同的参数中首位相连
+        # Joining with commas here ensures the required parameters must be complete and can't have their
+        # start/end concatenated across different parameters
         params_string = ','.join(params.values())
         for param in need_params:
             if param not in params_string:

@@ -14,7 +14,7 @@ __all__ = ['SSHKeySerializer', 'GenerateKeyType']
 
 class GenerateKeyType(TextChoices):
     auto = 'auto', _('Automatically Generate Key Pair')
-    # 目前只支持sftp方式
+    # Currently only supports the sftp method
     load = 'load', _('Import Existing Key Pair')
 
 

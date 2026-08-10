@@ -66,7 +66,7 @@ class AssetPlatformViewSet(JMSModelViewSet):
     page_no_limit = True
 
     def get_queryset(self):
-        # 因为没有走分页逻辑，所以需要这里 prefetch
+        # Since pagination isn't used here, we need to prefetch
         asset_count_subquery = (
             Asset.objects.filter(platform=OuterRef('pk'))
             .values('platform')

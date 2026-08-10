@@ -11,7 +11,7 @@ logger = get_logger(__file__)
 custom_authenticate_method = None
 
 if settings.AUTH_CUSTOM:
-    """ 保证自定义认证方法在服务运行时不能被更改，只在第一次调用时加载一次 """
+    """ Ensure the custom authentication method cannot be changed while the service is running; load it only once on first call """
     try:
         custom_auth_method_path = 'data.auth.main.authenticate'
         custom_authenticate_method = import_string(custom_auth_method_path)

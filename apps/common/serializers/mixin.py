@@ -40,8 +40,8 @@ __all__ = [
 
 class SecretReadableCheckMixin(serializers.Serializer):
     """
-    根据 SECURITY_DISABLE_VIEW_SECRET 配置控制密码字段的可读性
-    当配置为 True 时，密码字段返回 <REDACTED>
+    Controls the readability of password fields based on the SECURITY_DISABLE_VIEW_SECRET setting
+    When set to True, password fields return <REDACTED>
     """
 
     def to_representation(self, instance):
@@ -56,7 +56,7 @@ class SecretReadableCheckMixin(serializers.Serializer):
 
 
 class SecretReadableMixin(serializers.Serializer):
-    """加密字段 (EncryptedField) 可读性"""
+    """Readability of encrypted fields (EncryptedField)"""
 
     def __init__(self, *args, **kwargs):
         super(SecretReadableMixin, self).__init__(*args, **kwargs)
@@ -120,12 +120,12 @@ class BulkSerializerMixin(object):
 
     def run_validation(self, data=empty):
         """
-        批量创建时，获取到的self.initial_data是list，
-        所以想用一个属性来存放当前操作的数据集，在validate_field中使用
+        During bulk creation, the self.initial_data obtained is a list,
+        so an attribute is used to store the current dataset being operated on, for use in validate_field
         :param data:
         :return:
         """
-        # 只有批量创建的时候，才需要重写 initial_data
+        # initial_data only needs to be overridden during bulk creation
         if self.parent:
             self.initial_data = data
         return super().run_validation(data)
@@ -359,7 +359,7 @@ class DefaultValueFieldsMixin:
 
 class DynamicFieldsMixin:
     """
-    可以控制显示不同的字段，mini 最少，small 不包含关系
+    Can control which fields are displayed; mini shows the fewest, small excludes relations
     """
 
     dynamic_fields_plugins = [

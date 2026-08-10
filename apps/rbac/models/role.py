@@ -23,7 +23,7 @@ class OrgRoleManager(models.Manager):
 
 
 class Role(JMSBaseModel):
-    """ 定义 角色 ｜ 角色-权限 关系 """
+    """ Defines the Role | Role-Permission relationship """
     Scope = const.Scope
 
     name = models.CharField(max_length=128, verbose_name=_('Name'))

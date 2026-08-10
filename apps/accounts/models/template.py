@@ -83,7 +83,7 @@ class AccountTemplate(LabeledMixin, BaseAccount, SecretWithRandomMixin):
         history_model.objects.bulk_create(history_account_objs)
 
     def bulk_sync_account_secret(self, accounts, user_id):
-        """ 批量同步账号密码 """
+        """ Batch sync account passwords """
         self.bulk_update_accounts(accounts)
         self.bulk_create_history_accounts(accounts, user_id)
 

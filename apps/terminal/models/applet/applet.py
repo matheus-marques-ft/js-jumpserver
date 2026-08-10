@@ -332,20 +332,20 @@ class Applet(JMSBaseModel):
         private_account = self._select_a_private_account(user, host, valid_accounts)
         if not private_account:
             return None
-        # 优先使用 private account，支持并发或者不支持并发时，如果私有没有被占用，则使用私有
+        # Prefer using the private account; whether concurrency is supported or not, use the private one if it isn't occupied
         account = None
-        # 如果都支持，不管私有是否被占用，都使用私有
+        # If both support concurrency, use the private account regardless of whether it's occupied
         if all_can_concurrent:
             logger.debug('All can concurrent, use private account')
             account = private_account
-        # 如果主机都不支持并发，则查询一下私有账号有没有任何应用使用，如果没有被使用，则使用私有
+        # If the host doesn't support concurrency, check whether the private account is used by any app; use it if not
         elif not host_can_concurrent:
             private_using_key = self.accounts_using_key_tmpl.format(host.id, private_account.username, '*')
             private_is_using = len(cache.keys(private_using_key))
             logger.debug("Private account is using: {}".format(private_is_using))
             if not private_is_using:
                 account = private_account
-        # 如果主机支持，但是应用不支持并发，则查询一下私有账号有没有被这个应用使用, 如果没有被使用，则使用私有
+        # If the host supports it but the app doesn't support concurrency, check whether the private account is used by this app; use it if not
         elif host_can_concurrent and not app_can_concurrent:
             private_app_using_key = self.accounts_using_key_tmpl.format(host.id, private_account.username, self.name)
             private_is_using_by_this_app = cache.get(private_app_using_key, False)
@@ -355,12 +355,12 @@ class Applet(JMSBaseModel):
         return account
 
     def select_host_account(self, user, asset):
-        # 选择激活的发布机
+        # Select an active applet host
         host = self.select_host(user, asset)
         if not host:
             return None
         logger.info('Select applet host: {}'.format(host.name))
-        # 过滤掉未激活的账号
+        # Filter out inactive accounts
         valid_accounts = host.accounts.all().filter(privileged=False, is_active=True)
         account = self.try_to_use_private_account(user, host, valid_accounts)
         if not account:

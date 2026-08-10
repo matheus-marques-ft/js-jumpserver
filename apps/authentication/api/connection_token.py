@@ -265,13 +265,13 @@ class RDPFileClientProtocolURLMixin:
             client_options = settings.LUNA_DEFAULT_RDP_CLIENT_OPTION
         client_options = set(client_options)
 
-        # 设置多屏显示
+        # Configure multi-monitor display
         multi_mon_value = self.request.query_params.get('multi_mon')
         multi_mon = 'multi_screen' in client_options if multi_mon_value is None else is_true(multi_mon_value)
         if multi_mon:
             rdp_options['use multimon:i'] = '1'
 
-        # 设置磁盘挂载
+        # Configure drive mounting
         drives_redirect_value = self.request.query_params.get('drives_redirect')
         drives_redirect = (
             'drives_redirect' in client_options
@@ -281,20 +281,20 @@ class RDPFileClientProtocolURLMixin:
             if ActionChoices.contains(token.actions, ActionChoices.transfer()):
                 rdp_options['drivestoredirect:s'] = '*'
 
-        # 设置全屏
+        # Configure full screen
         full_screen_value = self.request.query_params.get('full_screen')
         full_screen = 'full_screen' in client_options if full_screen_value is None else is_true(full_screen_value)
         rdp_options['screen mode id:i'] = '2' if full_screen else '1'
 
-        # 设置 RDP Server 地址
+        # Configure RDP server address
         endpoint = self.get_smart_endpoint(protocol='rdp', asset=token.asset)
         rdp_options['full address:s'] = f'{endpoint.host}:{endpoint.rdp_port}'
 
-        # 设置用户名
+        # Configure username
         rdp_options['username:s'] = '{}|{}'.format(token.user.username, str(token.id))
         # rdp_options['domain:s'] = token.account_ad_domain
 
-        # 设置宽高
+        # Configure width and height
 
         resolution_value = token.connect_options.get('resolution')
         if not resolution_value:
@@ -317,7 +317,7 @@ class RDPFileClientProtocolURLMixin:
                 default=os.getenv('JUMPSERVER_COLOR_DEPTH', settings.LUNA_DEFAULT_RDP_COLOR_QUALITY)
             )
 
-        # 设置其他选项
+        # Configure other options
         rdp_options['session bpp:i'] = color_quality
         rdp_options['audiomode:i'] = self.parse_env_bool('JUMPSERVER_DISABLE_AUDIO', 'false', '2', '0')
         smart_size = self.request.query_params.get('rdp_smart_size')
@@ -328,7 +328,7 @@ class RDPFileClientProtocolURLMixin:
             )
         rdp_options['smart sizing:i'] = smart_size
 
-        # 设置远程应用, 不是 Mstsc
+        # Configure remote app, not Mstsc
         if token.connect_method != NativeClient.mstsc:
             remote_app_options = token.get_remote_app_option()
             rdp_options.update(remote_app_options)
@@ -339,7 +339,7 @@ class RDPFileClientProtocolURLMixin:
         rdp_connection_speed = token.connect_options.get('rdp_connection_speed', 'auto')
         rdp_options.update(RDP_CONNECTION_SPEED_OPTION_MAP.get(rdp_connection_speed, {}))
 
-        # 文件名
+        # File name
         name = token.asset.name
         prefix_name = f'{token.user.username}-{name}'
         filename = self.get_connect_filename(prefix_name)
@@ -365,7 +365,7 @@ class RDPFileClientProtocolURLMixin:
         return filename
 
     @staticmethod
-    def get_token_account_display(token):  #新增方法
+    def get_token_account_display(token):  # newly added method
             try:
                 account = token.account_object
             except Exception:
@@ -388,13 +388,13 @@ class RDPFileClientProtocolURLMixin:
         if connect_method_dict is None:
             raise ValueError('Connect method not support: {}'.format(connect_method_name))
 
-        account = self.get_token_account_display(token)  #修改account
+        account = self.get_token_account_display(token)  # modified account
         datetime = timezone.localtime(timezone.now()).strftime('%Y-%m-%d_%H:%M:%S')
         name = account + '@' + asset.name + '[' + datetime + ']'
         data = {
             'version': 2,
-            'id': str(token.id),  # 兼容老的，未来几个版本删掉
-            'value': token.value,  # 兼容老的，未来几个版本删掉
+            'id': str(token.id),  # kept for backward compatibility, remove in a future version
+            'value': token.value,  # kept for backward compatibility, remove in a future version
             'name': self.escape_name(name),
             'protocol': token.protocol,
             'token': {
@@ -518,7 +518,7 @@ class ExtraActionApiMixin(RDPFileClientProtocolURLMixin):
     @action(methods=['POST'], detail=False)
     def exchange(self, request, *args, **kwargs):
         pk = request.data.get('id', None) or request.data.get('pk', None)
-        # 只能兑换自己使用的 Token
+        # Can only exchange a token used by yourself
         instance = get_object_or_404(ConnectionToken, pk=pk, user=request.user)
         instance.id = None
         self.validate_exchange_token(instance)
@@ -857,7 +857,7 @@ class SuperConnectionTokenViewSet(ConnectionTokenViewSet):
 
     @action(methods=['POST'], detail=False, url_path='secret')
     def get_secret_detail(self, request, *args, **kwargs):
-        """ 非常重要的 api, 在逻辑层再判断一下 rbac 权限, 双重保险 """
+        """ Very important api, double-check rbac permission at the logic layer as a safeguard """
         rbac_perm = 'authentication.view_superconnectiontokensecret'
         if not request.user.has_perm(rbac_perm):
             raise PermissionDenied('Not allow to view secret')
@@ -871,7 +871,7 @@ class SuperConnectionTokenViewSet(ConnectionTokenViewSet):
 
         expire_now = request.data.get('expire_now', True)
         asset_type = token.asset.type
-        # 设置默认值
+        # Set default value
         if asset_type in ['k8s', 'kubernetes']:
             expire_now = False
 

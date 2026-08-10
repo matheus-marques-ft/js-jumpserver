@@ -37,7 +37,7 @@ __all__ = [
 
 
 class _UserPermTreeCacheMixin:
-    """ 缓存数据 users: {org_id, org_id }, 记录用户授权树已经构建完成的组织集合 """
+    """ Cached data users: {org_id, org_id}, recording the set of orgs for which the user's permission tree has been built """
     cache_key_template = 'perms.user.node_tree.built_orgs.user_id:{user_id}'
 
     def get_cache_key(self, user_id):
@@ -49,7 +49,7 @@ class _UserPermTreeCacheMixin:
 
 
 class UserPermTreeRefreshUtil(_UserPermTreeCacheMixin):
-    """ 用户授权树刷新工具, 针对某一个用户授权树的刷新 """
+    """ User permission tree refresh utility, for refreshing a single user's permission tree """
 
     def __init__(self, user):
         self.user = user
@@ -91,7 +91,7 @@ class UserPermTreeRefreshUtil(_UserPermTreeCacheMixin):
     @timeit
     def refresh_tree_manual(self):
         """
-        用来手动 debug
+        Used for manual debugging
         :return:
         """
         built_just_now = cache.get(self.cache_key_time)
@@ -106,7 +106,7 @@ class UserPermTreeRefreshUtil(_UserPermTreeCacheMixin):
 
     @timeit
     def perform_refresh_user_tree(self, to_refresh_orgs):
-        # 再判断一次，毕竟构建树比较慢
+        # Check once more, since building the tree is relatively slow
         built_just_now = cache.get(self.cache_key_time)
         if built_just_now:
             logger.info('Refresh user perm tree just now, pass: {}'.format(built_just_now))
@@ -161,7 +161,7 @@ class UserPermTreeRefreshUtil(_UserPermTreeCacheMixin):
 
 
 class UserPermTreeExpireUtil(_UserPermTreeCacheMixin):
-    """ 用户授权树过期工具 """
+    """ User permission tree expiration utility """
 
     @lazyproperty
     def cache_key_all_user(self):
@@ -265,7 +265,7 @@ class UserPermTreeBuildUtil(object):
         self._compute_perm_nodes_for_ancestor()
 
     def compute_perm_nodes_asset_amount(self):
-        """ 这里计算的是一个组织的授权树 """
+        """ This computes the permission tree for a single organization """
         computed = self._only_compute_root_node_assets_amount_if_need()
         if computed:
             return
@@ -306,7 +306,7 @@ class UserPermTreeBuildUtil(object):
         UserAssetGrantedTreeNodeRelation.objects.bulk_create(to_create)
 
     def _compute_perm_nodes_for_direct(self):
-        """ 直接授权的节点（叶子节点）"""
+        """ Directly granted nodes (leaf nodes) """
         for node in self.direct_nodes:
             if self.has_any_ancestor_direct_permed(node):
                 continue
@@ -314,7 +314,7 @@ class UserPermTreeBuildUtil(object):
             self._perm_nodes_key_node_mapper[node.key] = node
 
     def _compute_perm_nodes_for_direct_asset_if_need(self):
-        """ 直接授权的资产所在的节点（叶子节点）"""
+        """ Nodes where directly granted assets reside (leaf nodes) """
         if settings.PERM_SINGLE_ASSET_TO_UNGROUP_NODE:
             return
         for node in self.direct_asset_nodes:
@@ -326,7 +326,7 @@ class UserPermTreeBuildUtil(object):
             self._perm_nodes_key_node_mapper[node.key] = node
 
     def _compute_perm_nodes_for_ancestor(self):
-        """ 直接授权节点 和 直接授权资产所在节点 的所有祖先节点 (构造完整树) """
+        """ All ancestor nodes of the directly granted nodes and the nodes where directly granted assets reside (builds the complete tree) """
         ancestor_keys = set()
         for node in self._perm_nodes_key_node_mapper.values():
             ancestor_keys.update(node.get_ancestor_keys())
@@ -366,21 +366,21 @@ class UserPermTreeBuildUtil(object):
 
     @lazyproperty
     def perm_nodes(self):
-        """ 授权树的所有节点 """
+        """ All nodes of the permission tree """
         return list(self._perm_nodes_key_node_mapper.values())
 
     def has_any_ancestor_direct_permed(self, node):
-        """ 任何一个祖先节点被直接授权 """
+        """ Whether any ancestor node is directly granted """
         return bool(set(node.get_ancestor_keys()) & set(self.direct_node_keys))
 
     @lazyproperty
     def direct_node_keys(self):
-        """ 直接授权的节点 keys """
+        """ Keys of the directly granted nodes """
         return {n.key for n in self.direct_nodes}
 
     @lazyproperty
     def direct_nodes(self):
-        """ 直接授权的节点 """
+        """ Directly granted nodes """
         node_ids = AssetPermission.nodes.through.objects \
             .filter(assetpermission_id__in=self.user_perm_ids) \
             .values_list('node_id', flat=True).distinct()
@@ -389,14 +389,14 @@ class UserPermTreeBuildUtil(object):
 
     @lazyproperty
     def direct_asset_nodes(self):
-        """ 获取直接授权的资产所在的节点 """
+        """ Get the nodes where directly granted assets reside """
         node_ids = [node_id for asset_id, node_id in self.direct_asset_id_node_id_pairs]
         nodes = PermNode.objects.filter(id__in=node_ids).distinct().only(*self.node_only_fields)
         return nodes
 
     @lazyproperty
     def direct_asset_id_node_id_pairs(self):
-        """ 直接授权的资产 id 和 节点 id  """
+        """ Directly granted asset id and node id """
         asset_node_pairs = Asset.nodes.through.objects \
             .filter(asset_id__in=self.direct_asset_ids) \
             .annotate(
@@ -411,7 +411,7 @@ class UserPermTreeBuildUtil(object):
 
     @lazyproperty
     def direct_asset_ids(self):
-        """ 直接授权的资产 ids """
+        """ Directly granted asset ids """
         asset_ids = AssetPermission.assets.through.objects \
             .filter(assetpermission_id__in=self.user_perm_ids) \
             .values_list('asset_id', flat=True) \

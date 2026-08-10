@@ -5,8 +5,8 @@ from typing import Any, Dict
 
 class AsyncLocal:
     """
-    一个异步环境下安全的上下文存储对象，用于替代 werkzeug.local.Local。
-    内部使用一个 ContextVar 来存储一个字典。
+    A context storage object that is safe in an asynchronous environment, used to replace werkzeug.local.Local.
+    Internally uses a ContextVar to store a dict.
     """
 
     def __init__(self, context_var_name: str = "_async_local_storage"):

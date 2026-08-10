@@ -106,8 +106,8 @@ class BaseChangeSecretPushManager(AccountBasePlaybookManager):
             'ssh_key_change_strategy', SSHKeyStrategy.set_jms
         )
         self.account_ids = self.execution.snapshot['accounts']
-        self.record_map = self.execution.snapshot.get('record_map', {})  # 这个是某个失败的记录重试
-        self.name_record_mapper = {}  # 做个映射，方便后面处理
+        self.record_map = self.execution.snapshot.get('record_map', {})  # Used to retry a failed record
+        self.name_record_mapper = {}  # A mapping to make later processing easier
         self.inventory_account_mapper = {}
         self.account_locks = {}
         self.found_account_ids = set()

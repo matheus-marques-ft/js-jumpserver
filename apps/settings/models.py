@@ -102,11 +102,11 @@ class Setting(models.Model):
             'AUTH_OPENID_PROVIDER_ENDPOINT', 'AUTH_OPENID_KEYCLOAK'
         ]
         if self.name not in watch_config_names:
-            # 不在监听的配置中, 不需要刷新
+            # Not in the watched config, no need to refresh
             return
         auth_keycloak = self.__class__.objects.filter(name='AUTH_OPENID_KEYCLOAK').first()
         if not auth_keycloak or not auth_keycloak.cleaned_value:
-            # 关闭 Keycloak 方式的配置, 不需要刷新
+            # Keycloak-style config is turned off, no need to refresh
             return
 
         from jumpserver.conf import Config
@@ -114,7 +114,7 @@ class Setting(models.Model):
             'AUTH_OPENID', 'AUTH_OPENID_REALM_NAME',
             'AUTH_OPENID_SERVER_URL', 'AUTH_OPENID_PROVIDER_ENDPOINT'
         ]
-        # 获取当前 keycloak 配置
+        # Get the current keycloak config
         keycloak_config = {}
         for name in config_names:
             setting = self.__class__.objects.filter(name=name).first()
@@ -123,11 +123,11 @@ class Setting(models.Model):
             value = setting.cleaned_value
             keycloak_config[name] = value
 
-        # 转化 keycloak 配置为 openid 配置
+        # Convert the keycloak config to the openid config
         openid_config = Config.convert_keycloak_to_openid(keycloak_config)
         if not openid_config:
             return
-        # 刷新 settings
+        # Refresh settings
         for key, value in openid_config.items():
             setattr(settings, key, value)
             self.__class__.update_or_create(key, value, encrypted=False, category=self.category)
@@ -143,7 +143,7 @@ class Setting(models.Model):
     @classmethod
     def update_or_create(cls, name='', value='', encrypted=False, category=''):
         """
-        不能使用 Model 提供的，update_or_create 因为这里有 encrypted 和 cleaned_value
+        Can't use the update_or_create provided by Model because encrypted and cleaned_value are involved here
         :return: (changed, instance)
         """
         setting = cls.objects.filter(name=name).first()

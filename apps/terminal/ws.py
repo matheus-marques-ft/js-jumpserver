@@ -61,7 +61,7 @@ class TerminalTaskWebsocket(JsonWebsocketConsumer):
             return JSONRenderer().render(serializer.data)
 
     def watch_component_event(self):
-        # 先发一次已有的任务
+        # First send the already existing tasks once
         self.send_tasks_msg()
 
         ws = self

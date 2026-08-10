@@ -13,12 +13,12 @@ jobs:
         env:
           WEBHOOK_URL: ${{ secrets.DISCORD_CHANGELOG_WEBHOOK }}
         run: |
-          # 获取标签名称和 release body
+          # Get the tag name and release body
           TAG_NAME="${{ github.event.release.tag_name }}"
           RELEASE_BODY="${{ github.event.release.body }}"
 
-          # 使用 jq 构建 JSON 数据，以确保安全传递
+          # Build the JSON payload with jq to ensure it's passed safely
           JSON_PAYLOAD=$(jq -n --arg tag "# JumpServer $TAG_NAME Released! 🚀" --arg body "$RELEASE_BODY" '{content: "\($tag)\n\($body)"}')
 
-          # 使用 curl 发送 JSON 数据
+          # Send the JSON payload with curl
           curl -X POST -H "Content-Type: application/json" -d "$JSON_PAYLOAD" "$WEBHOOK_URL"

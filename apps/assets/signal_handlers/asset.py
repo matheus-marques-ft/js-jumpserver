@@ -56,8 +56,8 @@ def ensure_asset_has_node(assets=()):
 @on_transaction_commit
 def on_asset_create(sender, instance=None, created=False, **kwargs):
     """
-    当资产创建时，更新硬件信息，更新可连接性
-    确保资产必须属于一个节点
+    When an asset is created, update its hardware info and connectivity
+    Ensure the asset must belong to a node
     """
     if not created:
         return
@@ -65,7 +65,7 @@ def on_asset_create(sender, instance=None, created=False, **kwargs):
 
     ensure_asset_has_node.delay(assets=(instance,))
 
-    # 获取资产硬件信息
+    # Get the asset's hardware info
     auto_config = instance.auto_config
     if auto_config.get('ping_enabled'):
         logger.debug('Asset {} ping enabled, test connectivity'.format(instance.name))

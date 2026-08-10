@@ -36,7 +36,7 @@ class VaultClient(LazyObject):
         self._wrapped = get_vault_client(**vault_configs)
 
 
-""" 为了安全, 页面修改配置, 重启服务后才会重新初始化 vault_client """
+""" For security reasons, vault_client is only re-initialized after the service restarts once the configuration is changed on the page """
 vault_client = VaultClient()
 
 

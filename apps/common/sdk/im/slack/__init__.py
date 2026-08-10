@@ -140,7 +140,7 @@ class Slack:
             try:
                 self._client.request('post', URL().SEND_MESSAGE, json=body)
             except APIException as e:
-                # 只处理可预知的错误
+                # Only handle predictable errors
                 logger.exception(e)
 
     @staticmethod
@@ -156,7 +156,7 @@ class Slack:
 
     def get_user_detail(self, user_id, **kwargs):
         # https://api.slack.com/methods/users.info
-        # get_user_id_by_code 已经返回个人信息，这里直接解析
+        # get_user_id_by_code already returns personal info, parse it directly here
         data = kwargs['other_info']
         data['user_id'] = user_id
         info = flatten_dict(data)

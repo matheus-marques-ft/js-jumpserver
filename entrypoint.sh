@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# 不能删掉 cleanup 会产生僵尸进程
+# Do not remove cleanup, otherwise it will produce zombie processes
 function cleanup()
 {
     local pids=`jobs -p`

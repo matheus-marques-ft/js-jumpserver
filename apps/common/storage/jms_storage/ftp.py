@@ -81,20 +81,20 @@ class FTPStorage(ObjectStorage):
 
     def mkdir(self, dirs):
         self.confirm_connected()
-        # 创建多级目录，ftplib不支持一次创建多级目录
+        # Create nested directories; ftplib doesn't support creating multiple levels at once
         dir_list = dirs.split('/')
         pwd = self.client.pwd()
         try:
             for d in dir_list:
                 if not d or d in ['.']:
                     continue
-                # 尝试切换目录
+                # Try to change into the directory
                 try:
                     self.client.cwd(d)
                     continue
                 except:
                     pass
-                # 切换失败创建这个目录，再切换
+                # If changing into it fails, create the directory, then change into it
                 try:
                     self.client.mkd(d)
                     self.client.cwd(d)

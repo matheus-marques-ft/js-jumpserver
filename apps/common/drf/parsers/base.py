@@ -52,7 +52,7 @@ class BaseFileParser(BaseParser):
         fields_map = {}
         fields = self.serializer_fields
         for k, v in fields.items():
-            # 资产平台的 id 是只读的, 导入更新资产平台会失败
+            # The asset platform's id is read-only; importing/updating the asset platform would fail
             if v.read_only and k not in ['id', 'pk']:
                 continue
             fields_map.update({
@@ -82,13 +82,13 @@ class BaseFileParser(BaseParser):
     @classmethod
     def load_row(cls, row):
         """
-        构建json数据前的行处理
+        Row processing before building the json data
         """
         new_row = []
         for col in row:
-            # 转换中文引号
+            # Convert Chinese quotation marks
             col = cls._replace_chinese_quote(col)
-            # 列表/字典转换
+            # List/dict conversion
             if isinstance(col, str) and (
                     (col.startswith('[') and col.endswith(']')) or
                     (col.startswith("{") and col.endswith("}"))
@@ -141,7 +141,7 @@ class BaseFileParser(BaseParser):
 
     def process_row_data(self, row_data):
         """
-        构建json数据后的行数据处理
+        Row data processing after building the json data
         """
         new_row = {}
         for k, v in row_data.items():
@@ -153,7 +153,7 @@ class BaseFileParser(BaseParser):
     def generate_data(self, fields_name, rows):
         data = []
         for row in rows:
-            # 空行不处理
+            # Skip empty rows
             if not any(row):
                 continue
             row = self.load_row(row)
@@ -192,7 +192,7 @@ class BaseFileParser(BaseParser):
             column_titles = self.get_column_titles(rows)
             field_names = self.convert_to_field_names(column_titles)
 
-            # 给 `common.mixins.api.RenderToJsonMixin` 提供，暂时只能耦合
+            # Provided for `common.mixins.api.RenderToJsonMixin`; for now this coupling can't be avoided
             column_title_field_pairs = list(zip(column_titles, field_names))
             column_title_field_pairs = [(k, v) for k, v in column_title_field_pairs if k and v]
             if not hasattr(request, 'jms_context'):

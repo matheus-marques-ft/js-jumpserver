@@ -1,4 +1,4 @@
-# Python 示例
+# Python example
 # pip install requests drf-httpsig
 import datetime
 import json

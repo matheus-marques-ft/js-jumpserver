@@ -26,7 +26,7 @@ class CSVFileParser(BaseFileParser):
     @staticmethod
     def _universal_newlines(stream):
         """
-        保证在`通用换行模式`下打开文件
+        Ensure the file is opened in `universal newline mode`
         """
         for line in stream.splitlines():
             yield line

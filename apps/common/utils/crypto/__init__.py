@@ -63,7 +63,7 @@ class Crypto:
                 if i == 0:
                     return origin_text
                 if origin_text:
-                    # 有时不同算法解密不报错，但是返回空字符串
+                    # Sometimes decrypting with a different algorithm doesn't raise an error, but returns an empty string
                     return origin_text
             except Exception:
                 continue

@@ -12,7 +12,7 @@ logger = get_logger(__file__)
 
 class ComputeLock(DistributedLock):
     """
-    需要重建缓存的时候加上该锁，避免重复计算
+    Add this lock when the cache needs to be rebuilt, to avoid redundant computation
     """
     def __init__(self, key):
         name = f'compute:{key}'
@@ -99,7 +99,7 @@ class Cache(metaclass=CacheType):
                 with ComputeLock(self.key):
                     data = self.load_data_from_db()
                     if not data:
-                        # 缓存中没有数据时，去数据库获取
+                        # When there is no data in the cache, fetch it from the database
                         self.init_all_values()
         return self._data
 
@@ -151,13 +151,13 @@ class Cache(metaclass=CacheType):
 
     def refresh(self, *fields):
         if not fields:
-            # 没有指定 field 要刷新所有的值
+            # No field specified, refresh all values
             self.init_all_values()
             return
 
         data = self.load_data_from_db()
         if not data:
-            # 缓存中没有数据，设置所有的值
+            # No data in the cache, set all values
             self.init_all_values()
             return
 
@@ -194,7 +194,7 @@ class CacheValueDesc:
             return self
         if self.field_name not in instance.data:
             instance.refresh(self.field_name)
-        # 防止边界情况没有值，报错
+        # Prevent an error in edge cases where there is no value
         value = instance.data.get(self.field_name)
         return value
 
@@ -231,7 +231,7 @@ class RedisChannelLayer(_RedisChannelLayer):
         """
         backup_queue = self._backup_channel_name(channel)
         async with self.connection(index) as connection:
-            # 部分云厂商的 Redis 此操作会报错(不支持，比如阿里云有限制)
+            # Some cloud providers' Redis will raise an error on this operation (unsupported, e.g. Alibaba Cloud has restrictions)
             try:
                 await connection.eval(cleanup_script, keys=[], args=[channel, backup_queue])
             except:

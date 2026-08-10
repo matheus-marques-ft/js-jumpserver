@@ -180,8 +180,8 @@ class SimpleMetadataWithFilters(SimpleMetadata):
             fields = view.filter_fields
 
         if hasattr(view, "custom_filter_fields"):
-            # 不能写 fields += view.custom_filter_fields
-            # 会改变 view 的 filter_fields
+            # Cannot write fields += view.custom_filter_fields
+            # It would change the view's filter_fields
             fields = list(fields) + list(view.custom_filter_fields)
 
         if isinstance(fields, dict):

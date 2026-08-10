@@ -14,8 +14,9 @@ from .common import padding_key
 
 
 def gen_key_pair(length=2048):
-    """ 生成加密key
-    用于登录页面提交用户名/密码时，对密码进行加密（前端）/解密（后端）
+    """ Generates an encryption key
+    Used to encrypt (frontend)/decrypt (backend) the password when
+    submitting a username/password on the login page
     """
     random_generator = Random.new().read
     rsa = RSA.generate(length, random_generator)
@@ -27,11 +28,11 @@ def gen_key_pair(length=2048):
 class AESCrypto:
     """
     AES
-    除了MODE_SIV模式key长度为: 32, 48, or 64,
-    其余key长度为16, 24 or 32
-    详细见AES内部文档
-    CBC模式传入iv参数
-    本例使用常用的ECB模式
+    Except for MODE_SIV mode, where the key length is: 32, 48, or 64,
+    other modes use a key length of 16, 24 or 32
+    See the AES internal documentation for details
+    CBC mode requires passing an iv parameter
+    This example uses the commonly used ECB mode
     """
 
     def __init__(self, key):
@@ -41,21 +42,21 @@ class AESCrypto:
     @staticmethod
     def to_16(key):
         """
-        转为16倍数的bytes数据
+        Converts to bytes data whose length is a multiple of 16
         :param key:
         :return:
         """
         key = bytes(key, encoding="utf8")
         while len(key) % 16 != 0:
             key += b'\0'
-        return key  # 返回bytes
+        return key  # returns bytes
 
     def aes(self):
         return AES.new(self.key, AES.MODE_ECB)
 
     def encrypt(self, text):
         cipher = base64.encodebytes(self.aes.encrypt(self.to_16(text)))
-        return str(cipher, encoding='utf8').replace('\n', '')  # 加密
+        return str(cipher, encoding='utf8').replace('\n', '')  # encrypt
 
     def decrypt(self, text):
         text_decoded = base64.decodebytes(bytes(text, encoding='utf8'))
@@ -64,7 +65,7 @@ class AESCrypto:
 
 class AESCryptoGCM:
     """
-    使用AES GCM模式
+    Uses AES GCM mode
     """
 
     def __init__(self, key):
@@ -80,8 +81,9 @@ class AESCryptoGCM:
 
     def encrypt(self, text):
         """
-        加密text，并将 header, nonce, tag (3*16 bytes, base64后变为 3*24 bytes)
-        附在密文前。解密时要用到。
+        Encrypts text, and prepends header, nonce, tag (3*16 bytes, which
+        becomes 3*24 bytes after base64 encoding) to the ciphertext.
+        These are needed during decryption.
         """
         header = get_random_bytes(16)
         cipher = AES.new(self.key, AES.MODE_GCM)
@@ -96,7 +98,7 @@ class AESCryptoGCM:
 
     def decrypt(self, text):
         """
-        提取header, nonce, tag并解密text。
+        Extracts header, nonce, tag and decrypts text.
         """
         metadata = text[:72]
         header = base64.b64decode(metadata[:24])
@@ -173,22 +175,22 @@ class RsaAesCryptoSuite(BaseCryptoSuite):
         return gen_key_pair(length)
 
     def encrypt_with_key_pair(self, message, rsa_public_key):
-        """ 加密登录密码 """
+        """ Encrypts the login password """
         key = RSA.importKey(rsa_public_key)
         cipher = PKCS1_v1_5.new(key)
         cipher_text = base64.b64encode(cipher.encrypt(message.encode())).decode()
         return cipher_text
     
     def decrypt_with_key_pair(self, cipher_text, rsa_private_key):
-        """ 解密登录密码 """
+        """ Decrypts the login password """
         if rsa_private_key is None:
-            # rsa_private_key 为 None，可以能是API请求认证，不需要解密
+            # rsa_private_key is None, this may be API request authentication, no need to decrypt
             return cipher_text
 
         key = RSA.importKey(rsa_private_key)
         cipher = PKCS1_v1_5.new(key)
         cipher_decoded = base64.b64decode(cipher_text.encode())
-        # Todo: 弄明白为何要以下这么写，https://xbuba.com/questions/57035263
+        # Todo: figure out why this needs to be written this way, https://xbuba.com/questions/57035263
         if len(cipher_decoded) == 127:
             hex_fixed = '00' + cipher_decoded.hex()
             cipher_decoded = base64.b16decode(hex_fixed.upper())

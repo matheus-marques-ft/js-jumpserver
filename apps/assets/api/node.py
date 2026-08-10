@@ -89,13 +89,13 @@ class NodeAddChildrenApi(generics.UpdateAPIView):
     instance = None
 
     def update(self, request, *args, **kwargs):
-        """ 同时支持 put 和 patch 方法"""
+        """ Supports both put and patch methods"""
         instance = self.get_object()
         node_ids = request.data.get("nodes")
         children = Node.objects.filter(id__in=node_ids)
         for node in children:
             if node.is_ancestor(instance):
-                # 如果 node 是 instance 的祖先节点，则不能添加为 instance 的子节点，否则会形成环，出现断层
+                # If node is an ancestor of instance, it can't be added as a child of instance, otherwise a cycle would form
                 error = _("Node {} is an ancestor of node {}, can't be added as its child".format(node.value, instance.value))
                 return Response(data={'error': error}, status=status.HTTP_400_BAD_REQUEST)
             node.parent = instance
@@ -132,7 +132,7 @@ class NodeRemoveAssetsApi(generics.UpdateAPIView):
         node = self.get_object()
         node.assets.remove(*assets)
 
-        # 把孤儿资产添加到 root 节点
+        # Add orphan assets to the root node
         orphan_assets = Asset.objects.filter(
             id__in=[a.id for a in assets],
             nodes__isnull=True
@@ -158,31 +158,31 @@ class MoveAssetsToNodeApi(generics.UpdateAPIView):
     def remove_old_nodes(self, assets):
         m2m_model = Asset.nodes.through
 
-        # 查询资产与节点关系表，查出要移动资产与节点的所有关系
+        # Query the asset-node relation table for all relations of the assets to be moved
         relates = m2m_model.objects.filter(asset__in=assets).values_list('asset_id', 'node_id')
         if relates:
-            # 对关系以资产进行分组，用来发 `reverse=False` 信号
+            # Group the relations by asset, used to send the `reverse=False` signal
             asset_nodes_mapper = defaultdict(set)
             for asset_id, node_id in relates:
                 asset_nodes_mapper[asset_id].add(node_id)
 
-            # 组建一个资产 id -> Asset 的 mapper
+            # Build an asset id -> Asset mapper
             asset_mapper = {asset.id: asset for asset in assets}
 
-            # 创建删除关系信号发送函数
+            # Create the functions that send the relation-removal signals
             senders = []
             for asset_id, node_id_set in asset_nodes_mapper.items():
                 senders.append(partial(m2m_changed.send, sender=m2m_model, instance=asset_mapper[asset_id],
                                        reverse=False, model=Node, pk_set=node_id_set))
-            # 发送 pre 信号
+            # Send the pre signal
             [sender(action=PRE_REMOVE) for sender in senders]
             num = len(relates)
             asset_ids, node_ids = zip(*relates)
-            # 删除之前的关系
+            # Delete the previous relations
             rows, _i = m2m_model.objects.filter(asset_id__in=asset_ids, node_id__in=node_ids).delete()
             if rows != num:
                 raise SomeoneIsDoingThis
-            # 发送 post 信号
+            # Send the post signal
             [sender(action=POST_REMOVE) for sender in senders]
 
 

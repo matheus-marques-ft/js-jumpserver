@@ -161,9 +161,9 @@ class ActivityLog(OrgModelMixin):
     datetime = models.DateTimeField(
         auto_now=True, verbose_name=_('Datetime'), db_index=True
     )
-    # 日志的描述信息
+    # Description information for the log
     detail = models.TextField(default='', blank=True, verbose_name=_('Detail'))
-    # 详情ID, 结合 type 来使用, (实例ID 和 CeleryTaskID)
+    # Detail ID, used together with type (instance ID and CeleryTaskID)
     detail_id = models.CharField(
         max_length=36, default=None, null=True, verbose_name=_('Detail ID')
     )

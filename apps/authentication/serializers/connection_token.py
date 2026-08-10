@@ -35,7 +35,7 @@ class ConnectionTokenSerializer(OrgResourceModelSerializerMixin):
             'remote_addr',
         ]
         read_only_fields = [
-            # 普通 Token 不支持指定 user
+            # Regular Token does not support specifying user
             'user', 'expire_time', 'is_expired', 'date_expired',
             'user_display', 'asset_display',
         ]

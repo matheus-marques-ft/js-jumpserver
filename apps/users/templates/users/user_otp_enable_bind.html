@@ -38,7 +38,7 @@
         }
 
         $(document).ready(function() {
-            // 生成用户绑定otp的二维码
+            // Generate the QR code for the user to bind OTP
             var qrcode = new QRCode(document.getElementById('qr_code'), {
                 text: "{{ otp_uri|safe}}",
                 width: 190 ,

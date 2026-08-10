@@ -1,25 +1,25 @@
 name-template: 'v$RESOLVED_VERSION'
 tag-template: 'v$RESOLVED_VERSION'
 categories:
-  - title: '🌱 新功能 Features'
+  - title: '🌱 Features'
     labels:
       - 'feature'
       - 'enhancement'
       - 'feat'
       - '新功能'
-  - title: '🚀 性能优化 Optimization'
+  - title: '🚀 Optimization'
     labels:
       - 'perf'
       - 'opt'
       - 'refactor'
       - 'Optimization'
       - '优化'
-  - title: '🐛 Bug修复 Bug Fixes'
+  - title: '🐛 Bug Fixes'
     labels:
       - 'fix'
       - 'bugfix'
       - 'bug'
-  - title: '🧰 其它 Maintenance'
+  - title: '🧰 Maintenance'
     labels:
       - 'chore'
       - 'docs'
@@ -40,6 +40,6 @@ version-resolver:
       - 'patch'
   default: patch
 template: |
-  ## 版本变化  What’s Changed
+  ## What's Changed
   $CHANGES
 

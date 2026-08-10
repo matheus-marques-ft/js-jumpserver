@@ -14,7 +14,7 @@ mirror_centos() {
 }
 
 mirror_epel() {
-  # epel-release 默认只有 metalink，sed 改 baseurl 会失效；直接覆盖为阿里云固定地址
+  # epel-release ships only a metalink by default, so a sed replacement of baseurl has no effect; overwrite it directly with a fixed Aliyun address
   cat > /etc/yum.repos.d/epel.repo <<'EOF'
 [epel]
 name=Extra Packages for Enterprise Linux 9 - $basearch
@@ -39,10 +39,10 @@ gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-9
 EOF
 
-  # epel-next 在阿里云 aarch64 上常 404，且 freetds-devel/sshpass 在 epel 主仓库即可
+  # epel-next often 404s on Aliyun aarch64, and freetds-devel/sshpass are already available from the main epel repo
   rm -f /etc/yum.repos.d/epel-next.repo
 
-  # 禁用可能仍指向官方源的其他 epel 附属 repo
+  # Disable other epel-related repos that may still point to the official source
   for f in /etc/yum.repos.d/epel*.repo; do
     case "$(basename "$f")" in
       epel.repo) ;;

@@ -11,7 +11,7 @@ class AccountEntry(AzureBaseEntry):
 
     @property
     def path_spec(self):
-        # 长度 0-127
+        # Length 0-127
         account_id = str(self.instance.id)[:18]
         path = f'assets-{self.instance.asset_id}-accounts-{account_id}'
         return path

@@ -23,9 +23,9 @@ class OrgRelatedCache(Cache):
 
     def get_current_org(self):
         """
-        暴露给子类控制组织的回调
-        1. 在交互式环境下能控制组织
-        2. 在 celery 任务下能控制组织
+        Exposes a callback for subclasses to control the organization:
+        1. Allows controlling the organization in an interactive environment
+        2. Allows controlling the organization in a celery task
         """
         return self.current_org
 
@@ -35,7 +35,7 @@ class OrgRelatedCache(Cache):
 
     def refresh_async(self, *fields):
         """
-        在事务提交之后再发送信号，防止因事务的隔离性导致未获得最新的数据
+        Send the signal only after the transaction commits, to avoid getting stale data due to transaction isolation
         """
 
         def func():

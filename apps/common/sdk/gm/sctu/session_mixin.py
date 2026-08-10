@@ -52,13 +52,14 @@ def pkcs7_unpad(data: bytes, block_size: int = 16) -> bytes:
 
 class SM4Mixin(BaseMixin):
     """
-    SM4 外部明文 key 加解密。
+    SM4 encryption/decryption using an externally supplied plaintext key.
 
-    注意：
-    1. 按当前 SDK 实测，key 允许 16 字节的整数倍。
-    2. CBC 模式 iv 必须是 16 字节。
-    3. SDF 接口要求输入数据长度必须是 16 的整数倍。
-    4. 默认使用 zero padding，解决你现在解密后结尾多 0 的问题。
+    Notes:
+    1. Based on current SDK testing, the key must be a multiple of 16 bytes.
+    2. In CBC mode, the iv must be 16 bytes.
+    3. The SDF interface requires the input data length to be a multiple of 16.
+    4. Zero padding is used by default, which fixes the issue of trailing
+       zero bytes after decryption.
     """
 
     def import_key(self, key_val):

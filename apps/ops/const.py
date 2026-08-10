@@ -77,7 +77,7 @@ class JobStatus(models.TextChoices):
     failed = 'failed', _('Failed')
 
 
-# celery 日志完成之后，写入的魔法字符，作为结束标记
+# Magic bytes written after the celery log finishes, used as an end marker
 CELERY_LOG_MAGIC_MARK = b'\x00\x00\x00\x00\x00'
 
 COMMAND_EXECUTION_DISABLED = _('Command execution disabled')

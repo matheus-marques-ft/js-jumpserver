@@ -64,7 +64,7 @@ class UserProfileApi(generics.RetrieveUpdateAPIView):
 class UserPasswordApi(generics.RetrieveUpdateAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = serializers.UserUpdatePasswordSerializer
-    # patch 方法不允许，否则 old_password 不传会导致用户直接修改密码成功，安全风险大
+    # PATCH method is not allowed; otherwise, omitting old_password would let the user change the password directly, which is a major security risk
     http_method_names = ['put', 'head', 'options']
 
     def get_object(self):

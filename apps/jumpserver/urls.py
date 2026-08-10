@@ -72,7 +72,7 @@ urlpatterns = [
     path('core/', include(app_view_patterns)),
 ]
 
-# 静态文件处理路由
+# Static file handling routes
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 urlpatterns += [
     # Protect media
@@ -84,7 +84,7 @@ if settings.DEBUG:
 else:
     urlpatterns += path('ui/', views.UIView.as_view()),
 
-# js i18n 路由文件
+# js i18n routing file
 urlpatterns += [
     path('core/jsi18n/', JavaScriptCatalog.as_view(), name='javascript-catalog'),
 ]
@@ -97,7 +97,7 @@ cache_kwargs = {
         'key_prefix': 'swagger-cache-' + DOC_VERSION,
     },
 }
-# docs 路由
+# docs routes
 urlpatterns += [
     path('api/swagger.json', views.get_swagger_view(ui='json', **cache_kwargs), name='schema-json'),
     path('api/swagger.yaml', views.get_swagger_view(ui='yaml', **cache_kwargs), name='schema'),

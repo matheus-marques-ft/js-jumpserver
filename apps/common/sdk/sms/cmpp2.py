@@ -12,14 +12,14 @@ from .base import BaseSMSClient
 
 logger = get_logger(__file__)
 
-CMPP_CONNECT = 0x00000001  # 请求连接
-CMPP_CONNECT_RESP = 0x80000001  # 请求连接应答
-CMPP_TERMINATE = 0x00000002  # 终止连接
-CMPP_TERMINATE_RESP = 0x80000002  # 终止连接应答
-CMPP_SUBMIT = 0x00000004  # 提交短信
-CMPP_SUBMIT_RESP = 0x80000004  # 提交短信应答
-CMPP_DELIVER = 0x00000005  # 短信下发
-CMPP_DELIVER_RESP = 0x80000005  # 下发短信应答
+CMPP_CONNECT = 0x00000001  # Request connection
+CMPP_CONNECT_RESP = 0x80000001  # Request connection response
+CMPP_TERMINATE = 0x00000002  # Terminate connection
+CMPP_TERMINATE_RESP = 0x80000002  # Terminate connection response
+CMPP_SUBMIT = 0x00000004  # Submit SMS
+CMPP_SUBMIT_RESP = 0x80000004  # Submit SMS response
+CMPP_DELIVER = 0x00000005  # SMS delivery
+CMPP_DELIVER_RESP = 0x80000005  # SMS delivery response
 
 
 class CMPPBaseRequestInstance(object):
@@ -255,8 +255,8 @@ class CMPPClient(object):
 
     def _cmpp_send_sms(self, dest, sign_name, template_code, template_param):
         """
-        优先发送template_param中message的信息
-        若该内容不存在，则根据template_code构建验证码发送
+        Prefer sending the message from template_param.
+        If it does not exist, build the verification code message from template_code
         """
         message = template_param.get('message')
         if message is None:

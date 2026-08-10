@@ -50,6 +50,6 @@ class ComponentI18nApi(RetrieveAPIView):
         code = Language.to_internal_code(lang, with_filename=True)
         data = data.get(code) or {}
         if flat == '0':
-            # 这里要使用原始的 lang, lina 会 merge
+            # The original lang must be used here, lina will merge it
             data = {lang: data}
         return Response(data)

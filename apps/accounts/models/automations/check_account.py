@@ -39,19 +39,19 @@ class CheckAccountAutomation(AccountBaseAutomation):
 
 
 class RiskChoice(TextChoices):
-    # 依赖自动发现的
-    long_time_no_login = 'long_time_no_login', _('Long time no login')  # 好久没登录的账号, 禁用、删除
-    new_found = 'new_found', _('New found')  # 未被纳管的账号, 纳管, 删除, 禁用
-    account_deleted = 'account_deleted', _('Account deleted')  # 账号被删除, 纳管, 删除, 禁用
-    group_changed = 'groups_changed', _('Groups change')  # 组变更, 确认
-    sudo_changed = 'sudoers_changed', _('Sudo changed')  # sudo 变更, 确认
-    authorized_keys_changed = 'authorized_keys_changed', _('Authorized keys changed')  # authorized_keys 变更, 确认
-    password_expired = 'password_expired', _('Password expired')  # 密码过期, 修改密码
-    long_time_password = 'long_time_password', _('Long time no change')  # 好久没改密码的账号, 改密码
+    # Depends on auto-discovery
+    long_time_no_login = 'long_time_no_login', _('Long time no login')  # Account not logged in for a long time, disable/delete
+    new_found = 'new_found', _('New found')  # Unmanaged account, manage, delete, disable
+    account_deleted = 'account_deleted', _('Account deleted')  # Account was deleted, manage, delete, disable
+    group_changed = 'groups_changed', _('Groups change')  # Group changed, confirm
+    sudo_changed = 'sudoers_changed', _('Sudo changed')  # Sudo changed, confirm
+    authorized_keys_changed = 'authorized_keys_changed', _('Authorized keys changed')  # authorized_keys changed, confirm
+    password_expired = 'password_expired', _('Password expired')  # Password expired, change password
+    long_time_password = 'long_time_password', _('Long time no change')  # Account whose password hasn't been changed in a long time, change password
 
-    weak_password = 'weak_password', _('Weak password')  # 弱密码, 改密
-    leaked_password = 'leaked_password', _('Leaked password')  # 可能泄露的密码, 改密
-    repeated_password = 'repeated_password', _('Repeated password')  # 重复度高的密码, 改密
+    weak_password = 'weak_password', _('Weak password')  # Weak password, change password
+    leaked_password = 'leaked_password', _('Leaked password')  # Possibly leaked password, change password
+    repeated_password = 'repeated_password', _('Repeated password')  # Highly repeated password, change password
 
 
 class AccountRisk(JMSOrgBaseModel):

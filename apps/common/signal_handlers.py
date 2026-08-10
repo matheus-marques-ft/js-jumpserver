@@ -138,32 +138,32 @@ def check_migrations_file_prefix_conflict(*args, **kwargs):
 
     from jumpserver.const import BASE_DIR
     print('>>> Check migrations file prefix conflict.', end=' ')
-    # 指定 app 目录
+    # The app directory to check
     _dir = BASE_DIR
-    # 获取所有子目录
+    # Get all subdirectories
     sub_dirs = next(os.walk(_dir))[1]
-    # 记录冲突的文件，元素为 (subdir, file1, file2)
+    # Record conflicting files, each element is (subdir, file1, file2)
     conflict_files = []
 
-    # 遍历每个子目录
+    # Iterate over each subdirectory
     for subdir in sub_dirs:
-        # 拼接 migrations 目录路径
+        # Build the migrations directory path
         migrations_dir = os.path.join(_dir, subdir, 'migrations')
-        # 判断是否存在 migrations 目录
+        # Check whether the migrations directory exists
         if not os.path.exists(migrations_dir):
             continue
-        # 获取所有文件名
+        # Get all file names
         files = os.listdir(migrations_dir)
-        # 遍历每个文件名
+        # Iterate over each file name
         prefix_file_map = dict()
         for file in files:
             file = str(file)
-            # 判断是否为 Python 文件
+            # Check whether it is a Python file
             if not file.endswith('.py'):
                 continue
             if 'squashed' in file:
                 continue
-            # file 为文件名
+            # file is the file name
             file_prefix = file.split('_')[0]
             if file_prefix in prefix_file_map.keys():
                 conflict_files.append((subdir, file, prefix_file_map.get(file_prefix)))

@@ -1,12 +1,12 @@
 """
-此文件作为 `django.db.models` 的 shortcut
+This file serves as a shortcut for `django.db.models`
 
-这样做的优点与缺点为：
-优点：
-    - 包命名都统一为 `models`
-    - 用户在使用的时候只导入本文件即可
-缺点：
-    - 此文件中添加代码的时候，注意不要跟 `django.db.models` 中的命名冲突
+The pros and cons of doing this are:
+Pros:
+    - The package naming is unified as `models`
+    - Users only need to import this file when using it
+Cons:
+    - When adding code to this file, be careful not to conflict with names in `django.db.models`
 """
 
 import uuid
@@ -80,7 +80,7 @@ class MultiTableChildQueryset(QuerySet):
 
 
 def CASCADE_SIGNAL_SKIP(collector, field, sub_objs, using):
-    # 级联删除时，操作日志标记不保存，以免用户混淆
+    # During cascade deletion, don't save the operation log flag, to avoid confusing the user
     try:
         for obj in sub_objs:
             setattr(obj, OP_LOG_SKIP_SIGNAL, True)

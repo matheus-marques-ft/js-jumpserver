@@ -8,7 +8,7 @@ class Scope(models.TextChoices):
 
 
 exclude_permissions = (
-    # ('App', 'Model', 'Action', 'Resource') Model 和 Resource 可能不同
+    # ('App', 'Model', 'Action', 'Resource') Model and Resource may differ
     # users.add_user
     ('auth', '*', '*', '*'),
     ('captcha', '*', '*', '*'),

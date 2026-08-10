@@ -143,7 +143,7 @@ class UserLoginView(mixins.AuthMixin, UserLoginContextMixin, FormView):
         if not auth_types:
             return None
 
-        # 明确直接登录哪个
+        # Explicitly specify which one to log in to directly
         login_to = settings.LOGIN_REDIRECT_TO_BACKEND.upper()
         if login_to == 'DIRECT':
             return None
@@ -198,7 +198,7 @@ class UserLoginView(mixins.AuthMixin, UserLoginContextMixin, FormView):
     def form_valid(self, form):
         if not self.request.session.test_cookie_worked():
             form.add_error(None, _("Login timeout, please try again."))
-            # 当 session 过期后，刷新浏览器重新提交依旧会报错，所以需要重新设置 test_cookie
+            # After the session expires, refreshing the browser and resubmitting will still raise an error, so the test_cookie needs to be reset
             self.request.session.set_test_cookie()
             return self.form_invalid(form)
 
@@ -274,7 +274,7 @@ class UserLoginGuardView(mixins.AuthMixin, RedirectView):
 
     def login_it(self, user):
         auth_login(self.request, user)
-        # 如果设置了自动登录，那需要设置 session_id cookie 的有效期
+        # If auto-login is enabled, the session_id cookie's expiry needs to be set
         if self.request.session.get('auto_login'):
             age = self.request.session.get_expiry_age()
             self.request.session.set_expiry(age)

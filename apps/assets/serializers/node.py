@@ -46,10 +46,10 @@ class NodeSerializer(BulkOrgResourceModelSerializer):
     def create(self, validated_data):
         full_value = validated_data.get('full_value')
 
-        # 直接多层级创建
+        # Create multiple levels directly
         if full_value:
             node = Node.create_node_by_full_value(full_value)
-        # 根据 value 在 root 下创建
+        # Create under root based on value
         else:
             key = Node.org_root().get_next_child_key()
             validated_data['key'] = key

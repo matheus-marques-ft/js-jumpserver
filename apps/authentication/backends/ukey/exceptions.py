@@ -4,7 +4,7 @@ from django.utils.translation import gettext_lazy as _
 
 
 class UKeyAuthError(Exception):
-    """证书认证失败基类，所有子类须带可展示给用户的 msg。"""
+    """Base class for certificate authentication failures; all subclasses must carry a user-displayable msg."""
     default_msg = _('Certificate authentication failed')
 
     def __init__(self, msg=None, **kwargs):

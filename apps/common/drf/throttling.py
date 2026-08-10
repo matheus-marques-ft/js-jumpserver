@@ -38,7 +38,7 @@ class RateThrottle(SimpleRateThrottle):
 
 class FileTransferThrottle(SimpleRateThrottle):
     """
-    文件上传下载限流，防止DOS攻击
+    Rate limit file upload/download to prevent DOS attacks
     """
     scope = 'file_transfer'
 

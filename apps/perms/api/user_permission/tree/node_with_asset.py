@@ -106,9 +106,9 @@ class UserPermedNodesWithAssetsAsTreeApi(BaseUserNodeWithAssetAsTreeApi):
 
 
 class UserPermedNodeChildrenWithAssetsAsTreeApi(BaseUserNodeWithAssetAsTreeApi):
-    """ 用户授权的节点的子节点与资产树 """
+    """ Tree of child nodes and assets under a node granted to the user """
 
-    # 默认展开的节点key
+    # Key of the node expanded by default
     default_unfolded_node_key = None
 
     @timeit
@@ -119,7 +119,7 @@ class UserPermedNodeChildrenWithAssetsAsTreeApi(BaseUserNodeWithAssetAsTreeApi):
         if not node_key:
             nodes, unfolded_node = query_node_util.get_top_level_nodes(with_unfolded_node=True)
             if unfolded_node:
-                """ 默认展开的节点, 获取根节点下的资产 """
+                """ Node expanded by default; get the assets under the root node """
                 assets = query_asset_util.get_node_assets(key=unfolded_node.key)
                 self.default_unfolded_node_key = unfolded_node.key
             else:
@@ -177,7 +177,7 @@ class UserPermedNodeChildrenWithAssetsAsCategoryTreeApi(BaseUserNodeWithAssetAsT
         if not self.tp or not all(self.tp):
             nodes = UserPermAssetUtil.get_type_nodes_tree_or_cached(self.user)
             if self.request.query_params.get('count_resource'):
-                # 解决在 lina 使用该 api 类型树套娃问题
+                # Fix the recursive/nested type-tree issue when this API is used in lina
                 for node in nodes:
                     if node.get('meta'):
                         node['isParent'] = False

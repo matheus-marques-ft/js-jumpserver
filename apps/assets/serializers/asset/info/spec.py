@@ -25,7 +25,7 @@ class WebSpecSerializer(serializers.ModelSerializer):
     def get_fields(self):
         fields = super().get_fields()
         if self.is_retrieve():
-            # 查看 Web 资产详情时
+            # When viewing Web asset details
             self.pop_fields_if_need(fields)
         return fields
 

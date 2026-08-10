@@ -163,9 +163,9 @@ class JSONFilterMixin:
     @staticmethod
     def get_json_filter_attr_q(name, value, match):
         """
-        :param name: 属性名称
-        :param value: 定义的结果
-        :param match: 匹配方式
+        :param name: Attribute name
+        :param value: Defined result
+        :param match: Match method
         :return:
         """
         from ..node import Node
@@ -216,7 +216,7 @@ class Asset(NodesRelationMixin, LabeledMixin, AbsConnectivity, JSONFilterMixin, 
     date_last_login = models.DateTimeField(
         null=True, blank=True, db_index=True, verbose_name=_('Last login time')
     )
-    gathered_info = models.JSONField(verbose_name=_('Gathered info'), default=dict, blank=True)  # 资产的一些信息，如 硬件信息
+    gathered_info = models.JSONField(verbose_name=_('Gathered info'), default=dict, blank=True)  # Some asset info, such as hardware info
     custom_info = models.JSONField(verbose_name=_('Custom info'), default=dict)
 
     objects = AssetManager.from_queryset(AssetQuerySet)()

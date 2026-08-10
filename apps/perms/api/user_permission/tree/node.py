@@ -27,12 +27,12 @@ class NodeTreeMixin(SerializeToTreeNodeMixin):
 
 
 class UserAllPermedNodesAsTreeApi(NodeTreeMixin, UserAllPermedNodesApi):
-    """ 用户 '授权的节点' 作为树 """
+    """ The user's 'granted nodes' as a tree """
     pass
 
 
 class UserPermedNodeChildrenAsTreeApi(NodeTreeMixin, UserPermedNodeChildrenApi):
-    """ 用户授权的节点下的子节点树 """
+    """ Tree of child nodes under a node granted to the user """
     pass
 
 

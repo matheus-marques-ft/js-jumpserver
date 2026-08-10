@@ -25,9 +25,9 @@ class DeployOptionsSerializer(serializers.Serializer):
         (4, _('Per User (User number limit)')),
     )
 
-    # 单用户单会话，
-    # 默认值为1，表示启用状态（组策略默认值），此时单用户只能有一个会话连接
-    # 如果改为 0 ，表示禁用状态，此时可以单用户多会话连接
+    # Single user single session,
+    # default value is 1, meaning enabled (group policy default), in which case a single user can only have one session connected
+    # if changed to 0, meaning disabled, in which case a single user can have multiple session connections
     SESSION_PER_USER = (
         (0, _("Disabled")),
         (1, _("Enabled")),
@@ -143,7 +143,7 @@ class AppletHostSerializer(HostSerializer):
 
     def get_validators(self):
         validators = super().get_validators()
-        # 不知道为啥没有继承过来
+        # Not sure why this wasn't inherited
         uniq_validator = ProjectUniqueValidator(
             queryset=AppletHost.objects.all(),
             fields=('org_id', 'name')

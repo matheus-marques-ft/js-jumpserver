@@ -7,6 +7,6 @@ class PiicoDevice(Device):
     def __init__(self):
         self.open()
 
-    # 默认去lib路径检索
+    # Default to searching the lib path
     def open(self, driver_path="libpiico_ccmu.so"):
         super().open(driver_path)

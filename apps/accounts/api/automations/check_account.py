@@ -126,12 +126,12 @@ class AccountRiskViewSet(OrgBulkModelViewSet):
         queryset = (
             AccountRisk.objects.select_related(
                 "asset", "asset__platform"
-            )  # 使用 select_related 来优化 asset 和 asset__platform 的查询
+            )  # Use select_related to optimize the asset and asset__platform queries
             .values(
                 "asset__id", "asset__name", "asset__address", "asset__platform__name"
-            )  # 添加需要的字段
-            .annotate(risk_total=Count("id"))  # 计算风险总数
-            .annotate(**annotations)  # 使用上面定义的 annotations 进行计数
+            )  # Add the required fields
+            .annotate(risk_total=Count("id"))  # Count the total number of risks
+            .annotate(**annotations)  # Count using the annotations defined above
         )
         return self.get_paginated_response_from_queryset(queryset)
 

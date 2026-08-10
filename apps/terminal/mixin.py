@@ -17,12 +17,12 @@ class LokiMixin:
 
     @staticmethod
     def _escape_loki_regex(value):
-        # 转义 \ " { } | = ~ ! 等 LogQL stream selector 特殊字符
+        # Escape special LogQL stream selector characters such as \ " { } | = ~ !
         return re.sub(r'([\\"{}\[\]|=~!()])', r"\\\1", str(value))
 
     @staticmethod
     def _escape_loki_filter(value):
-        # 转义 line filter 中的 \ 和 " 防止逃逸
+        # Escape \ and " in the line filter to prevent escaping issues
         return str(value).replace("\\", "\\\\").replace('"', '\\"')
 
     @classmethod

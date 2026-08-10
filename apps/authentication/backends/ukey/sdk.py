@@ -32,7 +32,7 @@ class UKeySDKConfig:
         return self._vendor_path('sdk_config.yaml')
 
     def load_sdk_script_content(self):
-        """返回 SDK JS 文件内容，按 vendor 缓存，vendor 变更或服务重启后自动失效。"""
+        """Return the SDK JS file content, cached per vendor; invalidated automatically when the vendor changes or the service restarts."""
         vendor = getattr(settings, 'AUTH_UKEY_VENDOR', '')
         cache_key = f'_sdk_script_cache'
         cache = getattr(self, cache_key, {})
@@ -46,7 +46,7 @@ class UKeySDKConfig:
         return cache[vendor]
 
     def load_sdk_config_content(self):
-        """返回原始 YAML 配置数据，按 vendor 缓存，vendor 变更或服务重启后自动失效。"""
+        """Return the raw YAML config data, cached per vendor; invalidated automatically when the vendor changes or the service restarts."""
         vendor = getattr(settings, 'AUTH_UKEY_VENDOR', '')
         cache_key = f'_sdk_config_cache'
         cache = getattr(self, cache_key, {})
@@ -66,70 +66,70 @@ class UKeySDKConfig:
         with open(config_file, 'r', encoding='utf-8') as f:
             return yaml.safe_load(f) or {}
 
-    # ── CA / 证书链（只读系统设置，不允许在 YAML 中配置）────────────────────────
+    # ── CA / certificate chain (read-only system settings, not configurable in YAML) ──
 
     @property
     def ca_cert_content(self):
-        """CA 根证书 PEM 内容，只从系统设置读取。"""
+        """CA root certificate PEM content, read only from system settings."""
         return getattr(settings, 'AUTH_UKEY_CA_CERT_CONTENT', '') or ''
 
     @property
     def ca_key_content(self):
-        """CA 私钥 PEM 内容，只从系统设置读取。"""
+        """CA private key PEM content, read only from system settings."""
         return getattr(settings, 'AUTH_UKEY_CA_KEY_CONTENT', '') or ''
 
     @property
     def ca_key_pass(self):
-        """CA 私钥密码，只从系统设置读取。"""
+        """CA private key password, read only from system settings."""
         return str(getattr(settings, 'AUTH_UKEY_CA_KEY_PASS', ''))
     
     @property
     def ca_cert_asym_alg(self):
-        # 从 CA 证书内容解析出签名算法类型，返回 'RSA' 或 'SM2' 等字符串，供 YAML 配置中使用
+        # Parse the signature algorithm type from the CA certificate content, returning a string such as 'RSA' or 'SM2' for use in the YAML config
         return detect_cert_algorithm(self.ca_cert_content)
 
-    # ── 工具 ─────────────────────────────────────────────────────────────────
+    # ── Utilities ────────────────────────────────────────────────────────────
 
     @property
     def gmssl_bin(self):
-        """gmssl 二进制路径，默认 'gmssl'（系统 PATH 中查找）。"""
+        """gmssl binary path, defaults to 'gmssl' (looked up on the system PATH)."""
         return 'gmssl'
 
-    # ── 认证流程 ──────────────────────────────────────────────────────────────
+    # ── Authentication flow ─────────────────────────────────────────────────────
 
     @property
     def challenge_ttl(self):
-        """Challenge 码在 Redis 中的存活时间（秒），默认 300。"""
+        """Challenge code TTL in Redis (seconds), defaults to 300."""
         v = getattr(settings, 'AUTH_UKEY_CHALLENGE_TTL', 300)
         return int(v)
 
-    # ── 证书签发 ──────────────────────────────────────────────────────────────
+    # ── Certificate issuance ────────────────────────────────────────────────────
 
     @property
     def enroll_enabled(self):
-        """是否开启用户证书签发功能。"""
+        """Whether user certificate issuance is enabled."""
         v = getattr(settings, 'AUTH_UKEY_ENROLL_ENABLED', False)
         return bool(v)
 
     @property
     def enroll_validity_days(self):
-        """签发证书的有效期（天），默认 365。"""
+        """Validity period of the issued certificate (days), defaults to 365."""
         v = getattr(settings, 'AUTH_UKEY_ENROLL_VALIDITY_DAYS', 365)
         return int(v)
     
     @property
     def default_pin(self):
-        """证书默认 PIN 码，默认为空字符串（不设置 PIN）。"""
+        """Default certificate PIN code, defaults to an empty string (no PIN set)."""
         v = getattr(settings, 'AUTH_UKEY_DEFAULT_PIN', '')
         return str(v)
 
-    # ── 厂商 SDK 映射（原始数据，供 API 层序列化给前端）───────────────────────
+    # ── Vendor SDK mapping (raw data, serialized to the frontend by the API layer) ──
         
     @staticmethod
     def _render(sdk_config, trans_filter=None):
         """
-        只处理 YAML 数据中的 i18n 翻译标记，不做模板变量替换。
-          - {{ 'text' | trans }} → 按 trans_filter 翻译；不传则原文返回
+        Only processes i18n translation markers in the YAML data; does not perform template variable substitution.
+          - {{ 'text' | trans }} -> translated via trans_filter; if not provided, the original text is returned
         """
         import re
         _filter = trans_filter or (lambda s: s)
@@ -150,8 +150,8 @@ class UKeySDKConfig:
         return _walk(sdk_config)
 
     def _build_trans_filter(self, sdk_config, lang):
-        """构建 Jinja2 | trans filter 函数，按 lang 从 YAML i18n 表查找翻译。
-        未找到翻译时原文返回；语言键自动归一化（zh_hant → zh-hant）。
+        """Build the Jinja2 | trans filter function, which looks up the translation for lang from the YAML i18n table.
+        Returns the original text if no translation is found; language keys are automatically normalized (zh_hant -> zh-hant).
         """
         lang = Language.to_internal_code(lang)
         i18n_raw = sdk_config.get('i18n') or {}
@@ -174,8 +174,8 @@ class UKeySDKConfig:
 
 
     def get_sdk_config(self, lang='en'):
-        """返回去掉 'cert'/'i18n' 顶层 key 后的厂商 SDK 方法映射。
-        YAML 中任意字符串值均可用 {{ 'text' | trans }} 语法标记为可翻译。
+        """Return the vendor SDK method mapping with the top-level 'cert'/'i18n' keys removed.
+        Any string value in the YAML can be marked as translatable using the {{ 'text' | trans }} syntax.
         """
         sdk_config = self.load_sdk_config_content()
         trans_filter = self._build_trans_filter(sdk_config, lang)
@@ -184,30 +184,30 @@ class UKeySDKConfig:
         sdk_config = {k: v for k, v in sdk_config.items() if k not in ('i18n',)}
         return sdk_config
     
-    # 当一个 config 值是含这些 key 的 dict 时，视为"算法分支字典"，自动按当前证书算法解析
+    # When a config value is a dict containing these keys, it is treated as an "algorithm branch dict" and automatically resolved based on the current certificate algorithm
     _ALGO_BRANCH_KEYS = frozenset({'SM2', 'RSA-1024', 'RSA-2048', 'default'})
 
     @classmethod
     def _is_algo_branch(cls, value):
-        """判断 value 是否为算法分支字典（至少含一个已知算法 key）。"""
+        """Determine whether value is an algorithm branch dict (contains at least one known algorithm key)."""
         return isinstance(value, dict) and bool(cls._ALGO_BRANCH_KEYS & value.keys())
 
     def _resolve_algo_branch(self, branch, algo_key):
-        """从算法分支字典中取当前算法对应的值，找不到时退回 default，再找不到返回 None。"""
+        """Get the value corresponding to the current algorithm from the algorithm branch dict; fall back to default if not found, and return None if that is also missing."""
         if algo_key in branch:
             return branch[algo_key]
         return branch.get('default')
 
     def _apply_internal_config_to_sdk_config(self, sdk_config):
-        """将 'config' 配置段渲染后添加到 data['config']，供前端 API 层使用。
-        
-        YAML config 中值为算法分支字典（含 SM2/RSA-1024/RSA-2048/default 等 key）的字段，
-        会自动根据 CA 证书算法类型解析为对应的标量值，无需在此处逐字段枚举。
+        """Render the 'config' section and add it to data['config'] for use by the frontend API layer.
+
+        Fields in the YAML config whose value is an algorithm branch dict (containing keys such as SM2/RSA-1024/RSA-2048/default)
+        are automatically resolved to the corresponding scalar value based on the CA certificate's algorithm type, without needing to enumerate each field here.
         """
         config = sdk_config.get('config') or {}
         asym_alg_name = self.ca_cert_asym_alg
 
-        # 自动展开所有算法分支字典字段
+        # Automatically expand all algorithm branch dict fields
         resolved_config = {}
         for k, v in config.items():
             if self._is_algo_branch(v):
@@ -215,7 +215,7 @@ class UKeySDKConfig:
             else:
                 resolved_config[k] = v
 
-        # 追加后端专有字段（不在 YAML config 中配置）
+        # Append backend-specific fields (not configured in the YAML config)
         resolved_config.update({
             'asym_alg_name': asym_alg_name,
             'challenge_ttl': self.challenge_ttl,

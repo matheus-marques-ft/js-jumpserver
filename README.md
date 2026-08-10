@@ -8,7 +8,6 @@
 [![][docs-shield]][docs-link]
 [![][deepwiki-shield]][deepwiki-link]
 [![][discord-shield]][discord-link]
-[![][docker-shield]][docker-link]
 [![][github-release-shield]][github-release-link]
 [![][github-stars-shield]][github-stars-link]
 
@@ -34,7 +33,7 @@ JumpServer is an open-source Privileged Access Management (PAM) platform that pr
 Prepare a clean Linux Server ( 64 bit, >= 4c8g )
 
 ```sh
-curl -sSL https://github.com/jumpserver/jumpserver/releases/latest/download/quick_start.sh | bash
+curl -sSL https://github.com/matheus-marques-ft/js-jumpserver/releases/latest/download/quick_start.sh | bash
 ```
 
 Access JumpServer in your browser at `http://your-jumpserver-ip/`
@@ -103,25 +102,43 @@ https://www.gnu.org/licenses/gpl-3.0.html
 
 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an " AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
+## Repository Layout
+
+This is the JumpServer **core** — the Django backend that everything else in this fork talks to: [js-lina](https://github.com/matheus-marques-ft/js-lina) (admin Web UI) and [js-luna](https://github.com/matheus-marques-ft/js-luna) (Web Terminal, bundled together into the `web` image by [js-docker-web](https://github.com/matheus-marques-ft/js-docker-web)) call its REST API, while [js-koko](https://github.com/matheus-marques-ft/js-koko) (SSH/character-protocol connector) and [js-lion](https://github.com/matheus-marques-ft/js-lion) (RDP/graphical connector) register with it and pull asset/permission data from it. [js-installer](https://github.com/matheus-marques-ft/js-installer) orchestrates all of these components together via `compose/*.yml`.
+
+- **`apps/`** — the Django project. Each subdirectory is an app: `assets` (asset/node/protocol inventory), `accounts` (privileged accounts + automations, `apps/accounts/demos/` has sample account-automation scripts), `perms` (asset/application permissions, RBAC-adjacent), `rbac` (roles/permissions engine), `authentication` (login backends — `apps/authentication/backends/` includes OIDC/SAML/CAS/LDAP), `terminal` (session/connect-method plumbing consumed by koko/lion — `connect_methods.py` maps a protocol to the native/web clients allowed to reach it), `acls` (login/command/connect ACLs), `orgs` (multi-tenancy), `tickets` (approval workflows), `ops` (Ansible-based automation jobs), `audits` (session recording/activity log), `labels`, `notifications`, `reports`, `settings` (site-wide config), `common` (shared utilities), `i18n` (translation tooling + `apps/i18n/core/**/*.po` locale catalogs), `libs` (vendored/adapted third-party helpers), `jumpserver` (Django project settings/urls/asgi/wsgi glue).
+- **`utils/`** — dev/ops helper scripts (`ansible_executor/` builds the Ansible Executor image, `mac_pkg.sh` for local macOS dev setup).
+- **`requirements/`** — pinned Python dependency sets per install target.
+- **`readmes/`** — translated copies of this README (language switcher at the top of the page).
+- **`Dockerfile-base`** / **`Dockerfile-python`** / **`Dockerfile`** — layered build: `Dockerfile-base` (Python deps → `core-base` image) and `Dockerfile-python` (bare Python base) feed into `Dockerfile`, which builds the actual `core` application image.
+
+### CI → GHCR mapping
+
+| Workflow | Publishes |
+|---|---|
+| `build-base-image.yml` | `ghcr.io/matheus-marques-ft/core-base:<timestamp>` — triggered by dependency/Dockerfile-base changes, auto-commits the new tag into `Dockerfile` |
+| `build-python-image.yml` | `ghcr.io/matheus-marques-ft/core-base:python-<tag>` — manual dispatch |
+| `build-ansible-executor.yml` | `ghcr.io/matheus-marques-ft/ansible-executor:<timestamp>` / `:latest` |
+| `build-release-image.yml` | `ghcr.io/matheus-marques-ft/core:<tag>` (and `:latest`) — triggered on `v*` tags |
+| `release-drafter.yml` | drafts a GitHub Release with a patched `quick_start.sh` asset (pointed at this fork's installer/registry) — triggered on `v*` tags |
+| `i18n-auto-translate.yml` | not a build — auto-translates `apps/i18n/**` catalogs via OpenAI/Anthropic API keys (needs `secrets` configured to run; harmless no-op otherwise) |
+
 <!-- JumpServer official link -->
 [docs-link]: https://jumpserver.com/docs
 [discord-link]: https://discord.com/invite/W6vYXmAQG2
 [deepwiki-link]: https://deepwiki.com/jumpserver/jumpserver/
-[contributing-link]: https://github.com/jumpserver/jumpserver/blob/dev/CONTRIBUTING.md
+[contributing-link]: https://github.com/matheus-marques-ft/js-jumpserver/blob/main/CONTRIBUTING.md
 
 <!-- JumpServer Other link-->
 [license-link]: https://www.gnu.org/licenses/gpl-3.0.html
-[docker-link]: https://hub.docker.com/u/jumpserver
-[github-release-link]: https://github.com/jumpserver/jumpserver/releases/latest
-[github-stars-link]: https://github.com/jumpserver/jumpserver
-[github-issues-link]: https://github.com/jumpserver/jumpserver/issues
+[github-release-link]: https://github.com/matheus-marques-ft/js-jumpserver/releases/latest
+[github-stars-link]: https://github.com/matheus-marques-ft/js-jumpserver
+[github-issues-link]: https://github.com/matheus-marques-ft/js-jumpserver/issues
 
 <!-- Shield link-->
 [docs-shield]: https://img.shields.io/badge/documentation-148F76
-[github-release-shield]: https://img.shields.io/github/v/release/jumpserver/jumpserver
-[github-stars-shield]: https://img.shields.io/github/stars/jumpserver/jumpserver?color=%231890FF&style=flat-square   
-[docker-shield]: https://img.shields.io/docker/pulls/jumpserver/jms_all.svg
-[license-shield]: https://img.shields.io/github/license/jumpserver/jumpserver
+[github-release-shield]: https://img.shields.io/github/v/release/matheus-marques-ft/js-jumpserver
+[github-stars-shield]: https://img.shields.io/github/stars/matheus-marques-ft/js-jumpserver?color=%231890FF&style=flat-square   
+[license-shield]: https://img.shields.io/github/license/matheus-marques-ft/js-jumpserver
 [deepwiki-shield]: https://img.shields.io/badge/deepwiki-devin?color=blue
 [discord-shield]: https://img.shields.io/discord/1194233267294052363?style=flat&logo=discord&logoColor=%23f5f5f5&labelColor=%235462eb&color=%235462eb
-# js-jumpserver

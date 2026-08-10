@@ -141,7 +141,8 @@ class AccountBackupHandler:
         self.name = self.execution.snapshot.get('name', '-')
 
     def get_accounts(self):
-        # TODO 可以优化一下查询 在账号上做 category 的缓存 避免数据量大时连表操作
+        # TODO: Could optimize this query by caching category on the account
+        #  to avoid a join when the data volume is large
         types = self.execution.snapshot.get('types', [])
         self.manager.summary['total_types'] = len(types)
         qs = Account.objects.filter(

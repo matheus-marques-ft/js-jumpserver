@@ -11,7 +11,7 @@ __all__ = ['AssetPermissionViewSet']
 
 class AssetPermissionViewSet(OrgBulkModelViewSet):
     """
-    资产授权列表的增删改查api
+    API for listing, creating, updating and deleting asset permissions
     """
     model = AssetPermission
     serializer_classes = {

@@ -35,7 +35,7 @@ jobs:
       - name: Auto Translate
         uses: jumpserver-dev/action-translate-readme@main
         env:
-          GITHUB_TOKEN: ${{ secrets.PRIVATE_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENAI_API_KEY: ${{ secrets.GPT_API_TOKEN }}
           GPT_MODE: ${{ github.event.inputs.gpt_mode }}
           SOURCE_README: ${{ github.event.inputs.source_readme }}

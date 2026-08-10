@@ -174,8 +174,8 @@ class SafeRedirectMiddleware:
                 request.resolver_match.namespace.startswith('authentication') and
                 not request.resolver_match.namespace.startswith('authentication:oauth2-provider')
         ):
-            # 认证相关的路由跳过验证 /core/auth/..., 
-            # 但 oauth2-provider 除外, 因为它会重定向到第三方客户端, 希望给出更友好的提示
+            # Skip validation for auth-related routes /core/auth/...,
+            # but not for oauth2-provider, since it redirects to a third-party client and we want to give a friendlier hint
             return response
         location = response.get('Location')
         if not location:

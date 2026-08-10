@@ -29,7 +29,7 @@ __all__ = [
 
 
 class ReadableHiddenField(serializers.HiddenField):
-    """可读的 HiddenField"""
+    """A readable HiddenField"""
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -189,13 +189,13 @@ class ObjectRelatedField(serializers.RelatedField):
 
     def get_schema(self):
         """
-        为 drf-spectacular 提供 OpenAPI schema
+        Provide an OpenAPI schema for drf-spectacular
         """
-        # 获取字段的基本信息
+        # Get the field's basic information
         field_type = 'array' if self.many else 'object'
 
         if field_type == 'array':
-            # 如果是多对多关系
+            # If it's a many-to-many relation
             return {
                 'type': 'array',
                 'items': self._get_openapi_item_schema(),
@@ -203,7 +203,7 @@ class ObjectRelatedField(serializers.RelatedField):
                 'title': getattr(self, 'label', ''),
             }
         else:
-            # 如果是一对一关系
+            # If it's a one-to-one relation
             return {
                 'type': 'object',
                 'properties': self._get_openapi_properties_schema(),
@@ -213,19 +213,19 @@ class ObjectRelatedField(serializers.RelatedField):
 
     def _get_openapi_item_schema(self):
         """
-        获取数组项的 OpenAPI schema
+        Get the OpenAPI schema for an array item
         """
         return self._get_openapi_object_schema()
 
     def _get_openapi_object_schema(self):
         """
-        获取对象的 OpenAPI schema
+        Get the OpenAPI schema for an object
         """
         properties = {}
 
-        # 动态分析 attrs 中的属性类型
+        # Dynamically analyze the attribute types in attrs
         for attr in self.attrs:
-            # 尝试从 queryset 的 model 中获取字段信息
+            # Try to get field information from the queryset's model
             field_type = self._infer_field_type(attr)
             properties[attr] = {
                 'type': field_type,
@@ -240,10 +240,10 @@ class ObjectRelatedField(serializers.RelatedField):
 
     def _infer_field_type(self, attr_name):
         """
-        智能推断字段类型
+        Intelligently infer the field type
         """
         try:
-            # 如果有 queryset，尝试从 model 中获取字段信息
+            # If there is a queryset, try to get field information from the model
             if hasattr(self, 'queryset') and self.queryset is not None:
                 model = self.queryset.model
                 if hasattr(model, '_meta') and hasattr(model._meta, 'fields'):
@@ -253,39 +253,39 @@ class ObjectRelatedField(serializers.RelatedField):
         except Exception:
             pass
 
-        # 如果没有 queryset 或无法获取字段信息，使用启发式规则
+        # If there is no queryset or field information can't be obtained, use heuristic rules
         return self._heuristic_field_type(attr_name)
 
     def _map_django_field_type(self, field):
         """
-        将 Django 字段类型映射到 OpenAPI 类型
+        Map a Django field type to an OpenAPI type
         """
         field_type = type(field).__name__
 
-        # 整数类型
+        # Integer types
         if 'Integer' in field_type or 'BigInteger' in field_type or 'SmallInteger' in field_type:
             return 'integer'
-        # 浮点数类型
+        # Floating-point types
         elif 'Float' in field_type or 'Decimal' in field_type:
             return 'number'
-        # 布尔类型
+        # Boolean type
         elif 'Boolean' in field_type:
             return 'boolean'
-        # 日期时间类型
+        # Date/time types
         elif 'DateTime' in field_type or 'Date' in field_type or 'Time' in field_type:
             return 'string'
-        # 文件类型
+        # File types
         elif 'File' in field_type or 'Image' in field_type:
             return 'string'
-        # 其他类型默认为字符串
+        # Other types default to string
         else:
             return 'string'
 
     def _heuristic_field_type(self, attr_name):
         """
-        启发式推断字段类型
+        Heuristically infer the field type
         """
-        # 基于属性名的启发式规则
+        # Heuristic rules based on the attribute name
 
         if attr_name in ['is_active', 'enabled', 'visible'] or attr_name.startswith('is_'):
             return 'boolean'
@@ -294,12 +294,12 @@ class ObjectRelatedField(serializers.RelatedField):
         elif attr_name in ['price', 'rate', 'percentage']:
             return 'number'
         else:
-            # 默认返回字符串类型
+            # Default to returning the string type
             return 'string'
 
     def _get_openapi_properties_schema(self):
         """
-        获取对象属性的 OpenAPI schema
+        Get the OpenAPI schema for object properties
         """
         return self._get_openapi_object_schema()['properties']
 
@@ -323,12 +323,12 @@ class TreeChoicesField(serializers.MultipleChoiceField):
 
 class BitChoicesField(TreeChoicesField):
     """
-    位字段
+    Bit field
     """
 
     def to_representation(self, value):
         if isinstance(value, list) and len(value) == 1:
-            # Swagger 会使用 field.choices.keys() 迭代传递进来
+            # Swagger will iterate using field.choices.keys() and pass it in
             return [
                 {"value": c.name, "label": c.label}
                 for c in self._choice_cls
@@ -348,7 +348,7 @@ class BitChoicesField(TreeChoicesField):
             return value
         if isinstance(data[0], dict):
             data = [d["value"] for d in data]
-        # 所有的
+        # All of them
         if "all" in data:
             for c in self._choice_cls:
                 value |= c.value
@@ -363,7 +363,7 @@ class BitChoicesField(TreeChoicesField):
 
     def get_schema(self):
         """
-        为 drf-spectacular 提供 OpenAPI schema
+        Provide an OpenAPI schema for drf-spectacular
         """
         return {
             'type': 'array',
@@ -380,10 +380,11 @@ class BitChoicesField(TreeChoicesField):
 
     def run_validation(self, data=empty):
         """
-        备注:
-        创建授权规则不包含 actions 字段时, 会使用默认值(AssetPermission 中设置),
-        会直接使用 ['connect', '...'] 等字段保存到数据库，导致类型错误
-        这里将获取到的值再执行一下 to_internal_value 方法, 转化为内部值
+        Note:
+        When creating an authorization rule without an actions field, the default value
+        (set in AssetPermission) is used, and fields like ['connect', '...'] end up being
+        saved to the database as-is, causing a type error.
+        Here the obtained value is run through to_internal_value again to convert it to the internal value
         """
         data = super().run_validation(data)
         if isinstance(data, int):

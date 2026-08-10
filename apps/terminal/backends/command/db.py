@@ -17,7 +17,7 @@ class CommandStore(CommandBase):
 
     def save(self, command):
         """
-        保存命令到数据库
+        Save the command to the database
         """
         cmd_input = pretty_string(command['input'])
         self.model.objects.create(
@@ -30,7 +30,7 @@ class CommandStore(CommandBase):
 
     def bulk_save(self, commands):
         """
-        批量保存命令到数据库, command的顺序和save中一致
+        Bulk save commands to the database; the order of commands is consistent with save()
         """
         _commands = []
         for c in commands:

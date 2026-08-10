@@ -5,9 +5,9 @@ from common.exceptions import JMSException
 from common.utils import get_logger
 from tencentcloud.common import credential
 from tencentcloud.common.exception.tencent_cloud_sdk_exception import TencentCloudSDKException
-# 导入对应产品模块的client models。
+# Import the client models of the corresponding product module.
 from tencentcloud.sms.v20210111 import sms_client, models
-# 导入可选配置类
+# Import optional configuration classes
 from tencentcloud.common.profile.client_profile import ClientProfile
 from tencentcloud.common.profile.http_profile import HttpProfile
 
@@ -35,12 +35,12 @@ class TencentSMS(BaseSMSClient):
 
         cred = credential.Credential(secret_id, secret_key)
         httpProfile = HttpProfile()
-        httpProfile.reqMethod = "POST"  # post请求(默认为post请求)
-        httpProfile.reqTimeout = 30    # 请求超时时间，单位为秒(默认60秒)
+        httpProfile.reqMethod = "POST"  # POST request (POST is the default)
+        httpProfile.reqTimeout = 30    # Request timeout, in seconds (default 60 seconds)
         httpProfile.endpoint = "sms.tencentcloudapi.com"
 
         clientProfile = ClientProfile()
-        clientProfile.signMethod = "TC3-HMAC-SHA256"  # 指定签名算法
+        clientProfile.signMethod = "TC3-HMAC-SHA256"  # Specify the signing algorithm
         clientProfile.language = "en-US"
         clientProfile.httpProfile = httpProfile
         self.client = sms_client.SmsClient(cred, "ap-guangzhou", clientProfile)
@@ -48,32 +48,42 @@ class TencentSMS(BaseSMSClient):
     def send_sms(self, phone_numbers: list, sign_name: str, template_code: str, template_param: OrderedDict, **kwargs):
         try:
             req = models.SendSmsRequest()
-            # 基本类型的设置:
-            # SDK采用的是指针风格指定参数，即使对于基本类型你也需要用指针来对参数赋值。
-            # SDK提供对基本类型的指针引用封装函数
-            # 帮助链接：
-            # 短信控制台: https://console.cloud.tencent.com/smsv2
+            # Setting basic types:
+            # The SDK uses a pointer-style approach for parameters, so even for
+            # basic types you need to assign values via a pointer.
+            # The SDK provides wrapper functions for pointer references to basic types
+            # Helpful links:
+            # SMS console: https://console.cloud.tencent.com/smsv2
             # sms helper: https://cloud.tencent.com/document/product/382/3773
 
-            # 短信应用ID: 短信SdkAppId在 [短信控制台] 添加应用后生成的实际SdkAppId，示例如1400006666
+            # SMS application ID: the actual SdkAppId generated after adding an
+            # application in the [SMS console], e.g. 1400006666
             req.SmsSdkAppId = self.sdkappid
-            # 短信签名内容: 使用 UTF-8 编码，必须填写已审核通过的签名，签名信息可登录 [短信控制台] 查看
+            # SMS signature content: UTF-8 encoded, must be an approved signature;
+            # signature info can be viewed by logging into the [SMS console]
             req.SignName = sign_name
-            # 短信码号扩展号: 默认未开通，如需开通请联系 [sms helper]
+            # SMS extension code: not enabled by default, contact [sms helper] to enable
             req.ExtendCode = ""
-            # 用户的 session 内容: 可以携带用户侧 ID 等上下文信息，server 会原样返回
+            # User session content: can carry client-side context such as user
+            # IDs; the server returns it unchanged
             req.SessionContext = "Jumpserver"
-            # 国际/港澳台短信 senderid: 国内短信填空，默认未开通，如需开通请联系 [sms helper]
+            # International/Hong Kong-Macao-Taiwan SMS senderid: leave blank for
+            # domestic SMS, not enabled by default, contact [sms helper] to enable
             req.SenderId = ""
-            # 下发手机号码，采用 E.164 标准，+[国家或地区码][手机号]
-            # 示例如：+8613711112222， 其中前面有一个+号 ，86为国家码，13711112222为手机号，最多不要超过200个手机号
+            # Recipient phone numbers, using the E.164 standard, +[country or
+            # region code][phone number]
+            # Example: +8613711112222, with a leading +, 86 as country code,
+            # 13711112222 as the phone number; no more than 200 numbers
             req.PhoneNumberSet = phone_numbers
-            # 模板 ID: 必须填写已审核通过的模板 ID。模板ID可登录 [短信控制台] 查看
+            # Template ID: must be an approved template ID. The template ID can
+            # be viewed by logging into the [SMS console]
             req.TemplateId = template_code
-            # 模板参数: 若无模板参数，则设置为空
+            # Template parameters: set to empty if there are none
             req.TemplateParamSet = list(template_param.values())
-            # 通过client对象调用DescribeInstances方法发起请求。注意请求方法名与请求对象是对应的。
-            # 返回的resp是一个DescribeInstancesResponse类的实例，与请求对象对应。
+            # Call the DescribeInstances method via the client object to send
+            # the request. Note the request method name corresponds to the request object.
+            # The returned resp is an instance of the DescribeInstancesResponse
+            # class, corresponding to the request object.
             logger.info(f'Tencent sms send: '
                         f'phone_numbers={phone_numbers} '
                         f'sign_name={sign_name} '

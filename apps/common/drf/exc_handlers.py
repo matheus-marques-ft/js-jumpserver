@@ -18,9 +18,9 @@ unexpected_exception_logger = getLogger('unexpected_exception')
 
 def extract_object_name(exc, index=0):
     """
-    `index` 是从 0 开始数的， 比如：
+    `index` is 0-based, for example:
     `No User matches the given query.`
-    提取 `User`，`index=1`
+    extracts `User`, `index=1`
     """
     if exc.args:
         (msg, *others) = exc.args

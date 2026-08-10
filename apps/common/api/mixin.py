@@ -61,7 +61,7 @@ class RelationMixin:
         self.through = getattr(self.m2m_field.model, self.m2m_field.attname).through
 
     def get_queryset(self):
-        # 注意，此处拦截了 `get_queryset` 没有 `super`
+        # Note: `get_queryset` is intercepted here without calling `super`
         queryset = self.through.objects.all()
         return queryset
 
@@ -73,7 +73,7 @@ class RelationMixin:
 
         for i in instances:
             to_id = getattr(i, self.to_field).id
-            # TODO 优化，不应该每次都查询数据库
+            # TODO: optimize, should not query the database every time
             from_obj = getattr(i, self.from_field)
             from_to_mapper[from_obj].append(to_id)
 
@@ -112,11 +112,11 @@ class QuerySetMixin:
         if action != 'list':
             return queryset
 
-        # 如果分页器有设置 limit，则不限制
+        # If the paginator has a limit set, don't restrict it
         if self.paginator and self.paginator.get_limit(self.request):
             return queryset
 
-        # 如果分页器没有设置 limit，则不限制
+        # If the paginator has no limit set, don't restrict it
         if getattr(self, 'page_no_limit', False):
             return queryset
 
@@ -138,7 +138,7 @@ class QuerySetMixin:
     def setup_eager_loading(self, queryset, is_paginated=False):
         is_export_request = self.request.query_params.get('format') in ['csv', 'xlsx']
         no_request_page = self.request.query_params.get('limit') is None
-        # 不分页不走一般这个，是因为会消耗多余的 sql 查询, 不如分页的时候查询一次
+        # When not paginated, this path is usually skipped because it would consume an extra sql query; better to query once when paginating
         if not is_export_request and not is_paginated and not no_request_page:
             return queryset
 
@@ -165,7 +165,7 @@ class QuerySetMixin:
 
         serializer_class = self.get_serializer_class()
         if page and serializer_class:
-            # 必须要返回 ids，用于排序
+            # Must return ids, used for ordering
             queryset, ids = self._get_page_again(page, model)
             page = self.setup_eager_loading(queryset, is_paginated=True)
             page_mapper = {str(obj.id): obj for obj in page}
@@ -174,7 +174,7 @@ class QuerySetMixin:
 
     def _get_page_again(self, page, model):
         """
-        因为 setup_eager_loading 需要是 queryset 结构, 所以必须要重新构造
+        Since setup_eager_loading requires a queryset structure, it must be reconstructed
         """
         id_org_mapper = {str(obj.id): getattr(obj, 'org_id', None) for obj in page}
         ids = list(id_org_mapper.keys())
@@ -194,7 +194,7 @@ class QuerySetMixin:
 
 class ExtraFilterFieldsMixin:
     """
-    额外的 api filter
+    Extra api filter
     """
     default_added_filters = (
         CustomFilterBackend, IDSpmFilterBackend, IDInFilterBackend,
@@ -206,7 +206,7 @@ class ExtraFilterFieldsMixin:
 
     def set_compatible_fields(self):
         """
-        兼容老的 filter_fields
+        Compatible with the old filter_fields
         """
         if not hasattr(self, 'filter_fields') and hasattr(self, 'filterset_fields'):
             self.filter_fields = self.filterset_fields
@@ -220,7 +220,7 @@ class ExtraFilterFieldsMixin:
             self.default_added_filters,
             self.extra_filter_backends,
         ))
-        # 这个要放在最后
+        # This must be placed last
         backends.append(NotOrRelFilterBackend)
         return backends
 
@@ -232,7 +232,7 @@ class ExtraFilterFieldsMixin:
 
 class OrderingFielderFieldsMixin:
     """
-    额外的 api ordering
+    Extra api ordering
     """
     ordering_fields = None
     extra_ordering_fields = []
@@ -249,7 +249,7 @@ class OrderingFielderFieldsMixin:
             valid_fields = self.get_valid_ordering_fields()
         except Exception as e:
             logger.debug('get_valid_ordering_fields error: %s, pass' % e)
-            # 这里千万不要这么用，会让 logging 重复，至于为什么，我也不知道
+            # Do NOT use it this way here, it will duplicate the logging; not sure why either
             # logging.debug('get_valid_ordering_fields error: %s' % e)
             valid_fields = []
 

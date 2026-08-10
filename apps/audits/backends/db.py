@@ -6,7 +6,7 @@ from perms.const import ActionChoices
 
 
 class OperateLogStore(object):
-    # 使用 Unicode 单元分隔符\u001f，替代旧的分隔符\0 PostgreSQL 数据库不支持\0
+    # Use the Unicode unit separator \u001f instead of the old separator \0, since PostgreSQL doesn't support \0
     SEP = '\u001f'
     OLD_SEP = '\0'
 
@@ -65,7 +65,7 @@ class OperateLogStore(object):
 
     @staticmethod
     def _get_special_handler(resource_type):
-        # 根据资源类型，处理特殊字段
+        # Handle special fields based on resource type
         resource_map = {
             'Asset permission': lambda k, v: ActionChoices.display(int(v)) if k == 'Actions' else v
         }
@@ -74,7 +74,7 @@ class OperateLogStore(object):
     @classmethod
     def convert_diff_friendly(cls, op_log):
         diff_list = list()
-        # 标记翻译字符串
+        # Mark strings for translation
         labels = _("labels")
         operate_log_id = _("operate_log_id")
         handler = cls._get_special_handler(op_log.resource_type)
@@ -99,7 +99,7 @@ class OperateLogStore(object):
             before.update(op_before)
             after.update(op_after)
         else:
-            # 限制长度 128 OperateLog.resource.field.max_length, 避免存储失败
+            # Limit length to 128 (OperateLog.resource.field.max_length) to avoid save failure
             max_length = 128
             resource = kwargs.get('resource', '')
             if resource and isinstance(resource, str):

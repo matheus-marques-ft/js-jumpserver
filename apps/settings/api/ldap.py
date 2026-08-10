@@ -75,7 +75,7 @@ class LDAPUserListApi(generics.ListAPIView):
 
     def list(self, request, *args, **kwargs):
         cache_police = self.request.query_params.get('cache_police', True)
-        # 不是用缓存
+        # Not using the cache
         if cache_police not in LDAP_USE_CACHE_FLAGS:
             return super().list(request, *args, **kwargs)
 
@@ -85,7 +85,7 @@ class LDAPUserListApi(generics.ListAPIView):
             data = {'error': str(e)}
             return Response(data=data, status=400)
 
-        # 缓存有数据
+        # The cache has data
         if queryset is not None:
             return super().list(request, *args, **kwargs)
         else:

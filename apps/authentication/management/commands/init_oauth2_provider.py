@@ -26,7 +26,7 @@ class Command(BaseCommand):
             
             Application = get_application_model()
             
-            # 检查表是否存在
+            # Check whether the table exists
             try:
                 Application.objects.exists()
             except (OperationalError, ProgrammingError) as e:
@@ -39,7 +39,7 @@ class Command(BaseCommand):
                 )
                 return
             
-            # 如果强制重建，先删除已存在的应用
+            # If forcing a rebuild, first delete the existing application
             if force:
                 deleted_count, _ = Application.objects.filter(
                     name=settings.OAUTH2_PROVIDER_JUMPSERVER_CLIENT_NAME
@@ -49,7 +49,7 @@ class Command(BaseCommand):
                         self.style.WARNING(f'Deleted {deleted_count} existing application(s)')
                     )
             
-            # 创建或获取应用
+            # Create or get the application
             application = get_or_create_jumpserver_client_application()
             
             if application:

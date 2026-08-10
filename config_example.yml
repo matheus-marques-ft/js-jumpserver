@@ -1,36 +1,36 @@
 # SECURITY WARNING: keep the secret key used in production secret!
-# 加密密钥 生产环境中请修改为随机字符串，请勿外泄, 可使用命令生成
+# Encryption secret key. In production, change to a random string, keep it secret, can be generated with the command below
 # $ cat /dev/urandom | tr -dc A-Za-z0-9 | head -c 49;echo
 SECRET_KEY:
 
 # SECURITY WARNING: keep the bootstrap token used in production secret!
-# 预共享Token coco和guacamole用来注册服务账号，不在使用原来的注册接受机制
+# Pre-shared token used by coco and guacamole to register service accounts, no longer uses the original registration/acceptance mechanism
 BOOTSTRAP_TOKEN:
 
 # Development env open this, when error occur display the full process track, Production disable it
-# DEBUG 模式 开启DEBUG后遇到错误时可以看到更多日志
+# DEBUG mode. When DEBUG is enabled, more logs are shown when an error occurs
 # DEBUG: true
 
 # DEBUG, INFO, WARNING, ERROR, CRITICAL can set. See https://docs.djangoproject.com/en/1.10/topics/logging/
-# 日志级别
+# Log level
 # LOG_LEVEL: DEBUG
 # LOG_DIR:
 
 # Session expiration setting, Default 1 hour, Also set expired on on browser close
-# 浏览器Session过期时间，默认 1 小时, 也可以设置浏览器关闭则过期
+# Browser session expiration time, default 1 hour, can also be set to expire on browser close
 # SESSION_COOKIE_AGE: 3600
 # SESSION_EXPIRE_AT_BROWSER_CLOSE: false
 
 # Database setting, Support sqlite3, mysql, postgres ....
-# 数据库设置
+# Database settings
 # See https://docs.djangoproject.com/en/1.10/ref/settings/#databases
 
 # SQLite setting:
-# 使用单文件sqlite数据库
+# Use a single-file SQLite database
 # DB_ENGINE: sqlite3
 # DB_NAME:
 # MySQL or postgres setting like:
-# 使用 PostgreSQL 作为数据库
+# Use PostgreSQL as the database
 DB_ENGINE: postgresql
 DB_HOST: 127.0.0.1
 DB_PORT: 5432
@@ -40,40 +40,40 @@ DB_NAME: jumpserver
 
 # When Django start it will bind this host and port
 # ./manage.py runserver 127.0.0.1:8080
-# 运行时绑定端口
+# Host and port to bind at runtime
 HTTP_BIND_HOST: 0.0.0.0
 HTTP_LISTEN_PORT: 8080
 WS_LISTEN_PORT: 8070
 
-# Ansible 单批次超时（一次 ansible-runner 执行，单位：秒）
-# JOB_TIMEOUT：无论是否持续有输出，批次运行超过该时间就终止
-# IDLE_TIMEOUT：连续这么久没有任何 Ansible 事件或输出，就认为批次卡死并终止
-# 任一项设为 0，只关闭该项限制
+# Ansible single-batch timeout (one ansible-runner execution, unit: seconds)
+# JOB_TIMEOUT: the batch is terminated once it runs longer than this, regardless of whether output keeps coming
+# IDLE_TIMEOUT: if no Ansible event or output occurs for this long in a row, the batch is considered stuck and terminated
+# Setting either value to 0 disables only that limit
 # ANSIBLE_RUNNER_JOB_TIMEOUT: 1800
 # ANSIBLE_RUNNER_IDLE_TIMEOUT: 900
 
-# 整个自动化任务的监控与超时（单位：秒）
-# STALL_LOG_INTERVAL：每隔多久记录一次仍在执行 task 的主机；只记录，不会终止任务
-# TASK_TIMEOUT：每台主机执行单个 Ansible task 的默认最长时间
-#               playbook 中为 task 显式设置 timeout 时，以 playbook 为准
-# TOTAL_TIMEOUT：整个自动化任务（包含所有批次）的最长时间，超时后停止当前及后续批次
-# 设置为 0 可关闭对应的日志记录或超时限制
+# Monitoring and timeouts for the whole automation task (unit: seconds)
+# STALL_LOG_INTERVAL: how often to log hosts still executing a task; logging only, never terminates the task
+# TASK_TIMEOUT: default max time for a single Ansible task on one host
+#               if a task explicitly sets a timeout in the playbook, the playbook value takes precedence
+# TOTAL_TIMEOUT: max time for the whole automation task (including all batches); once exceeded, the current and subsequent batches are stopped
+# Setting a value to 0 disables the corresponding logging or timeout limit
 # ANSIBLE_STALL_LOG_INTERVAL: 60
 # ANSIBLE_AUTOMATION_TASK_TIMEOUT: 300
 # ANSIBLE_AUTOMATION_TOTAL_TIMEOUT: 21600
 
-# SSH 网关连接超时（单位：秒）
-# 限制通过网关建隧道时 DNS 解析、TCP 连接、SSH 握手和认证的总等待时间
-# 设置为 0 时不增加 JumpServer 的总超时限制，仍受 sshtunnel/Paramiko 默认超时约束
+# SSH gateway connection timeout (unit: seconds)
+# Limits the total wait time for DNS resolution, TCP connection, SSH handshake and authentication when building a tunnel through the gateway
+# Setting it to 0 does not add any extra timeout limit on top of JumpServer's, it is still bound by the default sshtunnel/Paramiko timeouts
 # SSH_GATEWAY_CONNECT_TIMEOUT: 30
 
-# SSH/交换机 remote_client 诊断日志
-# 开启后输出已脱敏的连接、切换用户、命令收发和网关阶段信息，并自动传入 Ansible EE
-# 仅建议排障时临时开启；可用值：true/false
+# SSH/switch remote_client diagnostic logging
+# When enabled, outputs redacted connection, user-switch, command send/receive and gateway-stage information, and is automatically passed into the Ansible EE
+# Recommended only as a temporary toggle for troubleshooting; allowed values: true/false
 # JMS_REMOTE_CLIENT_DEBUG: false
 
 # Use Redis as broker for celery and web socket
-# Redis配置
+# Redis configuration
 REDIS_HOST: 127.0.0.1
 REDIS_PORT: 6379
 # REDIS_PASSWORD:
@@ -81,7 +81,7 @@ REDIS_PORT: 6379
 # REDIS_DB_CACHE: 4
 
 # Vault storage, OpenBao is the default backend when enabled.
-# 内置 OpenBao 作为默认 Vault backend；开启后请先确认 OpenBao Server 已完成初始化和授权
+# OpenBao is built in as the default Vault backend; once enabled, make sure the OpenBao Server has already been initialized and authorized
 # VAULT_ENABLED: true
 # VAULT_BACKEND: openbao
 # VAULT_OPENBAO_ADDR: http://openbao:8200
@@ -90,49 +90,49 @@ REDIS_PORT: 6379
 # VAULT_OPENBAO_TIMEOUT: 10
 
 # LDAP/AD settings
-# LDAP 搜索分页数量
+# LDAP search page size
 # AUTH_LDAP_SEARCH_PAGED_SIZE: 1000
 #
-# 定时同步用户
-# 启用 / 禁用
+# Periodic user sync
+# Enable / disable
 # AUTH_LDAP_SYNC_IS_PERIODIC: True
-# 同步间隔 (单位: 时) (优先）
+# Sync interval (unit: hours) (takes priority)
 # AUTH_LDAP_SYNC_INTERVAL: 12
-# Crontab 表达式
+# Crontab expression
 # AUTH_LDAP_SYNC_CRONTAB: * 6 * * *
 #
-# LDAP 用户登录时仅允许在用户列表中的用户执行 LDAP Server 认证
+# When logging in via LDAP, only allow users that are in the user list to authenticate against the LDAP Server
 # AUTH_LDAP_USER_LOGIN_ONLY_IN_USERS: False
 #
-# LDAP 认证时如果日志中出现以下信息将参数设置为 0 (详情参见：https://www.python-ldap.org/en/latest/faq.html)
+# If the following message appears in the logs during LDAP authentication, set this parameter to 0 (see https://www.python-ldap.org/en/latest/faq.html for details)
 # In order to perform this operation a successful bind must be completed on the connection
 # AUTH_LDAP_OPTIONS_OPT_REFERRALS: -1
 
 # OTP settings
-# OTP/MFA 配置
+# OTP/MFA configuration
 # OTP_VALID_WINDOW: 0
 # OTP_ISSUER_NAME: JumpServer
 
-# 启用定时任务
+# Enable periodic tasks
 # PERIOD_TASK_ENABLED: True
 #
 
-# 是否开启 Luna 水印
+# Whether to enable the Luna watermark
 # SECURITY_WATERMARK_ENABLED: False
 
-# 浏览器关闭页面后，会话过期
+# Session expires after the browser tab is closed
 # SESSION_EXPIRE_AT_BROWSER_CLOSE: False
 
-# 每次 api 请求，session 续期
+# Renew the session on every API request
 # SESSION_SAVE_EVERY_REQUEST: True
 
-# 仅允许用户从来源处登录
+# Only allow users to log in from their originating source
 # ONLY_ALLOW_AUTH_FROM_SOURCE: False
 
-# 仅允许已存在的用户登录，不允许第三方认证后，自动创建用户
+# Only allow existing users to log in; do not auto-create users after third-party authentication
 # ONLY_ALLOW_EXIST_USER_AUTH: False
 
-# 开启人脸识别 XPACK 功能
+# Enable the face recognition XPACK feature
 #FACE_RECOGNITION_ENABLED: true
 #FACE_RECOGNITION_DISTANCE_THRESHOLD': 0.35
 #FACE_RECOGNITION_COSINE_THRESHOLD': 0.95

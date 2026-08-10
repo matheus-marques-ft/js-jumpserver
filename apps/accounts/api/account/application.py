@@ -96,6 +96,6 @@ class IntegrationApplicationViewSet(OrgBulkModelViewSet):
             account=f'{account.name}({account.username})', asset=f'{asset.name}({asset.address})',
         )
         
-        # 根据配置决定是否返回密码
+        # Decide whether to return the password based on the configuration
         secret = None if settings.SECURITY_DISABLE_VIEW_SECRET else account.secret
         return Response(data={'id': request.user.id, 'secret': secret})

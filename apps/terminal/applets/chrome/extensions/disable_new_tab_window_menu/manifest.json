@@ -1,8 +1,8 @@
 {
   "manifest_version": 2,
-  "name": "禁止新标签窗口菜单",
+  "name": "Disable New Tab Window Menu",
   "version": "1.0",
-  "description": "将所有链接替换为当前窗口打开, 并禁止新窗口和标签，隐藏右击菜单",
+  "description": "Replaces all links to open in the current window, and disables new windows/tabs and hides the right-click menu",
   "background": {
     "scripts": [
       "background.js"

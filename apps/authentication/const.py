@@ -54,6 +54,6 @@ class FaceMonitorActionChoices(TextChoices):
 
 
 class ConnectionTokenType(TextChoices):
-    ADMIN = 'admin', 'Admin'  # 管理员 Token, 可以访问所有资源
-    SUPER = 'super', 'Super'  # 超级 Token, 可以为不同用户生成的 Token, 遵守用户 Token 的限制
-    USER = 'user', 'User'  # 用户 Token, 只能访问指定资源
+    ADMIN = 'admin', 'Admin'  # Admin Token, can access all resources
+    SUPER = 'super', 'Super'  # Super Token, can generate tokens for different users, subject to the user token's restrictions
+    USER = 'user', 'User'  # User Token, can only access specified resources

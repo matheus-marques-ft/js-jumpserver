@@ -163,7 +163,7 @@ class BaseService(object):
         print(f"{now} Check service status: {self.name} -> ", end='')
         if self.process:
             try:
-                self.process.wait(1)  # 不wait，子进程可能无法回收
+                self.process.wait(1)  # If we don't wait, the child process may fail to be reaped
             except:
                 pass
 

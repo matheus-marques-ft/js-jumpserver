@@ -70,7 +70,7 @@ class UKeyCertEnrollAPIView(APIView):
         return Response(data=data, status=200)
 
     def sign_cert(self, csr_raw):
-        # 记录输入是否含 PEM 头，用于决定输出格式
+        # Record whether the input contains a PEM header, used to decide the output format
         if isinstance(csr_raw, bytes):
             has_pem_header = csr_raw.lstrip().startswith(b'-----BEGIN')
         else:
@@ -82,7 +82,7 @@ class UKeyCertEnrollAPIView(APIView):
         else:
             singed_cert = self.sign_cert_by_other(csr_pem)
 
-        # 输入不含 PEM 头时，返回裸 base64（去掉首尾标识行）
+        # When the input has no PEM header, return raw base64 (strip the header/footer marker lines)
         if not has_pem_header:
             lines = singed_cert.strip().splitlines()
             singed_cert = ''.join(
@@ -92,11 +92,11 @@ class UKeyCertEnrollAPIView(APIView):
 
     def _normalize_csr_to_pem(self, csr_data):
         """
-        将 SDK 返回的 CSR 统一转换成标准 PEM 字符串。
-        支持三种输入格式：
-          1. 已经是标准 PEM（含 -----BEGIN CERTIFICATE REQUEST----- 头）
-          2. 裸 base64 字符串（无 PEM 头，国密 USB Key SDK 常见）
-          3. 原始 DER 二进制 bytes
+        Convert the CSR returned by the SDK into a standard PEM string.
+        Supports three input formats:
+          1. Already a standard PEM (with a -----BEGIN CERTIFICATE REQUEST----- header)
+          2. A raw base64 string (no PEM header, common with GM (national cryptography) USB Key SDKs)
+          3. Raw DER binary bytes
         """
         if isinstance(csr_data, bytes):
             if csr_data.lstrip().startswith(b'-----BEGIN'):
@@ -106,7 +106,7 @@ class UKeyCertEnrollAPIView(APIView):
             csr_data = csr_data.strip()
             if csr_data.startswith('-----BEGIN'):
                 return csr_data
-            # 裸 base64：去除空白后校验并重新分行
+            # Raw base64: strip whitespace, validate, then re-wrap into lines
             b64 = ''.join(csr_data.split())
             base64.b64decode(b64, validate=True)
 
@@ -118,7 +118,7 @@ class UKeyCertEnrollAPIView(APIView):
         )
 
     def _is_sm2_csr(self, csr_pem):
-        """通过查找 SM2 曲线 OID 字节序列判断 CSR 是否使用 SM2 算法。"""
+        """Determine whether the CSR uses the SM2 algorithm by searching for the SM2 curve OID byte sequence."""
         return is_sm2_pem(csr_pem)
 
     def sign_cert_by_other(self, csr_pem):
@@ -164,8 +164,8 @@ class UKeyCertEnrollAPIView(APIView):
 
     def sign_cert_by_gmssl(self, csr_pem):
         """
-        使用 gmssl reqsign 签发 SM2 证书。
-        命令示例：
+        Issue an SM2 certificate using gmssl reqsign.
+        Example command:
           gmssl reqsign -in user.csr -days 365 -cacert root.crt -key root.key -pass 123456 -out user.crt
         """
         gmssl_bin = ukey_sdk_config.gmssl_bin
@@ -203,9 +203,9 @@ class UKeyCertEnrollAPIView(APIView):
             os.close(fd)
 
             # https://github.com/GmSSL/GmSSL-Python#sm2数字证书
-            # gmssl_python 只支持SM2证书的解析和验证等功能，不支持SM2证书的签发和生成，
-            # 所以还是需要使用 gmssl bin 来执行 reqsign 命令行工具进行签发。虽然增加了对外部命令的依赖，
-            # 但这是目前最简单可靠的方案。
+            # gmssl_python only supports parsing and verifying SM2 certificates, not issuing or generating them,
+            # so the gmssl bin's reqsign command-line tool is still needed to issue them. Although this adds a dependency on an external command,
+            # it is currently the simplest and most reliable approach.
             cmd = [
                 gmssl_bin, 'reqsign',
                 '-in', csr_file,

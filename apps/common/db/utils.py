@@ -50,13 +50,13 @@ def get_objects(model, pks):
     return objs
 
 
-# 复制 django.db.close_old_connections, 因为它没有导出，ide 提示有问题
+# Copied from django.db.close_old_connections, because it's not exported and the IDE flags it as an issue
 def close_old_connections(**kwargs):
     for conn in connections.all(initialized_only=True):
         conn.close_if_unusable_or_obsolete()
 
 
-# 这个要是在 Django 请求周期外使用的，不能影响 Django 的事务管理， 在 api 中使用会影响 api 事务
+# This is meant to be used outside the Django request cycle; it must not affect Django's transaction management — using it inside an api would affect the api transaction
 @contextmanager
 def safe_db_connection():
     close_old_connections()
@@ -67,12 +67,12 @@ def safe_db_connection():
 @contextmanager
 def safe_atomic_db_connection(auto_close=False):
     """
-    通用数据库连接管理器（线程安全、事务感知）：
-    - 在连接不可用时主动重建连接
-    - 在非事务环境下自动关闭连接（可选）
-    - 不影响 Django 请求/事务周期
+    Generic database connection manager (thread-safe, transaction-aware):
+    - Proactively rebuild the connection when it is unusable
+    - Automatically close the connection outside of a transaction (optional)
+    - Does not affect the Django request/transaction cycle
     """
-    in_atomic = connection.in_atomic_block  # 当前是否在事务中
+    in_atomic = connection.in_atomic_block  # Whether we are currently inside a transaction
     autocommit = transaction.get_autocommit()
     recreated = False
 
@@ -83,7 +83,7 @@ def safe_atomic_db_connection(auto_close=False):
             recreated = True
         yield
     finally:
-        # 只在非事务、autocommit 模式下，才考虑主动清理连接
+        # Only consider proactively cleaning up the connection when outside a transaction and in autocommit mode
         if auto_close or (recreated and not in_atomic and autocommit):
             close_old_connections()
 
@@ -105,25 +105,25 @@ class Encryptor:
 
     def is_encrypted_data(self):
         """
-        检测数据是否为加密格式
-        返回 True 表示是加密数据，False 表示是原始数据
+        Detect whether the data is in encrypted format
+        Returns True if it is encrypted data, False if it is raw data
         """
         if not self.value:
             return False
-        
-        # 检测 base64 编码格式 (crypto.encrypt 的输出)
+
+        # Detect base64-encoded format (output of crypto.encrypt)
         try:
-            # 尝试不同的 base64 解码方式
-            # 1. 标准 base64
+            # Try different base64 decoding methods
+            # 1. Standard base64
             try:
                 base64.b64decode(self.value)
                 return True
             except Exception:
                 pass
-            
+
             # 2. URL-safe base64
             try:
-                # 添加必要的填充
+                # Add the necessary padding
                 missing_padding = len(self.value) % 4
                 if missing_padding:
                     padded_value = self.value + '=' * (4 - missing_padding)
@@ -137,10 +137,10 @@ class Encryptor:
         except Exception:
             pass
         
-        # 检测 AES GCM 格式 (固定72字符metadata)
+        # Detect AES GCM format (fixed 72-character metadata)
         if len(self.value) > 72:
             try:
-                # 前72字符应该是3个24字符的base64编码
+                # The first 72 characters should be 3 groups of 24-character base64 encoding
                 metadata = self.value[:72]
                 for i in range(0, 72, 24):
                     part = metadata[i:i+24]
@@ -154,7 +154,7 @@ class Encryptor:
     def decrypt(self):
         plain_value = crypto.decrypt(self.value)
 
-        # 如果没有解开，使用原来的signer解密
+        # If it wasn't decrypted, fall back to decrypting with the original signer
         if not plain_value:
             plain_value = signer.unsign(self.value) or ""
         return plain_value

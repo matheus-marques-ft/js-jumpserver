@@ -22,7 +22,7 @@ class CodeDialog(object):
         self.root.bind('<Return>', self.click_ok)
 
     def wait_string(self):
-        # 局中
+        # Center
         self.root.eval('tk::PlaceWindow . center')
         self.root.mainloop()
         return self.code.get()
@@ -84,8 +84,8 @@ class TkProgressBar(object):
         self._root.mainloop()
 
 
-# progress bar 装饰器，用于显示进度动画
-# 此方法会创建一个全屏的进度条窗口
+# progress bar decorator, used to display a progress animation
+# This method creates a fullscreen progress bar window
 def wrapper_progress_bar(func):
     def inner(*args, **kwargs):
         wait_func = functools.partial(func, *args, **kwargs)

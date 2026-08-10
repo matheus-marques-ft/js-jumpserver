@@ -166,7 +166,7 @@ class AccountCreateUpdateSerializerMixin(serializers.Serializer):
             q |= Q(username=vd['username'], secret_type=vd.get('secret_type'))
 
         instance = Account.objects.filter(asset=vd['asset']).filter(q).first()
-        # 不存在这个资产，不用关系策略
+        # This asset doesn't exist, no need to apply the relation strategy
         if not instance:
             instance = Account.objects.create(**vd)
             return instance, 'created'
@@ -254,7 +254,7 @@ class AccountSerializer(AccountCreateUpdateSerializerMixin, BaseAccountSerialize
             'source_id': {'required': False, 'allow_null': True},
         }
         fields_unimport_template = ['params']
-        # 手动判断唯一性校验
+        # Uniqueness validation is checked manually
         validators = []
 
     @classmethod

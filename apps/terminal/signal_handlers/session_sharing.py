@@ -13,6 +13,6 @@ def on_session_sharing_created(sender, instance: SessionSharing, created, **kwar
     for user in instance.users_queryset:
         SessionSharingMessage(user, instance).publish_async()
 
-    # 创建会话分享活动日志
+    # Create session sharing activity log
     session = instance.session
     UserCreateShareLink(session, None).create_activity_log()

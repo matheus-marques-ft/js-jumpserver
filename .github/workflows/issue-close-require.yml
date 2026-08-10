@@ -24,7 +24,6 @@ jobs:
           printf '%s\n' \
             "You haven't provided feedback for over 30 days." \
             "We will close this issue. If you have any further needs, you can reopen it or submit a new issue." \
-            "您超过 30 天未反馈信息，我们将关闭该 issue，如有需求您可以重新打开或者提交新的 issue。" \
             > "${RUNNER_TEMP}/close-comment.md"
 
           gh api --method GET --paginate /search/issues -f q="${query}" -f per_page=100 --jq '.items[].number' |

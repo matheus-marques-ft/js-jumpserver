@@ -12,12 +12,12 @@ __all__ = ['AllowBulkDestroyMixin', 'RoleAdminMixin', 'RoleUserMixin']
 class AllowBulkDestroyMixin:
     def allow_bulk_destroy(self, qs, filtered):
         """
-        我们规定，批量删除的情况必须用 `id` 指定要删除的数据。
+        We require that bulk deletion must specify the data to delete using `id`.
         """
         where = filtered.query.where
 
         def has_id_condition(node):
-            # 检查是否有 `id` 或 `ptr_id` 的条件
+            # Check whether there is an `id` or `ptr_id` condition
             if isinstance(node, Q):
                 return any(
                     lookup in str(node)

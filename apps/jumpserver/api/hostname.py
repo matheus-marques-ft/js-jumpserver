@@ -7,8 +7,8 @@ from rest_framework.permissions import AllowAny
 from common.permissions import OnlySuperUser
 
 
-# 此 api 返回 /etc/hostname 的值
-# 在 DEBUG_DEV 配置下可以匿名访问
+# This api returns the value of /etc/hostname
+# Anonymous access is allowed under the DEBUG_DEV setting
 class HostnameView(APIView):
     permission_classes = (AllowAny,)
 

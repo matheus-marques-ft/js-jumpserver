@@ -33,7 +33,7 @@ class LoginAssetCheckAPI(CreateAPIView):
         user = self.serializer.user
         asset = self.serializer.asset
 
-        # 用户满足的 acls
+        # ACLs that the user satisfies
         queryset = LoginAssetACL.objects.all()
         q = LoginAssetACL.users.get_filter_q(LoginAssetACL, 'users', user)
         queryset = queryset.filter(q)

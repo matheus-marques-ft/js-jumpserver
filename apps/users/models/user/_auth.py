@@ -49,10 +49,10 @@ class MFAMixin:
         # 1 All users
         if force_level in [True, 1]:
             return True
-        # 2 仅管理员强制开启
+        # 2 Force-enabled for admins only
         if force_level == 2 and self.is_org_admin:
             return True
-        # 3 仅用户开启
+        # 3 Enabled by the user only
         return self.mfa_level == 2
 
     def enable_mfa(self):

@@ -24,7 +24,7 @@ class MethodSerializer(serializers.Serializer):
         super().__init__(**kwargs)
 
     class Meta:
-        # 生成swagger时使用
+        # Used when generating swagger
         ref_name = None
 
     def bind(self, field_name, parent):
@@ -42,16 +42,16 @@ class MethodSerializer(serializers.Serializer):
         except Exception as e:
             logging.error(e, exc_info=True)
             raise e
-        # 设置serializer的parent值，否则在serializer实例中获取parent会出现断层
+        # Set the serializer's parent value, otherwise there will be a gap when getting parent on the serializer instance
         setattr(_serializer, 'parent', self.parent)
         return _serializer
 
     @cached_property
     def fields(self):
         """
-        重写此方法因为在 BindingDict 中要设置每一个 field 的 parent 为 `serializer`,
-        这样在调用 field.parent 时, 才会达到预期的结果，
-        比如: serializers.SerializerMethodField
+        Override this method because in BindingDict, each field's parent needs to be set to `serializer`,
+        so that calling field.parent produces the expected result,
+        e.g.: serializers.SerializerMethodField
         """
         return self.serializer.fields
 
@@ -101,12 +101,12 @@ class FileSerializer(serializers.Serializer):
 class DictSerializer(serializers.Serializer):
 
     def to_representation(self, instance):
-        # 返回一个包含所有提交字段的 Python 字典
+        # Return a Python dict containing all submitted fields
         return instance
 
     def to_internal_value(self, data):
-        # 确保从请求中得到的输入是 Python 字典
+        # Ensure the input received from the request is a Python dict
         if isinstance(data, dict):
             return data
         else:
-            raise serializers.ValidationError("无法转换为dict类型")
+            raise serializers.ValidationError("Cannot be converted to a dict type")

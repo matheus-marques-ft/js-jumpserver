@@ -44,7 +44,7 @@ function hexToBytes(hex) {
     if (hex.startsWith('0x')) {
         hex = hex.slice(2)
     }
-    // 确保是偶数长度
+    // Ensure the length is even
     const len = Math.floor(hex.length / 2)
     const bytes = new Uint8Array(len)
     for (let i = 0; i < len; i++) {
@@ -54,7 +54,7 @@ function hexToBytes(hex) {
 }
 
 function bytesToBase64(bytes) {
-    // Uint8Array -> base64（标准 base64）
+    // Uint8Array -> base64 (standard base64)
     let binary = ''
     for (let i = 0; i < bytes.length; i++) {
         binary += String.fromCharCode(bytes[i])
@@ -64,22 +64,22 @@ function bytesToBase64(bytes) {
 
 function rsaEncryptPassword(password,  rsaPublicKey) {
     const aesKey = (Math.random() + 1).toString(36).substring(2)
-    // public key 是 base64 存储的
+    // The public key is stored as base64
     const keyCipher = rsaEncrypt(aesKey, rsaPublicKey)
     const passwordCipher = aesEncrypt(password, aesKey)
     return `${keyCipher}:${passwordCipher}`
 }
 
 function ensureSm2PublicKey(sm2PublicKey) {
-    // sm2.min.js 的 doEncrypt 需要能被 decodePointHex 解析的公钥：
-    // 通常为非压缩点 hex，格式 `04||x||y`（总长度 130）。
-    // 但后端生成/下发的公钥有时是 `x||y`（长度 128），这里做归一化补齐 `04` 前缀。
+    // sm2.min.js's doEncrypt needs a public key that decodePointHex can parse:
+    // usually an uncompressed point hex, in the format `04||x||y` (total length 130).
+    // But the public key generated/issued by the backend is sometimes `x||y` (length 128); this normalizes it by padding with a `04` prefix.
     if (typeof sm2PublicKey === 'string') {
         sm2PublicKey = sm2PublicKey.replaceAll('"', '').trim()
         if (sm2PublicKey.startsWith('0x')) {
             sm2PublicKey = sm2PublicKey.slice(2)
         }
-        // 后端下发的 SM2 公钥常见是 x||y（128 hex），sm-crypto 需要 04||x||y（130 hex）
+        // The SM2 public key issued by the backend is commonly x||y (128 hex); sm-crypto needs 04||x||y (130 hex)
         if (sm2PublicKey.length === 128 && !sm2PublicKey.startsWith('04')) {
             sm2PublicKey = '04' + sm2PublicKey
         }
@@ -90,24 +90,24 @@ function ensureSm2PublicKey(sm2PublicKey) {
 
 function gmEncryptPassword(password,  sm2PublicKey) {
     sm2PublicKey = ensureSm2PublicKey(sm2PublicKey)
-    // 只适配前端，不改后端：
-    // 直接生成 16 字符 key（后端 padding_key 会保持原样，不再补齐）
+    // Only adapting the frontend, not changing the backend:
+    // generate the 16-character key directly (the backend's padding_key stays as-is, no further padding)
     const sm4KeyRaw = randomString(16)
     const sm4KeyHex = Buffer.from(sm4KeyRaw).toString('hex')
 
     let keyCipher = ''
     try {
-        // 与后端 gmssl.sm2.CryptSM2 默认 decrypt 的 mode 对齐：
-        // gmssl 解析的格式是 C1C2C3（mode=0），前端这里输出也用 mode=0。
+        // Aligned with the backend gmssl.sm2.CryptSM2 default decrypt mode:
+        // gmssl parses the format C1C2C3 (mode=0), so the frontend output here also uses mode=0.
         keyCipher = sm2.doEncrypt(sm4KeyRaw, sm2PublicKey, 0)
     } catch (e) {
         console.error('gmEncryptPassword sm2.doEncrypt failed:', e)
-        // 避免前端崩溃：失败时返回明文，由后端按原值流程处理（至少可继续登录/看报错）
+        // Avoid frontend crashes: return the plaintext on failure, and let the backend handle it as the original value (at least the login/error-viewing flow can continue)
         return password
     }
 
     const passwordCipher = sm4.encrypt(password, sm4KeyHex)
-    // sm2/sm4 默认输出是 hex，但后端 gm.py/session.py 需要 base64：
+    // sm2/sm4 output hex by default, but the backend gm.py/session.py needs base64:
     // - sm2_decrypt: base64.b64decode
     // - sm4 decrypt: base64.urlsafe_b64decode
     const keyCipherB64 = bytesToBase64(hexToBytes(keyCipher))

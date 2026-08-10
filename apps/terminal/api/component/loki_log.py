@@ -26,7 +26,7 @@ class LokiLogAPI(APIView, LokiMixin):
         return Response(data=loki_logs)
 
     def query_components_log(self, components, search, start, end):
-        # 秒转纳秒
+        # Convert seconds to nanoseconds
         start_ns = int(start * 1e9)
         end_ns = int(end * 1e9)
         query = self.create_loki_query(components, search)

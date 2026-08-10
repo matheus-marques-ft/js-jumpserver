@@ -8,13 +8,13 @@ if [ ! -d "$lib_path" ]; then
   exit 0
 fi
 
-# 清理不需要的模块
+# Clean up unneeded modules
 need_clean="jedi"
 for i in $need_clean; do
   rm -rf "${lib_path}/${i}"
 done
 
-# 清理 ansible connection 中 不需要的模块
+# Clean up unneeded modules in ansible connection
 ansible_connection="${lib_path}/ansible_collections"
 need_clean="fortinet dellemc f5networks netapp theforeman google azure cyberark ibm
             netbox purestorage inspur netapp_eseries sensu check_point vyos arista"
@@ -23,11 +23,11 @@ for i in $need_clean; do
   rm -rf "${ansible_connection:-tmp}/${i}"
 done
 
-# 清理缓存文件
+# Clean up cache files
 cd ${lib_path} || exit 1
 find . -name "*.pyc" -exec rm -f {} \;
 
-# 清理不需要的国际化文件
+# Clean up unneeded localization files
 find . -name 'locale' -o -name 'locales' -type d | while read -r dir; do
     find "$dir" -mindepth 1 -maxdepth 1 -type d \
       ! -name 'zh_Hans' \

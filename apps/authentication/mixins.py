@@ -37,12 +37,12 @@ from .signals import post_auth_success, post_auth_failed
 
 logger = get_logger(__name__)
 
-# 模块级别的线程上下文，用于 authenticate 函数中标记当前线程
+# Module-level thread context, used to mark the current thread inside the authenticate function
 _auth_thread_context = Local()
 
-# 保存 Django 原始的 get_or_create 方法（在模块加载时保存一次）
+# Save Django's original get_or_create method (saved once when the module loads)
 def _save_original_get_or_create():
-    """保存 Django 原始的 get_or_create 方法"""
+    """Save Django's original get_or_create method"""
     from django.contrib.auth import get_user_model as get_user_model_func
     UserModel = get_user_model_func()
     return UserModel.objects.get_or_create
@@ -56,20 +56,20 @@ class OnlyAllowExistUserAuthError(Exception):
 
 def _authenticate_context(func):
     """
-    装饰器：管理 authenticate 函数的执行上下文
-    
-    功能：
-    1. 执行前：
-       - 在线程本地存储中标记当前正在执行 authenticate
-       - 临时替换 UserModel.objects.get_or_create 方法
-    2. 执行后：
-       - 清理线程本地存储标记
-       - 恢复 get_or_create 为 Django 原始方法
-    
-    作用：
-    - 确保 get_or_create 行为仅在 authenticate 生命周期内生效
-    - 支持 ONLY_ALLOW_EXIST_USER_AUTH 配置的线程安全实现
-    - 防止跨请求或跨线程的状态污染
+    Decorator: manages the execution context of the authenticate function
+
+    Functionality:
+    1. Before execution:
+       - Mark in thread-local storage that authenticate is currently running
+       - Temporarily replace the UserModel.objects.get_or_create method
+    2. After execution:
+       - Clean up the thread-local storage mark
+       - Restore get_or_create to Django's original method
+
+    Purpose:
+    - Ensure the get_or_create behavior only takes effect during the authenticate lifecycle
+    - Support a thread-safe implementation of the ONLY_ALLOW_EXIST_USER_AUTH setting
+    - Prevent state contamination across requests or threads
     """
     from functools import wraps
     
@@ -83,7 +83,7 @@ def _authenticate_context(func):
             create_username = kwargs.get('username')
             logger.debug(f"get_or_create: thread_id={threading.get_ident()}, username={create_username}")
 
-            # 如果当前线程正在执行 authenticate 且仅允许已存在用户认证，则提前判断用户是否存在
+            # If the current thread is running authenticate and only existing-user authentication is allowed, check whether the user exists up front
             if (
                 getattr(_auth_thread_context, 'in_authenticate', False) and 
                 settings.ONLY_ALLOW_EXIST_USER_AUTH
@@ -93,19 +93,19 @@ def _authenticate_context(func):
                 except UserModel.DoesNotExist:
                     raise OnlyAllowExistUserAuthError
 
-            # 调用 Django 原始方法（已是绑定方法，直接传参）
+            # Call Django's original method (already a bound method, pass arguments directly)
             return _django_original_get_or_create(*args, **kwargs)
         
         
         try:
-            # 执行前：设置线程上下文和 monkey-patch
+            # Before execution: set the thread context and monkey-patch
             setattr(_auth_thread_context, 'in_authenticate', True)
             UserModel.objects.get_or_create = custom_get_or_create
 
-            # 执行原函数
+            # Execute the original function
             return func(request, **credentials)
         finally:
-            # 执行后：清理线程上下文和恢复原始方法
+            # After execution: clean up the thread context and restore the original method
             try:
                 if hasattr(_auth_thread_context, 'in_authenticate'):
                     delattr(_auth_thread_context, 'in_authenticate')
@@ -123,7 +123,7 @@ def _get_backends(return_tuples=False):
     backends = []
     for backend_path in settings.AUTHENTICATION_BACKENDS:
         backend = load_backend(backend_path)
-        # 检查 backend 是否启用
+        # Check whether the backend is enabled
         if not backend.is_enabled():
             continue
         backends.append((backend, backend_path) if return_tuples else backend)
@@ -146,12 +146,12 @@ def authenticate(request=None, **credentials):
     temp_user = None
     username = credentials.get('username')
     for backend, backend_path in _get_backends(return_tuples=True):
-        # 检查用户名是否允许认证 (预先检查，不浪费认证时间)
+        # Check whether the username is allowed to authenticate (pre-check, to avoid wasting authentication time)
         logger.info('Try using auth backend: {}'.format(str(backend)))
         if not backend.username_allow_authenticate(username):
             continue
 
-        # 原生
+        # Native
         backend_signature = inspect.signature(backend.authenticate)
         try:
             backend_signature.bind(request, **credentials)
@@ -188,7 +188,7 @@ def authenticate(request=None, **credentials):
                 request.error_message = _('User is invalid')
             return temp_user
 
-        # 检查用户是否允许认证
+        # Check whether the user is allowed to authenticate
         if not backend.user_allow_authenticate(user):
             temp_user = user
             temp_user.backend = backend_path
@@ -304,7 +304,7 @@ class AuthPreCheckMixin:
         self._check_is_block(username, raise_exception)
 
     def _check_only_allow_exists_user_auth(self, username):
-        # 仅允许预先存在的用户认证
+        # Only allow pre-existing users to authenticate
         if not settings.ONLY_ALLOW_EXIST_USER_AUTH:
             return
 
@@ -342,7 +342,7 @@ class MFAMixin:
         self._do_check_user_mfa(code, mfa_type, user=user)
 
     def check_user_mfa_if_need(self, user):
-        # 扫码登录的认证方式会执行该函数检查 mfa，跳转登录认证方式则通过ThirdPartyLoginMiddleware中间件检验 mfa
+        # The QR-code login authentication flow runs this function to check mfa; the redirect login flow instead verifies mfa via the ThirdPartyLoginMiddleware middleware
         if not settings.SECURITY_MFA_AUTH_ENABLED_FOR_THIRD_PARTY and \
                 self.request.session.get('auth_backend') in AUTHENTICATION_BACKENDS_THIRD_PARTY:
             return
@@ -383,7 +383,7 @@ class MFAMixin:
         user = user if user else self.get_user_from_session()
         if not user.mfa_enabled:
             return
-        # 监测 MFA 是不是屏蔽了
+        # Check whether MFA is blocked
         ip = self.get_request_ip()
         self.check_mfa_is_block(user.username, ip)
 
@@ -471,7 +471,7 @@ class AuthACLMixin:
     get_request_ip: Callable
 
     def _check_login_acl(self, user, ip):
-        # ACL 限制用户登录
+        # ACL restricts user login
         acl = LoginACL.get_match_rule_acls(user, ip)
         if not acl:
             return
@@ -512,8 +512,8 @@ class AuthACLMixin:
         if not acl.is_action(acl.ActionChoices.review):
             return
         if acl.is_user_in_reviewers(user):
-            # 如果用户在审核人列表中，则不需要审核，直接通过
-            # 避免管理员admin创建一条针对所有用户的复核规则导致admin自己也无法登录了
+            # If the user is in the reviewers list, no review is needed and login proceeds directly
+            # This avoids a case where an admin creates a review rule targeting all users and thereby locks themselves out too
             return
         self.get_ticket_or_create(acl, user)
         self.check_user_login_confirm()
@@ -645,7 +645,7 @@ class AuthMixin(CommonMixin, AuthPreCheckMixin, AuthACLMixin, AuthFaceMixin, MFA
         cache.set(self.key_prefix_captcha.format(ip), 1, 3600)
 
     def check_is_need_captcha(self):
-        # 最近有登录失败时需要填写验证码
+        # A captcha is required when there was a recent login failure
         ip = get_request_ip(self.request)
         need = cache.get(self.key_prefix_captcha.format(ip))
         return need
@@ -659,7 +659,7 @@ class AuthMixin(CommonMixin, AuthPreCheckMixin, AuthACLMixin, AuthFaceMixin, MFA
         # check auth
         user = self._check_auth_user_is_valid(username, password, public_key)
 
-        # 校验login-acl规则
+        # Validate the login-acl rule
         self._check_login_acl(user, ip)
 
         # post check
@@ -668,10 +668,10 @@ class AuthMixin(CommonMixin, AuthPreCheckMixin, AuthACLMixin, AuthFaceMixin, MFA
         self._check_passwd_need_update(user)
         user.cache_login_password_if_need(password)
 
-        # 校验login-mfa, 如果登录页面上显示 mfa 的话
+        # Validate login-mfa, if mfa is shown on the login page
         self._check_login_page_mfa_if_need(user)
 
-        # 标记密码验证成功
+        # Mark password verification as successful
         self.mark_password_ok(user=user, auto_login=auto_login)
         LoginBlockUtil(user.username, ip).clean_failed_count()
         LoginIpBlockUtil(ip).clean_block_if_need()

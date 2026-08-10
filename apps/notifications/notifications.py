@@ -72,9 +72,9 @@ class CustomMsgTemplateBase:
 
 class Message(CustomMsgTemplateBase, metaclass=MessageType):
     """
-    这里封装了什么？
-        封装不同消息的模板，提供统一的发送消息的接口
-        - publish 该方法的实现与消息订阅的表结构有关
+    What is encapsulated here?
+        Encapsulates templates for different messages, providing a unified interface for sending messages
+        - publish: the implementation of this method depends on the message subscription table structure
         - send_msg
     """
     message_type_label: str
@@ -98,7 +98,7 @@ class Message(CustomMsgTemplateBase, metaclass=MessageType):
 
     def get_backend_msg_mapper(self, backends):
         backends = set(backends)
-        backends.add(BACKEND.SITE_MSG)  # 站内信必须发
+        backends.add(BACKEND.SITE_MSG)  # Site message must always be sent
         backends_msg_mapper = {}
         for backend in backends:
             backend = BACKEND(backend)
@@ -206,9 +206,9 @@ class Message(CustomMsgTemplateBase, metaclass=MessageType):
         return get_login_title()
 
     # --------------------------------------------------------------
-    # 支持不同发送消息的方式定义自己的消息内容，比如有些支持 html 标签
+    # Support different sending methods defining their own message content, e.g. some support html tags
     def get_dingtalk_msg(self) -> dict:
-        # 钉钉相同的消息一天只能发一次，所以给所有消息添加基于时间的序号，使他们不相同
+        # DingTalk only allows the same message to be sent once a day, so a time-based suffix is added to every message to make them different
         message = self.markdown_msg['message']
         time = local_now().strftime('%Y-%m-%d %H:%M:%S')
         suffix = '\n{}: {}'.format(_('Time'), time)
@@ -271,7 +271,7 @@ class SystemMessage(Message):
             message_type=self.get_message_type()
         )
 
-        # 只发送当前有效后端
+        # Only send to currently enabled backends
         receive_backends = subscription.receive_backends
         receive_backends = BACKEND.filter_enable_backends(receive_backends)
 
@@ -304,7 +304,7 @@ class UserMessage(Message):
 
     def publish(self, is_async=False):
         """
-        发送消息到每个用户配置的接收方式上
+        Send the message to each receiving method configured by the user
         """
         sub = UserMsgSubscription.objects.get(user=self.user)
         with activate_user_language(self.user):

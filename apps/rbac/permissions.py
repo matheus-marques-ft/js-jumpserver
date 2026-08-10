@@ -109,7 +109,7 @@ class RBACPermission(permissions.DjangoModelPermissions):
 
     def get_require_perms(self, request, view):
         """
-        获取 request, view 需要的 perms
+        Get the perms required by the request/view
         :param request:
         :param view:
         :return:

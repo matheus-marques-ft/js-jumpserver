@@ -133,7 +133,7 @@ class SSHTunnelManager:
                     local_bind_port
                 )
 
-        # 网域不可连接的，就不继续执行此资源的后续任务了
+        # If the domain is unreachable, don't continue with subsequent tasks for this resource
         for a in set(not_valid):
             info["all"]["hosts"].pop(a)
         self.json_to_file(runner.inventory, info)
@@ -357,8 +357,8 @@ class PlaybookPrepareMixin:
             for method in self.platform_automation_methods
             if method["method"] == self.__class__.method_type()
         }
-        # 根据执行方式就行分组, 不同资产的改密、推送等操作可能会使用不同的执行方式
-        # 然后根据执行方式分组, 再根据 bulk_size 分组, 生成不同的 playbook
+        # Group by execution method, since different assets' change-secret, push, etc. operations may use different execution methods
+        # Then group by execution method, and within that group by bulk_size, generating different playbooks
         self.playbooks = []
 
     @classmethod
@@ -801,7 +801,7 @@ class BasePlaybookManager(PlaybookPrepareMixin, BaseManager):
             if not self.check_automation_enabled(platform, assets):
                 continue
 
-            # 避免一个任务太大，分批执行
+            # Avoid a single task being too large, execute it in batches
             assets_bulked = [
                 assets[i: i + self.bulk_size]
                 for i in range(0, len(assets), self.bulk_size)
@@ -882,7 +882,7 @@ class BasePlaybookManager(PlaybookPrepareMixin, BaseManager):
             self.print_log(_("Stage: Saving execution results"), 'progress')
         summary = cb.summary
         for state, hosts in summary.items():
-            # 错误行为为，host 是 dict， ok 时是 list
+            # On error, host is a dict; on ok, it's a list
 
             if state == "ok":
                 handler = self._on_host_success

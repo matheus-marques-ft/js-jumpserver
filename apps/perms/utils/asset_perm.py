@@ -14,7 +14,7 @@ __all__ = ['PermAssetDetailUtil']
 
 
 class PermAssetDetailUtil:
-    """ 资产授权账号相关的工具 """
+    """ Utility for asset permission accounts """
 
     def __init__(self, user, asset_or_id):
         self.user = user
@@ -57,13 +57,13 @@ class PermAssetDetailUtil:
         return perms
 
     def get_permed_accounts_for_user(self):
-        """ 获取授权给用户某个资产的账号 """
+        """ Get the accounts granted to the user for an asset """
         perms = self.user_asset_perms
         permed_accounts = self.get_permed_accounts_from_perms(perms, self.user, self.asset)
         return permed_accounts
 
     def get_permed_protocols_for_user(self, only_name=False):
-        """ 获取授权给用户某个资产的账号 """
+        """ Get the protocols granted to the user for an asset """
         perms = self.user_asset_perms
         names = set()
         for perm in perms:
@@ -85,7 +85,7 @@ class PermAssetDetailUtil:
                 alias_action_bit_mapper[alias] |= perm.actions
                 alias_date_expired_mapper[alias].append(perm.date_expired)
 
-        # @ALL 账号先处理，后面的每个最多映射一个账号
+        # Process the @ALL account first; each subsequent account maps to at most one account
         all_action_bit = alias_action_bit_mapper.pop(AliasAccount.ALL, None)
         if all_action_bit:
             asset_account_usernames = asset.all_valid_accounts.values_list('username', flat=True)
@@ -95,7 +95,7 @@ class PermAssetDetailUtil:
                     alias_date_expired_mapper[AliasAccount.ALL]
                 )
 
-        # 排除某些账号的权限
+        # Exclude permissions for certain accounts
         exclude_alias_action_mapper = {
             alias: action 
             for alias, action in alias_action_bit_mapper.items() 
@@ -107,7 +107,7 @@ class PermAssetDetailUtil:
             account = alias.lstrip('!')
             alias_action_bit_mapper[account] -= action
             
-        # 排除掉没有 action 的账号
+        # Exclude accounts that have no action
         alias_action_bit_mapper = {
             alias: action_bit
             for alias, action_bit in alias_action_bit_mapper.items()
@@ -122,7 +122,7 @@ class PermAssetDetailUtil:
         cleaned_accounts_expired = defaultdict(list)
         asset_accounts = asset.all_valid_accounts.all()
 
-        # 用户名 -> 账号
+        # username -> account
         for account in asset_accounts:
             username_accounts_mapper[account.username].append(account)
 
@@ -151,7 +151,7 @@ class PermAssetDetailUtil:
     def get_permed_accounts_from_perms(cls, perms, user, asset):
         # alias: is a collection of account usernames and special accounts [@ALL, @INPUT, @USER, @ANON]
         alias_action_bit_mapper, alias_date_expired_mapper = cls.parse_alias_action_date_expire(perms, asset)
-        # 展开 alias 到具体的账号
+        # Expand alias into concrete accounts
         cleaned_accounts_action_bit, cleaned_accounts_expired = cls.map_alias_to_accounts(
             alias_action_bit_mapper, alias_date_expired_mapper, asset, user
         )
@@ -175,7 +175,7 @@ class PermAssetDetailUtil:
 
     def check_perm_protocols(self, protocols):
         """
-        检查用户是否有某些协议权限
+        Check whether the user has permission for certain protocols
         :param protocols: set
         """
         perms_protocols = self.get_permed_protocols_for_user(only_name=True)
@@ -185,7 +185,7 @@ class PermAssetDetailUtil:
 
     def check_perm_actions(self, account_name, actions):
         """
-        检查用户是否有某个账号的某个资产操作权限
+        Check whether the user has permission for certain actions on an asset account
         :param account_name: str
         :param actions: list
         """

@@ -40,7 +40,7 @@ class UKeyBackend(JMSBaseAuthBackend):
     def is_enabled():
         return settings.AUTH_UKEY
 
-    # ── 主入口 ────────────────────────────────────────────────────────────────
+    # ── Main entry point ────────────────────────────────────────────────────────
 
     def authenticate(self, request, username, cert, signature, challenge, ukey_sn=None):
         try:
@@ -60,10 +60,10 @@ class UKeyBackend(JMSBaseAuthBackend):
                 request.error_message = str(e)
             raise PermissionDenied(str(e))
 
-    # ── Part 1: 用户与 UKey SN 预校验 ────────────────────────────────────────
+    # ── Part 1: User and UKey SN pre-validation ─────────────────────────────────
 
     def _check_user_and_ukey_sn(self, username, ukey_sn):
-        """查找用户并校验 ukey_sn 绑定关系，返回 User 实例。"""
+        """Look up the user and validate the ukey_sn binding relationship, returning a User instance."""
         ukey_sn = (ukey_sn or '').strip()
         user = User.objects.filter(username=username).first()
         if user is None:
@@ -75,10 +75,10 @@ class UKeyBackend(JMSBaseAuthBackend):
             raise UkeySNMismatchError()
         return user
 
-    # ── Part 2: SM2 证书校验流程 ──────────────────────────────────────────────
+    # ── Part 2: SM2 certificate verification flow ───────────────────────────────
 
     def _authenticate_sm2(self, cert_pem, username, signature, challenge, user):
-        """SM2 证书校验：加载 → 链校验 → 有效期 → CN 比对 → 签名验证。"""
+        """SM2 certificate verification: load -> chain verification -> validity -> CN comparison -> signature verification."""
         sm2_cert = self._load_sm2_cert(cert_pem)
         self._verify_sm2_cert_chain(sm2_cert)
         self._verify_sm2_cert_validity(sm2_cert)
@@ -88,7 +88,7 @@ class UKeyBackend(JMSBaseAuthBackend):
 
     @staticmethod
     def _load_sm2_cert(cert_pem):
-        """将 PEM 字符串写入临时文件，加载为 Sm2Certificate 对象后立即删除临时文件。"""
+        """Write the PEM string to a temporary file, load it as an Sm2Certificate object, then immediately delete the temporary file."""
         from common.utils.gmssl_python import Sm2Certificate
 
         fd, cert_file = tempfile.mkstemp(suffix='.crt')
@@ -108,7 +108,7 @@ class UKeyBackend(JMSBaseAuthBackend):
 
     @staticmethod
     def _verify_sm2_cert_validity(sm2_cert):
-        """校验 SM2 证书有效期（not_before / not_after）。"""
+        """Validate the SM2 certificate's validity period (not_before / not_after)."""
         try:
             validity = sm2_cert.get_validity()
         except Exception as e:
@@ -118,7 +118,7 @@ class UKeyBackend(JMSBaseAuthBackend):
 
     @staticmethod
     def _verify_sm2_cert_chain(sm2_cert):
-        """调用 Sm2Certificate.verify_by_ca_certificate 验证 SM2 证书链。"""
+        """Call Sm2Certificate.verify_by_ca_certificate to verify the SM2 certificate chain."""
         from common.utils.gmssl_python import Sm2Certificate, SM2_DEFAULT_ID
 
         ca_cert_content = ukey_sdk_config.ca_cert_content
@@ -148,7 +148,7 @@ class UKeyBackend(JMSBaseAuthBackend):
 
     @staticmethod
     def _verify_sm2_signature(sm2_key, signature, challenge):
-        """使用 gmssl_python 的 Sm2Signature 做 SM2withSM3 验签。"""
+        """Use gmssl_python's Sm2Signature to perform SM2withSM3 signature verification."""
         from common.utils.gmssl_python import Sm2Signature, DO_VERIFY, SM2_DEFAULT_ID
 
         sig_bytes = UKeyBackend._decode_signature(signature)
@@ -164,10 +164,10 @@ class UKeyBackend(JMSBaseAuthBackend):
             logger.error('UKeyBackend: SM2 signature mismatch')
             raise UKeySignatureError()
 
-    # ── Part 3: RSA / 其他证书校验流程 ───────────────────────────────────────
+    # ── Part 3: RSA / other certificate verification flow ──────────────────────
 
     def _authenticate_other(self, cert_pem, username, signature, challenge, user):
-        """RSA 证书校验：加载 → 链校验 → 有效期 → CN 比对 → 签名验证。"""
+        """RSA certificate verification: load -> chain verification -> validity -> CN comparison -> signature verification."""
         cert, pub_key = self._load_rsa_cert(cert_pem)
         self._verify_rsa_cert_chain(cert)
         self._verify_rsa_cert_validity(cert)
@@ -177,7 +177,7 @@ class UKeyBackend(JMSBaseAuthBackend):
 
     @staticmethod
     def _load_rsa_cert(cert_pem):
-        """加载 RSA PEM 证书，校验公钥算法类型，返回 (cert, pub_key)。"""
+        """Load the RSA PEM certificate, validate the public key algorithm type, and return (cert, pub_key)."""
         from cryptography import x509
         from cryptography.hazmat.primitives.asymmetric import ec, rsa
 
@@ -198,14 +198,14 @@ class UKeyBackend(JMSBaseAuthBackend):
 
     @staticmethod
     def _verify_rsa_cert_validity(cert):
-        """校验 RSA 证书有效期（not_valid_before_utc / not_valid_after_utc）。"""
+        """Validate the RSA certificate's validity period (not_valid_before_utc / not_valid_after_utc)."""
         UKeyBackend._check_validity_period(
             cert.not_valid_before_utc, cert.not_valid_after_utc, 'RSA'
         )
 
     @staticmethod
     def _verify_rsa_cert_chain(cert):
-        """使用 CA 根证书验证 RSA 证书链。"""
+        """Verify the RSA certificate chain using the CA root certificate."""
         from cryptography import x509
         from cryptography.exceptions import InvalidSignature
         from cryptography.hazmat.primitives.asymmetric import padding
@@ -233,7 +233,7 @@ class UKeyBackend(JMSBaseAuthBackend):
 
     @staticmethod
     def _extract_rsa_cert_cn(cert):
-        """从 RSA 证书 subject 中提取 CN，失败时返回 None。"""
+        """Extract the CN from the RSA certificate subject, returning None on failure."""
         from cryptography import x509
 
         try:
@@ -243,7 +243,7 @@ class UKeyBackend(JMSBaseAuthBackend):
 
     @staticmethod
     def _verify_rsa_signature(pub_key, signature, challenge):
-        """使用 RSA PKCS1v15 + SHA256 验证签名。"""
+        """Verify the signature using RSA PKCS1v15 + SHA256."""
         from cryptography.exceptions import InvalidSignature
         from cryptography.hazmat.primitives import hashes
         from cryptography.hazmat.primitives.asymmetric import padding
@@ -261,14 +261,14 @@ class UKeyBackend(JMSBaseAuthBackend):
             logger.error('UKeyBackend: RSA signature verification error: %s', e)
             raise UKeySignatureError()
 
-    # ── 公共工具方法 ──────────────────────────────────────────────────────────
+    # ── Common utility methods ──────────────────────────────────────────────────
 
     @staticmethod
     def _check_validity_period(not_before, not_after, label=''):
-        """校验证书有效期（SM2 和 RSA 共用）。
+        """Validate the certificate's validity period (shared by SM2 and RSA).
 
-        not_before / not_after 可为 naive（本地时间）或 aware（带时区）datetime，
-        now 与之保持相同类型以确保可比较。
+        not_before / not_after can be naive (local time) or aware (timezone-aware) datetimes;
+        now is kept the same type as them to ensure they are comparable.
         """
         import datetime
 
@@ -290,7 +290,7 @@ class UKeyBackend(JMSBaseAuthBackend):
 
     @staticmethod
     def _verify_cert_cn(cert_cn, username):
-        """校验证书 CN 与 username 是否匹配（SM2 和 RSA 流程共用）。"""
+        """Validate whether the certificate CN matches the username (shared by SM2 and RSA flows)."""
         if cert_cn != username:
             logger.error(
                 'UKeyBackend: cert CN %r does not match username %r', cert_cn, username
@@ -299,12 +299,12 @@ class UKeyBackend(JMSBaseAuthBackend):
 
     @staticmethod
     def _challenge_as_bytes(challenge):
-        """将 challenge 统一转为 bytes（SM2 和 RSA 签名验证共用）。"""
+        """Convert challenge to bytes uniformly (shared by SM2 and RSA signature verification)."""
         return challenge if isinstance(challenge, bytes) else challenge.encode('utf-8')
 
     @staticmethod
     def _load_cert_pem(cert_data):
-        """将原始证书数据转为 PEM 字符串，格式不合法时抛出 CertNormalizationError。"""
+        """Convert the raw certificate data into a PEM string, raising CertNormalizationError if the format is invalid."""
         try:
             return UKeyBackend._normalize_cert_to_pem(cert_data)
         except Exception as e:
@@ -313,14 +313,14 @@ class UKeyBackend(JMSBaseAuthBackend):
 
     @staticmethod
     def _is_sm2_cert(cert_pem):
-        """通过 OID 字节序列判断证书是否使用 SM2 算法。"""
+        """Determine whether the certificate uses the SM2 algorithm by its OID byte sequence."""
         return is_sm2_pem(cert_pem)
 
     @staticmethod
     def _normalize_cert_to_pem(cert_data):
         """
-        将证书统一转换为标准 PEM 格式。
-        支持：已含头尾的 PEM、裸 base64 字符串、DER bytes。
+        Convert the certificate uniformly into standard PEM format.
+        Supports: PEM that already has a header/footer, raw base64 strings, and DER bytes.
         """
         if isinstance(cert_data, bytes):
             if cert_data.lstrip().startswith(b'-----BEGIN'):
@@ -331,7 +331,7 @@ class UKeyBackend(JMSBaseAuthBackend):
             if cert_data.startswith('-----BEGIN'):
                 return cert_data
             b64 = ''.join(cert_data.split())
-            base64.b64decode(b64, validate=True)  # 验证是合法 base64
+            base64.b64decode(b64, validate=True)  # Validate that it is legal base64
 
         lines = [b64[i:i + 64] for i in range(0, len(b64), 64)]
         return (
@@ -343,8 +343,8 @@ class UKeyBackend(JMSBaseAuthBackend):
     @staticmethod
     def _decode_signature(signature):
         """
-        将签名值转为 bytes。
-        依次尝试：已是 bytes → 十六进制字符串 → base64 字符串。
+        Convert the signature value into bytes.
+        Tried in order: already bytes -> hexadecimal string -> base64 string.
         """
         if isinstance(signature, bytes):
             return signature

@@ -20,10 +20,10 @@ logger = get_logger(__file__)
 
 
 class BaseFileRenderer(LogMixin, BaseRenderer):
-    # 渲染模板标识, 导入、导出、更新模板: ['import', 'update', 'export']
+    # Render template identifier, import/export/update templates: ['import', 'update', 'export']
     template = 'export'
     serializer = None
-    # 敏感字段名称，导出数据时这些字段不允许导出
+    # Sensitive field names; these fields are not allowed to be exported when exporting data
     secret_field_names = ("password", "token", "secret", "key", "private_key", "passphrase")
 
     @staticmethod
@@ -51,11 +51,11 @@ class BaseFileRenderer(LogMixin, BaseRenderer):
         response['Content-Disposition'] = disposition
 
     def is_secret_field(self, field):
-        """检查字段是否为敏感字段"""
-        # 检查字段类型是否为 EncryptedField
+        """Check whether the field is a sensitive field"""
+        # Check whether the field type is EncryptedField
         if isinstance(field, EncryptedField):
             return True
-        # 检查字段名是否包含敏感关键词
+        # Check whether the field name contains a sensitive keyword
         field_name = field.field_name.lower()
         for secret_name in self.secret_field_names:
             if secret_name in field_name:
@@ -76,7 +76,7 @@ class BaseFileRenderer(LogMixin, BaseRenderer):
 
         fields_unexport = getattr(meta, 'fields_unexport', [])
         fields = [v for v in fields if v.field_name not in fields_unexport]
-        # 仅真实导出数据且禁用查看密文时过滤敏感字段，模板需保留这些字段供用户填写
+        # Only filter sensitive fields for a real data export when viewing secrets is disabled; templates must keep these fields for the user to fill in
         if self.template == 'export' and settings.SECURITY_DISABLE_VIEW_SECRET:
             fields = [v for v in fields if not self.is_secret_field(v)]
         return fields
@@ -100,9 +100,9 @@ class BaseFileRenderer(LogMixin, BaseRenderer):
         if self.template == 'import':
             results = [results[0]] if results else results
         else:
-            # 限制数据数量
+            # Limit the amount of data
             results = results[:settings.MAX_LIMIT_PER_PAGE]
-        # 会将一些 UUID 字段转化为 string
+        # This will convert some UUID fields to string
         results = json.loads(json.dumps(results, cls=encoders.JSONEncoder))
         return results
 

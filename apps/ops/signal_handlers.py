@@ -25,7 +25,7 @@ logger = get_logger(__name__)
 
 @receiver(pre_save, sender=Job)
 def on_account_pre_create(sender, instance, **kwargs):
-    # 升级版本号
+    # Bump version number
     instance.version += 1
 
 
@@ -96,13 +96,13 @@ def on_celery_task_pre_run(task_id='', kwargs=None, **others):
         time.sleep(1)
         qs = CeleryTaskExecution.objects.filter(id=task_id)
 
-    # 更新状态
+    # Update state
     qs.update(state='RUNNING', date_start=timezone.now())
 
-    # 关闭之前的数据库连接
+    # Close previous database connections
     close_old_connections()
 
-    # 设置语言的一些上下文
+    # Set some language-related context
     lang = kwargs.pop('__current_lang', None)
     org_id = kwargs.pop('__current_org_id', None)
     if lang:
@@ -174,7 +174,7 @@ def task_sent_handler(headers=None, body=None, **kwargs):
         args = []
         kwargs = {}
 
-    # 不要保存__current_lang和__current_org_id参数,防止系统任务中点击再次执行报错
+    # Do not save the __current_lang and __current_org_id parameters, to prevent errors when re-executing system tasks
     kwargs.pop('__current_lang', None)
     kwargs.pop('__current_org_id', None)
     data = {

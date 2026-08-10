@@ -7,7 +7,7 @@ from .base import UserBaseACL
 
 
 class LoginACL(UserBaseACL):
-    # 规则, ip_group, time_period
+    # Rule, ip_group, time_period
     rules = models.JSONField(default=dict, verbose_name=_('Rule'))
 
     class Meta(UserBaseACL.Meta):

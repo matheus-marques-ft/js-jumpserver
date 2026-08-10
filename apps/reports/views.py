@@ -115,7 +115,7 @@ def export_chart_to_pdf(chart_name, sessionid, request):
             locale=lang,
             ignore_https_errors=True
         )
-        # 设置 sessionid cookie
+        # Set the sessionid cookie
         context.add_cookies([
             {
                 'name': settings.SESSION_COOKIE_NAME,
@@ -124,7 +124,7 @@ def export_chart_to_pdf(chart_name, sessionid, request):
                 'domain': parsed_site.hostname,
                 'path': '/',
                 'httpOnly': True,
-                'secure': False,  # 如有 https 可改 True
+                'secure': False,  # Change to True if using https
             }
         ])
         page = context.new_page()
@@ -193,7 +193,7 @@ class SendMailView(LoginRequiredMixin, View):
         if not sessionid:
             return HttpResponseBadRequest('No sessionid found in cookies')
 
-        # 1. 生成 PDF
+        # 1. Generate PDF
         try:
             pdf_bytes, title = export_chart_to_pdf(
                 chart_name, sessionid, request=request
@@ -203,9 +203,9 @@ class SendMailView(LoginRequiredMixin, View):
         if not pdf_bytes:
             return HttpResponseBadRequest('Failed to generate PDF')
 
-        # 2. PDF 转图片
+        # 2. Convert PDF to images
         images = convert_from_bytes(pdf_bytes, dpi=200)
-        # 3. 图片转 base64
+        # 3. Convert images to base64
         img_tags = []
         for img in images:
             buffer = BytesIO()
@@ -214,8 +214,8 @@ class SendMailView(LoginRequiredMixin, View):
             img_tags.append(f'<img src="data:image/png;base64,{encoded}" style="width:100%; max-width:800px;" />')
         html_content = "<br/>".join(img_tags)
 
-        # 4. 发送邮件
-        subject = f"{title} 报表"
+        # 4. Send email
+        subject = f"{title} Report"
         from_email = settings.EMAIL_FROM or settings.EMAIL_HOST_USER
         to = [email]
         msg = EmailMultiAlternatives(subject, '', from_email, to)

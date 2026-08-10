@@ -24,7 +24,7 @@ class JMSBaseAuthBackend:
         Reject users with is_valid=False. Custom user models that don't have
         that attribute are allowed.
         """
-        # 三方用户认证完成后，在后续的 get_user 获取逻辑中，也应该需要检查用户是否有效
+        # After a third-party user finishes authenticating, the subsequent get_user retrieval logic should also check whether the user is valid
         is_valid = getattr(user, 'is_valid', None)
         if not is_valid:
             logger.info("User %s is not valid", getattr(user, "username", "<unknown>"))
@@ -44,7 +44,7 @@ class JMSBaseAuthBackend:
         else:
             allowed_backend_paths = User.get_user_allowed_auth_backend_paths(username)
         if allowed_backend_paths is None:
-            # 特殊值 None 表示没有限制
+            # A special value of None means no restriction
             return True
         backend_name = self.__class__.__name__
         allowed_backend_names = [path.split('.')[-1] for path in allowed_backend_paths]
@@ -56,7 +56,7 @@ class JMSBaseAuthBackend:
         return allow
 
     def get_user(self, user_id):
-        """ 三方用户认证成功后 request.user 赋值时会调用 backend 的当前方法获取用户 """
+        """ After a third-party user authenticates successfully, this backend method is called to retrieve the user when assigning request.user """
         try:
             user = UserModel._default_manager.get(pk=user_id)
         except UserModel.DoesNotExist:

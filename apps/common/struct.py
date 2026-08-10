@@ -52,9 +52,9 @@ class QuerySetChain:
 
     def __getitem__(self, ndx):
         querysets_count_zip = zip(self.querysets, self.querysets_counts)
-        length = 0   # 加上本数组后的大数组长度
-        pre_length = 0  # 不包含本数组的大数组长度
-        items = []  # 返回的值
+        length = 0   # length of the combined array including this one
+        pre_length = 0  # length of the combined array excluding this one
+        items = []  # the returned values
         loop = 0
 
         if isinstance(ndx, slice):
@@ -68,39 +68,39 @@ class QuerySetChain:
         for queryset, count in querysets_count_zip:
             length += count
             loop += 1
-            # 取当前数组的start角标, 存在3中情况
-            # 1. start角标在当前数组
+            # Get the start index for the current array, 3 possible cases
+            # 1. the start index is within the current array
             if length > ndx_start >= pre_length:
                 start = ndx_start - pre_length
                 # print("[loop {}] Start is: {}".format(loop, start))
                 if ndx_step is None:
                     return queryset[start]
-            # 2. 不包含当前数组，因为起始已经超过了当前数组的长度
+            # 2. the current array is skipped entirely, because the start already exceeds its length
             elif ndx_start >= length:
                 pre_length += count
                 continue
-            # 3. 不在当前数组，但是应该从当前数组0开始计算
+            # 3. not within the current array, but counting should start from 0 in this array
             else:
                 start = 0
 
-            # 可能取单个值, ndx_stop 为None, 不应该再找
+            # a single value may be requested, ndx_stop is None, no need to keep searching
             if ndx_stop is None:
                 pre_length += count
                 continue
 
-            # 取当前数组的stop角标, 存在2中情况
-            # 不存在第3中情况是因为找到了会提交结束循环
-            # 1. 结束角标小于length代表 结束位在当前数组上
+            # Get the stop index for the current array, 2 possible cases
+            # there is no 3rd case because once found, the loop is ended
+            # 1. stop index less than length means the end position is within the current array
             if ndx_stop < length:
                 stop = ndx_stop - pre_length
-            # 2. 结束位置包含改数组到了最后
+            # 2. the end position extends through to the end of this array
             else:
                 stop = count
             # print("[loop {}] Slice: {} {} {}".format(loop, start, stop, ndx_step))
             items.extend(list(queryset[slice(start, stop, ndx_step)]))
             pre_length += count
 
-            # 如果结束再当前数组，则结束循环
+            # if the end is within the current array, break the loop
             if ndx_stop < length:
                 break
         return items

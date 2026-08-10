@@ -17,7 +17,7 @@ from .utils import logger
 
 def on_transaction_commit(func):
     """
-    如果不调用on_commit, 对象创建时添加多对多字段值失败
+    If on_commit is not called, adding many-to-many field values fails when the object is created
     """
 
     def inner(*args, **kwargs):
@@ -27,7 +27,7 @@ def on_transaction_commit(func):
 
 
 class Singleton(object):
-    """ 单例类 """
+    """ Singleton class """
 
     def __init__(self, cls):
         self._cls = cls
@@ -148,8 +148,8 @@ def _run_func_with_org(key, org, func, *args, **kwargs):
     from orgs.utils import set_current_org
     try:
         with open_db_connection() as conn:
-            # 保证执行时使用的是新的 connection 数据库连接
-            # 避免出现 MySQL server has gone away 的情况
+            # Ensure a fresh database connection is used during execution
+            # to avoid "MySQL server has gone away" errors
             set_current_org(org)
             func(*args, **kwargs)
     except Exception as e:
@@ -168,9 +168,9 @@ def _run_func_with_org(key, org, func, *args, **kwargs):
 
 def delay_run(ttl=5, key=None):
     """
-    延迟执行函数, 在 ttl 秒内, 只执行最后一次
+    Delay function execution; within ttl seconds, only the last call is executed
     :param ttl:
-    :param key: 是否合并参数, 一个 callback
+    :param key: whether to merge arguments, a callback
     :return:
     """
 
@@ -196,15 +196,15 @@ def delay_run(ttl=5, key=None):
 
 def merge_delay_run(ttl=5, key=None):
     """
-    延迟执行函数, 在 ttl 秒内, 只执行最后一次, 并且合并参数
+    Delay function execution; within ttl seconds, only the last call is executed, and arguments are merged
     :param ttl:
-    :param key: 是否合并参数, 一个 callback
+    :param key: whether to merge arguments, a callback
     :return:
     """
 
     def delay(func, *args, **kwargs):
         from orgs.utils import get_current_org
-        # 每次调用 delay 时可以指定本次调用的 ttl
+        # A per-call ttl can be specified each time delay is invoked
         current_ttl = kwargs.pop('ttl', ttl)
         suffix_key_func = key if key else default_suffix_key
         org = get_current_org()
@@ -282,11 +282,11 @@ def cached_method(ttl=20):
         @wraps(func)
         def wrapper(*args, **kwargs):
             key = (func, args, tuple(sorted(kwargs.items())))
-            # 检查缓存是否存在且未过期
+            # Check whether the cache exists and has not expired
             if key in _cache and time.time() - _cache[key]['timestamp'] < ttl:
                 return _cache[key]['result']
 
-            # 缓存过期或不存在，执行方法并缓存结果
+            # Cache expired or missing, execute the method and cache the result
             result = func(*args, **kwargs)
             _cache[key] = {'result': result, 'timestamp': time.time()}
             return result
@@ -302,15 +302,15 @@ def cached_method_to_redis(key, ttl, should_cache=None):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            # 尝试从缓存读取
+            # Try to read from the cache
             cached_result = cache.get(key)
             if cached_result is not None:
                 return cached_result
-            
-            # 执行函数
+
+            # Execute the function
             result = func(*args, **kwargs)
-            
-            # 判断是否缓存
+
+            # Determine whether to cache
             if should_cache is None or should_cache(result):
                 cache.set(key, result, ttl)
             
@@ -325,8 +325,8 @@ def bulk_handle(handler, batch_size=50, timeout=0.5):
     def decorator(func):
         from orgs.utils import get_current_org_id
 
-        cache = []  # 缓存实例的列表
-        lock = threading.Lock()  # 用于线程安全
+        cache = []  # List of cached instances
+        lock = threading.Lock()  # Used for thread safety
         org_id = None
 
         def handle_it():
@@ -355,21 +355,21 @@ def bulk_handle(handler, batch_size=50, timeout=0.5):
 
             handle_on_org_changed()
 
-            # 调用被装饰的函数，生成一个实例
+            # Call the decorated function to produce an instance
             instance = func(*args, **kwargs)
             if instance is None:
                 return None
 
-            # 添加实例到缓存
+            # Add the instance to the cache
             cache.append(instance)
 
-            # 如果缓存大小达到批量保存阈值，执行保存
+            # If the cache size reaches the batch-save threshold, perform the save
             if len(cache) >= batch_size:
                 handle_it()
 
             return instance
 
-        # 提交剩余实例的方法
+        # Method to commit the remaining instances
         def handle_remaining():
             if not cache:
                 return

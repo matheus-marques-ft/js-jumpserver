@@ -5,7 +5,7 @@ logger = get_logger(__file__)
 
 
 def deprecated_api(replacement=None, sunset_date=None):
-    """类视图废弃装饰器"""
+    """Deprecation decorator for class-based views"""
     def decorator(cls):
         original_dispatch = cls.dispatch
 

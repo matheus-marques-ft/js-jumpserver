@@ -64,7 +64,7 @@ class SiteMsgWebsocket(JsonWebsocketConsumer):
         ws = self
         user_id = str(self.scope["user"].id)
 
-        # 先发一个消息再说
+        # Send an initial message first
         with safe_db_connection():
             SiteMessageUtil.create_site_msgs_for_user_if_need(user_id)
             self.send_site_msg()

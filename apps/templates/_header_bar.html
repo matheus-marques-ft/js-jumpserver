@@ -37,7 +37,7 @@
                     {% if request.COOKIES.django_language == 'en' %}
                         <span class="m-r-sm text-muted welcome-message">English<b class="caret"></b></span>
                     {% else %}
-                        <span class="m-r-sm text-muted welcome-message">中文<b class="caret"></b></span>
+                        <span class="m-r-sm text-muted welcome-message">Chinese<b class="caret"></b></span>
                     {% endif %}
                 </a>
 
@@ -45,13 +45,13 @@
                     <li>
                         <a id="switch_cn" href="{% url 'i18n-switch' lang='zh-hans' %}">
                             <i class="fa fa-flag"></i>
-                            <span> 中文</span>
+                            <span> Chinese</span>
                         </a>
                     </li>
                     <li>
                         <a id="switch_hant" href="{% url 'i18n-switch' lang='zh-hant' %}">
                             <i class="fa fa-flag"></i>
-                            <span> 中文(繁體)</span>
+                            <span> Chinese (Traditional)</span>
                         </a>
                     </li>
                     <li>
@@ -63,7 +63,7 @@
                      <li>
                         <a id="switch_ja" href="{% url 'i18n-switch' lang='ja' %}">
                             <i class="fa fa-flag-checkered"></i>
-                            <span> 日本語</span>
+                            <span> Japanese</span>
                         </a>
                     </li>
                 </ul>

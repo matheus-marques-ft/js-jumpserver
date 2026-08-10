@@ -23,7 +23,7 @@ component_event_chan = ComponentEventChan()
 @on_transaction_commit
 def on_task_created(sender, instance: Task, created, **kwargs):
     if not created and instance.is_finished:
-        # 当组件完成 task 时，修改 session 的 lock 状态
+        # When a component finishes a task, update the session's lock status
         session_id = instance.args
         name = instance.name
         if name == TaskNameType.lock_session:

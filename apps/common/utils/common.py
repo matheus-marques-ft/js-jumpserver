@@ -204,7 +204,7 @@ def get_common_request_ip(request):
     if x_forwarded_for and x_forwarded_for[0]:
         login_ip = x_forwarded_for[0]
         if login_ip.count(':') == 1:
-            # format: ipv4:port (非标准格式的 X-Forwarded-For)
+            # format: ipv4:port (non-standard X-Forwarded-For format)
             login_ip = login_ip.split(":")[0]
     else:
         login_ip = request.META.get('REMOTE_ADDR', '')
@@ -450,13 +450,13 @@ def static_or_direct(logo_path):
 
 
 def make_dirs(name, mode=0o755, exist_ok=False):
-    """ 默认权限设置为 0o755 """
+    """ Default permission is set to 0o755 """
     return os.makedirs(name, mode=mode, exist_ok=exist_ok)
 
 
 def distinct(seq, key=None):
     if key is None:
-        # 如果未提供关键字参数，则默认使用元素本身作为比较键
+        # If no key function is provided, use the item itself as the comparison key by default
         key = lambda x: x
     seen = set()
     result = []
@@ -512,7 +512,7 @@ def text_hmac_sha256(text: str, secret_key: str = None):
     try:
         msg = text.strip().lower().encode('utf-8')
         key = secret_key.encode("utf-8")
-        digest = hmac.new(key, msg, hashlib.sha256).hexdigest()  # 64位十六进制字符串
+        digest = hmac.new(key, msg, hashlib.sha256).hexdigest()  # 64-character hex string
     except Exception as e:
         logger.error(f"Failed to hmac hash text: {text}, error: {e}")
         digest = ''

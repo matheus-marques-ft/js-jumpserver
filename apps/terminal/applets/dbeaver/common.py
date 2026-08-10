@@ -51,7 +51,7 @@ def notify_err_message(msg):
 
 def check_pid_alive(pid) -> bool:
     # tasklist  /fi "PID eq 508" /fo csv
-    # '"映像名称","PID","会话名      ","会话#   ","内存使用 "\r\n"wininit.exe","508","Services","0","6,920 K"\r\n'
+    # '"Image Name","PID","Session Name","Session#","Mem Usage"\r\n"wininit.exe","508","Services","0","6,920 K"\r\n'
     try:
 
         csv_ret = subprocess.check_output(["tasklist", "/fi", f'PID eq {pid}', "/fo", "csv"],

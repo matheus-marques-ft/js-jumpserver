@@ -138,7 +138,7 @@ class JMSInventory:
 
     @staticmethod
     def make_protocol_setting_vars(host, protocols):
-        # 针对协议的特殊处理
+        # Special handling for specific protocols
         for p in protocols:
             if p.name == 'ssh':
                 if hasattr(p, 'setting'):
@@ -250,7 +250,7 @@ class JMSInventory:
     def get_primary_protocol(self, ansible_config, protocols):
         invalid_protocol = type('protocol', (), {'name': 'null', 'port': 0})
         ansible_connection = ansible_config.get('ansible_connection')
-        # 数值越小，优先级越高，若用户在 ansible_config 中配置了，则提高用户配置方式的优先级
+        # The smaller the value, the higher the priority; if the user configured it in ansible_config, raise the priority of the user's configuration
         protocol_priority = {'ssh': 10, 'winrm': 9, ansible_connection: 1}
         if self.protocol:
             protocol_priority.update({self.protocol: 0})
@@ -409,7 +409,7 @@ class JMSInventory:
                 else:
                     hosts.append(host)
 
-        # 分类主机
+        # Categorize hosts
         for host in hosts:
             if host.get('error'):
                 self.exclude_hosts[host['name']] = host['error']

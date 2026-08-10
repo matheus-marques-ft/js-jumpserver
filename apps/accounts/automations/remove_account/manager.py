@@ -28,7 +28,7 @@ class RemoveAccountManager(AccountBasePlaybookManager):
         for account in snapshot_account:
             self.snapshot_asset_account_map[str(account["asset"])].append(account)
 
-        # 给 handler 使用
+        # Used by the handler
         self.delete = self.execution.snapshot.get("delete", "both")
         self.confirm_risk = self.execution.snapshot.get("risk", "")
 

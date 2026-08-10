@@ -13,15 +13,15 @@ from .models import Organization
 
 
 def get_org_from_request(request):
-    # query中优先级最高
+    # query has the highest priority
     oid = request.GET.get("oid")
-    # 其次header
+    # then header
     if not oid:
         oid = request.META.get("HTTP_X_JMS_ORG")
-    # 其次cookie
+    # then cookie
     if not oid:
         oid = request.COOKIES.get('X-JMS-ORG')
-    # 其次session
+    # then session
     if not oid:
         oid = request.session.get("oid")
 
@@ -37,15 +37,15 @@ def get_org_from_request(request):
     org = Organization.get_instance(oid)
 
     if org and org.internal:
-        # 内置组织直接返回
+        # Built-in organizations are returned directly
         return org
 
     if not settings.XPACK_ENABLED:
-        # 社区版用户只能使用默认组织
+        # Community edition users can only use the default organization
         return Organization.default()
 
     if not org and request.user.is_authenticated:
-        # 企业版用户优先从自己有权限的组织中获取
+        # Enterprise edition users are first obtained from the organizations they have permission to
         org = request.user.orgs.exclude(id=Organization.SYSTEM_ID).first()
 
     if not org:
@@ -158,7 +158,7 @@ def filter_org_queryset(queryset):
 
 def org_aware_func(org_arg_name):
     """
-    :param org_arg_name: 函数中包含org_id的对象是哪个参数
+    :param org_arg_name: which function argument is the object that contains org_id
     :return:
     """
 

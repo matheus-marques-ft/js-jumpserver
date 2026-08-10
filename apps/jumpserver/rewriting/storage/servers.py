@@ -6,8 +6,8 @@ class StaticFileServer(object):
     @staticmethod
     def serve(private_file):
         full_path = private_file.full_path
-        # todo: gzip 文件录像 nginx 处理后，浏览器无法正常解析内容
-        # 造成在线播放失败，暂时仅使用 nginx 处理 mp4 录像文件
+        # todo: after nginx handles a gzip'd recording file, the browser can't parse the content properly,
+        # causing online playback to fail; for now, only use nginx to handle mp4 recording files
         if full_path.endswith('.mp4'):
             return NginxXAccelRedirectServer.serve(private_file)
         else:

@@ -76,7 +76,7 @@ class RoleViewSet(JMSModelViewSet):
         return queryset
 
     def set_users_amount(self, queryset):
-        """设置角色的用户绑定数量，以减少查询"""
+        """Set the user binding count for roles, to reduce queries"""
         ids = [role.id for role in queryset]
         queryset = Role.objects.filter(id__in=ids).order_by(*self.ordering)
         org_id = current_org.id

@@ -37,7 +37,7 @@ def unblock_input():
 
 def notify_err_message(msg):
     if _messageBox:
-        # _messageBox 是阻塞当前线程的，所以需要开启一个新线程执行
+        # _messageBox blocks the current thread, so a new thread needs to be started to run it
         t = Thread(target=_messageBox, args=(msg, 'Error'), kwargs={})
         t.daemon = True
         t.start()
@@ -55,7 +55,7 @@ def decode_content(content: bytes) -> str:
 
 def check_pid_alive(pid) -> bool:
     # tasklist  /fi "PID eq 508" /fo csv
-    # '"映像名称","PID","会话名      ","会话#   ","内存使用 "\r\n"wininit.exe","508","Services","0","6,920 K"\r\n'
+    # '"Image Name","PID","Session Name","Session#","Mem Usage"\r\n"wininit.exe","508","Services","0","6,920 K"\r\n'
     try:
 
         csv_ret = subprocess.check_output(["tasklist", "/fi", f'PID eq {pid}', "/fo", "csv"],
@@ -82,19 +82,19 @@ def wait_pid(pid):
 
 def get_system_language():
     """
-    获取系统默认语言
-    :return: 系统默认语言代码
+    Get the system default language
+    :return: system default language code
     """
     try:
         import ctypes
         import locale
-        # 获取系统默认的语言ID
+        # Get the system default language ID
         lang_id = ctypes.windll.kernel32.GetUserDefaultUILanguage()
-        # 转换为语言代码
+        # Convert to language code
         language = locale.windows_locale[lang_id]
         return language
     except Exception as e:
-        print(f"获取系统语言失败: {e}")
+        print(f"Failed to get system language: {e}")
         return 'en_US'
 
 class DictObj(dict):

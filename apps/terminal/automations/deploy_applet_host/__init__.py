@@ -74,7 +74,7 @@ class DeployAppletHostManager:
         download_host = download_host.rstrip("/")
 
         def handler(plays):
-            # 替换所有的特殊字符为下划线 _ , 防止因主机名称造成任务执行失败
+            # Replace all special characters with underscore _, to prevent task execution failures caused by the host name
             applet_host_name = re.sub(r'\W', '_', self.deployment.host.name, flags=re.UNICODE)
             hostname = '{}-{}'.format(applet_host_name, random_string(7))
             for play in plays:

@@ -81,7 +81,7 @@ class CustomAutoSchema(AutoSchema):
         ]
         view_app = str(self.view.__class__.__module__.split('.')[0])
         if view_app in my_apps:
-            # 内部 app 的 view 注释不展示在文档里
+            # View docstrings of internal apps are not shown in the docs
             return ''
         else:
             return description
@@ -108,13 +108,13 @@ class CustomAutoSchema(AutoSchema):
 
     def get_operation_security(self):
         """
-        重写操作安全配置，统一使用 Bearer token
+        Override the operation security config to uniformly use Bearer token
         """
         return [{'Bearer': []}]
 
     def get_components_security_schemes(self):
         """
-        重写安全方案定义，避免认证类解析错误
+        Override the security scheme definition to avoid authentication class parsing errors
         """
         return {
             'Bearer': {
@@ -127,7 +127,7 @@ class CustomAutoSchema(AutoSchema):
 
     @staticmethod
     def exclude_some_paths(path):
-        # 这里可以对 paths 进行处理
+        # Paths can be processed here
         excludes = [
             '/report/', '/render-to-json/', '/suggestions/',
             'executions', 'automations', 'change-secret-records',
@@ -215,7 +215,7 @@ class CustomAutoSchema(AutoSchema):
             return None
         return operation
 
-# 添加自定义字段的 OpenAPI 扩展
+# Add OpenAPI extensions for custom fields
 from drf_spectacular.extensions import OpenApiSerializerFieldExtension
 from drf_spectacular.openapi import AutoSchema
 from drf_spectacular.plumbing import build_basic_type
@@ -224,18 +224,18 @@ from common.serializers.fields import ObjectRelatedField, LabeledChoiceField, Bi
 
 class ObjectRelatedFieldExtension(OpenApiSerializerFieldExtension):
     """
-    为 ObjectRelatedField 提供 OpenAPI schema
+    Provide an OpenAPI schema for ObjectRelatedField
     """
     target_class = ObjectRelatedField
 
     def map_serializer_field(self, auto_schema, direction):
         field = self.target
-        
-        # 获取字段的基本信息
+
+        # Get the field's basic info
         field_type = 'array' if field.many else 'object'
-        
+
         if field_type == 'array':
-            # 如果是多对多关系
+            # If it's a many-to-many relationship
             return {
                 'type': 'array',
                 'items': self._get_openapi_item_schema(field),
@@ -243,7 +243,7 @@ class ObjectRelatedFieldExtension(OpenApiSerializerFieldExtension):
                 'title': getattr(field, 'label', ''),
             }
         else:
-            # 如果是一对一关系
+            # If it's a one-to-one relationship
             return {
                 'type': 'object',
                 'properties': self._get_openapi_properties_schema(field),
@@ -253,19 +253,19 @@ class ObjectRelatedFieldExtension(OpenApiSerializerFieldExtension):
 
     def _get_openapi_item_schema(self, field):
         """
-        获取数组项的 OpenAPI schema
+        Get the OpenAPI schema for an array item
         """
         return self._get_openapi_object_schema(field)
 
     def _get_openapi_object_schema(self, field):
         """
-        获取对象的 OpenAPI schema
+        Get the OpenAPI schema for an object
         """
         properties = {}
-        
-        # 动态分析 attrs 中的属性类型
+
+        # Dynamically analyze the attribute types in attrs
         for attr in field.attrs:
-            # 尝试从 queryset 的 model 中获取字段信息
+            # Try to get field info from the queryset's model
             field_type = self._infer_field_type(field, attr)
             properties[attr] = {
                 'type': field_type,
@@ -280,10 +280,10 @@ class ObjectRelatedFieldExtension(OpenApiSerializerFieldExtension):
 
     def _infer_field_type(self, field, attr_name):
         """
-        智能推断字段类型
+        Intelligently infer the field type
         """
         try:
-            # 如果有 queryset，尝试从 model 中获取字段信息
+            # If there is a queryset, try to get field info from the model
             if hasattr(field, 'queryset') and field.queryset is not None:
                 model = field.queryset.model
                 if hasattr(model, '_meta') and hasattr(model._meta, 'fields'):
@@ -292,41 +292,41 @@ class ObjectRelatedFieldExtension(OpenApiSerializerFieldExtension):
                         return self._map_django_field_type(model_field)
         except Exception:
             pass
-        
-        # 如果没有 queryset 或无法获取字段信息，使用启发式规则
+
+        # If there's no queryset or the field info can't be obtained, use heuristic rules
         return self._heuristic_field_type(attr_name)
 
     def _map_django_field_type(self, model_field):
         """
-        将 Django 字段类型映射到 OpenAPI 类型
+        Map a Django field type to an OpenAPI type
         """
         field_type = type(model_field).__name__
-        
-        # 整数类型
+
+        # Integer types
         if 'Integer' in field_type or 'BigInteger' in field_type or 'SmallInteger' in field_type:
             return 'integer'
-        # 浮点数类型
+        # Float types
         elif 'Float' in field_type or 'Decimal' in field_type:
             return 'number'
-        # 布尔类型
+        # Boolean type
         elif 'Boolean' in field_type:
             return 'boolean'
-        # 日期时间类型
+        # Date/time types
         elif 'DateTime' in field_type or 'Date' in field_type or 'Time' in field_type:
             return 'string'
-        # 文件类型
+        # File types
         elif 'File' in field_type or 'Image' in field_type:
             return 'string'
-        # 其他类型默认为字符串
+        # Other types default to string
         else:
             return 'string'
 
     def _heuristic_field_type(self, attr_name):
         """
-        启发式推断字段类型
+        Heuristically infer the field type
         """
-        # 基于属性名的启发式规则
-        
+        # Heuristic rules based on the attribute name
+
         if attr_name in ['is_active', 'enabled', 'visible'] or attr_name.startswith('is_'):
             return 'boolean'
         elif attr_name in ['count', 'number', 'size', 'amount']:
@@ -334,19 +334,19 @@ class ObjectRelatedFieldExtension(OpenApiSerializerFieldExtension):
         elif attr_name in ['price', 'rate', 'percentage']:
             return 'number'
         else:
-            # 默认返回字符串类型
+            # Default to string type
             return 'string'
 
     def _get_openapi_properties_schema(self, field):
         """
-        获取对象属性的 OpenAPI schema
+        Get the OpenAPI schema for an object's properties
         """
         return self._get_openapi_object_schema(field)['properties']
 
 
 class LabeledChoiceFieldExtension(OpenApiSerializerFieldExtension):
     """
-    为 LabeledChoiceField 提供 OpenAPI schema
+    Provide an OpenAPI schema for LabeledChoiceField
     """
     target_class = LabeledChoiceField
 
@@ -380,7 +380,7 @@ class LabeledChoiceFieldExtension(OpenApiSerializerFieldExtension):
 
 class BitChoicesFieldExtension(OpenApiSerializerFieldExtension):
     """
-    为 BitChoicesField 提供 OpenAPI schema
+    Provide an OpenAPI schema for BitChoicesField
     """
     target_class = BitChoicesField
 
@@ -403,14 +403,14 @@ class BitChoicesFieldExtension(OpenApiSerializerFieldExtension):
 
 class LabelRelatedFieldExtension(OpenApiSerializerFieldExtension):
     """
-    为 LabelRelatedField 提供 OpenAPI schema
+    Provide an OpenAPI schema for LabelRelatedField
     """
     target_class = 'common.serializers.fields.LabelRelatedField'
 
     def map_serializer_field(self, auto_schema, direction):
         field = self.target
-        
-        # LabelRelatedField 返回一个包含 id, name, value, color 的对象
+
+        # LabelRelatedField returns an object containing id, name, value, color
         return {
             'type': 'object',
             'properties': {

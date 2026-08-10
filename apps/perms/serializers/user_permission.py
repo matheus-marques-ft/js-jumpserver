@@ -22,7 +22,7 @@ __all__ = [
 
 
 class AssetPermedSerializer(OrgResourceModelSerializerMixin, ResourceLabelsMixin):
-    """ 被授权资产的数据结构 """
+    """ Data structure for the granted asset """
     platform = ObjectRelatedField(required=False, queryset=Platform.objects, label=_('Platform'))
     category = LabeledChoiceField(choices=Category.choices, read_only=True, label=_('Category'))
     type = LabeledChoiceField(choices=AllTypes.choices(), read_only=True, label=_('Type'))
@@ -82,7 +82,7 @@ class AccountsPermedSerializer(serializers.ModelSerializer):
 
 
 class AssetPermedDetailSerializer(AssetPermedSerializer):
-    # 前面特意加了 permed，避免返回的是资产本身的
+    # The 'permed' prefix is added on purpose, to avoid returning the asset's own fields
     permed_protocols = AssetProtocolsPermsSerializer(many=True, required=False, label=_('Protocols'))
     permed_accounts = AccountsPermedSerializer(label=_("Accounts"), required=False, many=True)
 

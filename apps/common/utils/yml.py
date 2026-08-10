@@ -115,7 +115,7 @@ def sanitize_ansible_inventory_value(value):
 
 
 def sanitize_inventory_by_paths(value, path_patterns, current_path=()):
-    # 递归遍历 inventory，只在命中高风险路径时处理对应值
+    # Recursively walk the inventory, only sanitizing values whose path matches a high-risk pattern
     if isinstance(value, dict):
         return {
             key: sanitize_inventory_by_paths(item, path_patterns, current_path + (key,))
@@ -138,14 +138,15 @@ def sanitize_inventory_by_paths(value, path_patterns, current_path=()):
 
 
 def path_matches_pattern(path, pattern):
-    # `*` 只匹配单层，例如 host 名
+    # `*` matches only a single level, e.g. a host name
     if len(path) != len(pattern):
         return False
     return all(expected == "*" or actual == expected for actual, expected in zip(path, pattern))
 
 
 def atomic_dump_text(dest_path, writer):
-    # 先写临时文件，再原子替换，避免目标文件出现半写入状态
+    # Write to a temp file first, then atomically replace it, to avoid the
+    # destination file ending up in a partially-written state
     dest_dir = os.path.dirname(dest_path) or "."
     fd, tmp_path = tempfile.mkstemp(dir=dest_dir)
     try:

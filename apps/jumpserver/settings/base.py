@@ -159,8 +159,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.forms',
-    'common.apps.CommonConfig',  # 这个放到内置的最后, django ready
-    'simple_history',  # 这个要放到最后，别特么瞎改顺序
+    'common.apps.CommonConfig',  # Put this after the built-in apps, django ready
+    'simple_history',  # This has to go last, don't mess with the order
 ]
 
 PRE_CUSTOM_MIDDLEWARES = [m for m in CONFIG.PRE_CUSTOM_MIDDLEWARES.split(',') if m.strip()]
@@ -236,8 +236,8 @@ LOGOUT_REDIRECT_URL = CONFIG.LOGOUT_REDIRECT_URL
 SESSION_COOKIE_DOMAIN = CONFIG.SESSION_COOKIE_DOMAIN
 CSRF_COOKIE_DOMAIN = CONFIG.SESSION_COOKIE_DOMAIN
 
-# 设置 SESSION_COOKIE_NAME_PREFIX_KEY
-# 解决 不同域 session csrf cookie 获取混乱问题
+# Set SESSION_COOKIE_NAME_PREFIX_KEY
+# Fixes session/csrf cookie retrieval getting mixed up across different domains
 SESSION_COOKIE_NAME_PREFIX_KEY = 'SESSION_COOKIE_NAME_PREFIX'
 SESSION_COOKIE_NAME_PREFIX = CONFIG.SESSION_COOKIE_NAME_PREFIX
 if SESSION_COOKIE_NAME_PREFIX is not None:

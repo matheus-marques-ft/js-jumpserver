@@ -169,10 +169,10 @@ class UserGroupGrantedNodeChildrenAsTreeApi(SerializeToTreeNodeMixin, ListAPIVie
         else:
             children_keys = set()
             for _key in granted_keys:
-                # 判断当前节点是否是授权节点
+                # Check whether the current node is a granted node
                 if node_key == _key:
                     return self.get_children_nodes(node_key)
-                # 判断当前节点有没有授权的父节点
+                # Check whether the current node has a granted ancestor node
                 if node_key.startswith(f'{_key}:'):
                     return self.get_children_nodes(node_key)
                 self.add_children_key(node_key, _key, children_keys)

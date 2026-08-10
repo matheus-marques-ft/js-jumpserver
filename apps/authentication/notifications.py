@@ -44,7 +44,7 @@ class DifferentCityLoginMessage(UserMessage):
         from users.models import User
         user = User.objects.first()
         ip = '8.8.8.8'
-        city = '洛杉矶'
+        city = 'Los Angeles'
         return cls(user, ip, city)
 
 
