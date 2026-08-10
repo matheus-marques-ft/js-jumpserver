@@ -86,7 +86,7 @@ jobs:
       - name: Build and push multi-arch image
         uses: docker/build-push-action@v6
         with:
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/arm64
           push: true
           file: Dockerfile-base
           tags: ghcr.io/${{ env.OWNER }}/core-base:${{ env.IMAGE_TAG }}

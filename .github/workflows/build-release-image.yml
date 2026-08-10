@@ -13,7 +13,7 @@ on:
       PLATFORMS:
         description: 'Platforms to build'
         type: string
-        default: 'linux/amd64,linux/arm64'
+        default: 'linux/arm64'
 
 env:
   REGISTRY: ghcr.io

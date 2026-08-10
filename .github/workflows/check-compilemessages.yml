@@ -24,7 +24,7 @@ jobs:
       - name: Build and check compilemessages
         uses: docker/build-push-action@v6
         with:
-          platforms: linux/amd64
+          platforms: linux/arm64
           push: false
           file: Dockerfile
           target: stage-build
