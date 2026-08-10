@@ -1,4 +1,4 @@
-FROM ghcr.io/matheus-marques-ft/core-base:20260729_065854 AS stage-build
+FROM ghcr.io/matheus-marques-ft/core-base:20260810_144056 AS stage-build
 
 ARG VERSION
 
