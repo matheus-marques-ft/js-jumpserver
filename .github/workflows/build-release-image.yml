@@ -10,9 +10,16 @@ on:
         description: 'Tag to publish (defaults to the pushed git tag)'
         required: false
         default: ''
+      PLATFORMS:
+        description: 'Platforms to build'
+        type: string
+        default: 'linux/amd64,linux/arm64'
 
 env:
   REGISTRY: ghcr.io
+  # VARIÁVEL: nome final da imagem (o único valor que muda por repo)
+  # core (js-jumpserver) | koko | lion | chen | lina | luna
+  IMAGE_NAME: core
 
 jobs:
   build-and-push:
@@ -31,7 +38,12 @@ jobs:
           if [ -z "$TAG" ]; then
             TAG="${GITHUB_REF_NAME}"
           fi
+          PLATFORMS="${{ github.event.inputs.PLATFORMS }}"
+          if [ -z "$PLATFORMS" ]; then
+            PLATFORMS="linux/amd64,linux/arm64"
+          fi
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "platforms=$PLATFORMS" >> "$GITHUB_OUTPUT"
           echo "owner_lower=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
 
       - name: Set up QEMU
@@ -52,9 +64,9 @@ jobs:
         with:
           context: .
           file: ./Dockerfile
-          platforms: linux/amd64,linux/arm64
+          platforms: ${{ steps.vars.outputs.platforms }}
           push: true
           build-args: VERSION=${{ steps.vars.outputs.tag }}
           tags: |
-            ${{ env.REGISTRY }}/${{ steps.vars.outputs.owner_lower }}/core:${{ steps.vars.outputs.tag }}
-            ${{ env.REGISTRY }}/${{ steps.vars.outputs.owner_lower }}/core:latest
+            ${{ env.REGISTRY }}/${{ steps.vars.outputs.owner_lower }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.tag }}
+            ${{ env.REGISTRY }}/${{ steps.vars.outputs.owner_lower }}/${{ env.IMAGE_NAME }}:latest
