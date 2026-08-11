@@ -167,7 +167,7 @@ class ConnectMethodUtil:
                 # Listen protocol: [Asset protocol]
                 'client_limits': {
                     Protocol.sftp: [Protocol.sftp],
-                    Protocol.ssh: [Protocol.ssh, Protocol.telnet],
+                    Protocol.ssh: [Protocol.ssh, Protocol.telnet, Protocol.k8s],
                 },
                 'match': 'm2m'
             },
