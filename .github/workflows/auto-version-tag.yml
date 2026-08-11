@@ -3,7 +3,7 @@ name: Auto Version and Tag
 on:
   push:
     branches:
-      - main
+      - dev
 
 jobs:
   auto-tag:
