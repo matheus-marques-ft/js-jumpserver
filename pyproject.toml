@@ -40,6 +40,7 @@ dependencies = [
     'python-dateutil==2.8.2',
     'pyyaml==6.0.1',
     'requests==2.32.4',
+    'requests-unixsocket==0.4.1',
     'simplejson==3.19.1',
     'six==1.17.0',
     'sshtunnel==0.4.0',
@@ -174,7 +175,6 @@ dev = [
 ]
 
 xpack = [
-    "requests-unixsocket==0.4.1",
     'qingcloud-sdk==1.2.15',
     'azure-mgmt-subscription==3.1.1',
     'azure-mgmt-compute==30.0.0',
