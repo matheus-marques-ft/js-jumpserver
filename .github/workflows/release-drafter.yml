@@ -12,8 +12,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    outputs:
-      upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -28,8 +26,8 @@ jobs:
           sed -i "s@^REPO_PREFIX=.*@REPO_PREFIX=js-@" quick_start.sh
           sed -i "s@^INSTALLER_REPO=.*@INSTALLER_REPO=installer@" quick_start.sh
           sed -i "s@^VERSION=.*@VERSION=v${VERSION}@" quick_start.sh
-          echo "::set-output name=TAG::$TAG"
-          echo "::set-output name=VERSION::$VERSION"
+          echo "TAG=$TAG" >> "$GITHUB_OUTPUT"
+          echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
       - name: Create Release
         id: create_release
         uses: release-drafter/release-drafter@v5
@@ -40,15 +38,9 @@ jobs:
           version: ${{ steps.get_version.outputs.TAG }}
           tag: ${{ steps.get_version.outputs.TAG }}
       - name: Upload Quick Start Script
-        id: upload-release-quick-start-shell
-        uses: actions/upload-release-asset@v1
+        run: gh release upload ${{ steps.get_version.outputs.TAG }} ./quick_start.sh -R $GITHUB_REPOSITORY --clobber
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
-          asset_path: ./quick_start.sh
-          asset_name: quick_start.sh
-          asset_content_type: application/text
       - name: Publish Release
         run: gh release edit ${{ steps.get_version.outputs.TAG }} --draft=false -R $GITHUB_REPOSITORY
         env:
