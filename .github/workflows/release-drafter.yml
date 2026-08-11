@@ -49,3 +49,7 @@ jobs:
           asset_path: ./quick_start.sh
           asset_name: quick_start.sh
           asset_content_type: application/text
+      - name: Publish Release
+        run: gh release edit ${{ steps.get_version.outputs.TAG }} --draft=false -R $GITHUB_REPOSITORY
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
