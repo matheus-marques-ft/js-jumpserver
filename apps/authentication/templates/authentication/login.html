@@ -318,23 +318,6 @@
 <div class="login-content extra-fields-{{ extra_fields_count }}">
 
     <div class="left-form-box {% if not form.challenge and not form.captcha %} no-captcha-challenge {% endif %}">
-        <ul class="nav navbar-top-links navbar-right">
-            <li class="dropdown">
-                <a class="dropdown-toggle login-page-language" data-bs-toggle="dropdown" href="#" target="_blank">
-                    <i class="fa fa-globe fa-lg" style="margin-right: 2px"></i>
-                    <span>{{ current_lang.title }}<b class="caret"></b></span>
-                </a>
-                <ul class="dropdown-menu profile-dropdown dropdown-menu-right">
-                    {% for lang in langs %}
-                        <li>
-                            <a href="{% url 'i18n-switch' lang=lang.code %}">
-                                <span>{{ lang.title }}</span>
-                            </a>
-                        </li>
-                    {% endfor %}
-                </ul>
-            </li>
-        </ul>
         <div class="mobile-logo">
             <img src="{{ INTERFACE.logo_logout }}" alt="Logo"/>
         </div>
@@ -380,9 +363,6 @@
                                 {% bootstrap_field form.auto_login form_group_class='auto_login_box' %}
                             {% endif %}
                         </div>
-                        <a id="forgot_password" href="{{ forgot_password_url }}">
-                            <small>{% trans 'Forgot password' %}?</small>
-                        </a>
                     </div>
 
                     <div class="form-group">
