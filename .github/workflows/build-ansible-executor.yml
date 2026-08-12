@@ -19,7 +19,7 @@ on:
         description: 'Branch used to build the Ansible Executor image'
         required: true
         type: string
-        default: 'main'
+        default: 'dev'
 
 jobs:
   build-and-push:
