@@ -14,7 +14,8 @@ RUN echo > /opt/jumpserver/config.yml \
 RUN set -ex \
     && export SECRET_KEY=$(head -c100 < /dev/urandom | base64 | tr -dc A-Za-z0-9 | head -c 48) \
     && . /opt/py3/bin/activate \
-    && uv pip install -r pyproject.toml \
+    && retry() { for i in 1 2 3 4 5; do "$@" && return 0; echo "Attempt $i/5 failed, retrying in 5s..."; sleep 5; done; return 1; } \
+    && retry uv pip install -r pyproject.toml \
     && rm -rf /root/.cache/ \
     && cd apps \
     && python manage.py compilemessages
