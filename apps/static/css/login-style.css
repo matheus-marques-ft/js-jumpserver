@@ -1,3 +1,9 @@
+:root {
+    --primary-color: #00aeef;
+    --primary-color-dark: #0089bf;
+    --primary-color-darker: #006c96;
+}
+
 .login_body {
     filter: "progid:DXImageTransform.Microsoft.AlphaImageLoader(sizingMethod='scale')";
     -moz-background-size: 100% 100%;
@@ -7,7 +13,6 @@
 }
 
 .login-dialog {
-
     margin-top: -moz-calc((100vh - 575px) / 2);
     margin-top: -webkit-calc((100vh - 575px) / 2);
     margin-top: calc((100vh - 575px) / 2);
@@ -19,14 +24,15 @@
     width: 100%;
 }
 
-.input_shadow-1{
-    box-shadow:-2px 5px 5px #9999
+.input_shadow-1 {
+    box-shadow: -2px 5px 5px #9999
 }
 
-.button-shadow{
-    box-shadow:-1px 3px 3px #9999 ;
+.button-shadow {
+    box-shadow: -1px 3px 3px #9999;
 }
 
+/* Campo de usuário / senha - cantos levemente arredondados */
 .contact-form .form-control-1 {
     background-color: transparent;
     border: 1px solid #dedede;
@@ -35,7 +41,7 @@
     height: 30px;
     font-family: -apple-system, BlinkMacSystemFont, "Neue Haas Grotesk Text Pro", "Arial Nova", "Segoe UI", "Helvetica Neue", ".PingFang SC", "PingFang SC", "Microsoft YaHei", "Microsoft JhengHei", "Source Han Sans SC", "Noto Sans CJK SC", "Source Han Sans CN", "Noto Sans SC", "Source Han Sans TC", "Noto Sans CJK TC", "Hiragino Sans GB", sans-serif;
     font-size: 14px;
-    border-radius: 0;
+    border-radius: 8px;
 }
 
 .login-logo {
@@ -71,10 +77,10 @@
 
 .login-input-control {
     background-color: #FFFFFF;
-    border: 1px solid #0D6FD1;
+    border: 1px solid var(--primary-color);
     position: absolute;
     padding: 6px 6px 6px 62px;
-    border-radius: 2px;
+    border-radius: 8px;
     width: 500px;
     height: 40px;
     font-size: 14px;
@@ -89,8 +95,8 @@
 }
 
 .login-input-control:focus {
-    color: #0D6FD1;
-    border-color: #0D6FD1;
+    color: var(--primary-color);
+    border-color: var(--primary-color);
 }
 
 .login-input-control:-webkit-autofill {
@@ -114,7 +120,7 @@
 }
 
 .login-input-prefix .fa {
-    color: #0D6FD1;
+    color: var(--primary-color);
 }
 
 .login-input-prefix img {
@@ -156,10 +162,11 @@
     padding-right: 20px;
 }
 
+/* Botão de login - cor de marca #00aeef */
 .btn-login {
     color: #FFFFFF;
-    background-color: #23A9F6;
-    border-color: #23A9F6;
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
     border-radius: 30px;
     width: 500px;
     height: 40px;
@@ -171,20 +178,20 @@
 .btn-login:focus,
 .btn-login.focus {
     color: #fff;
-    background-color: #23A9F6;
-    border-color: #23A9F6;
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
 }
 
 .btn-login:hover {
     color: #fff;
-    background-color: #53C0FF;
-    border-color: #53C0FF;
+    background-color: var(--primary-color-dark);
+    border-color: var(--primary-color-dark);
 }
 
 .btn-login:active, .btn-login.active, .open > .dropdown-toggle.btn-login {
     color: #fff;
-    background-color: #0D6FD1;
-    border-color: #0D6FD1;
+    background-color: var(--primary-color-darker);
+    border-color: var(--primary-color-darker);
 }
 
 .btn-login:active:hover,
@@ -197,10 +204,9 @@
 .btn-login.active.focus,
 .open > .dropdown-toggle.btn-login.focus {
     color: #fff;
-    background-color: #53C0FF;
-    border-color: #53C0FF;
+    background-color: var(--primary-color-dark);
+    border-color: var(--primary-color-dark);
 }
-
 
 .btn-login:active,
 .btn-login.active,
@@ -227,31 +233,39 @@ fieldset[disabled] .btn-login:active,
 .btn-login[disabled].active,
 fieldset[disabled] .btn-login.active {
     color: #fff;
-    background-color: #23A9F6;
-    border-color: #23A9F6;
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
     opacity: 0.6;
 }
 
 .btn-login .badge {
-    color: #23A9F6;
+    color: var(--primary-color);
     background-color: #fff;
 }
 
+/* Campos de usuário / senha usados no formulário de login (pam_login.html) */
 .contact-form .form-control {
     background-color: transparent;
     border: 1px solid #dedede;
     box-shadow: none;
     color: #0c0c0c;
-    height: 38px;
+    height: 42px;
     font-family: -apple-system, BlinkMacSystemFont, "Neue Haas Grotesk Text Pro", "Arial Nova", "Segoe UI", "Helvetica Neue", ".PingFang SC", "PingFang SC", "Microsoft YaHei", "Microsoft JhengHei", "Source Han Sans SC", "Noto Sans CJK SC", "Source Han Sans CN", "Noto Sans SC", "Source Han Sans TC", "Noto Sans CJK TC", "Hiragino Sans GB", sans-serif;
     font-size: 14px;
-    border-radius: 0;
+    border-radius: 8px;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.contact-form .form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(0, 174, 239, 0.15);
+    outline: none;
 }
 
 .contact-form input:hover,
 .contact-form textarea:hover,
 .contact-form #contact-submit:hover {
-    border-color: #28ABE3;
+    border-color: var(--primary-color);
 }
 
 .contact-form #contact-submit {
@@ -259,9 +273,9 @@ fieldset[disabled] .btn-login.active {
     padding: 15px 0;
     width: 100%;
     margin: 0;
-    background: #28ABE3;
+    background: var(--primary-color);
     color: #fff;
-    border-radius: 0;
+    border-radius: 8px;
 }
 
 .contact-form textarea.form-control {
@@ -270,21 +284,31 @@ fieldset[disabled] .btn-login.active {
     outline: none;
 }
 
+/* Botão principal "Login" - cor de marca #00aeef, cantos levemente arredondados */
 .btn-transparent {
     color: #fff;
     border: 1px solid var(--primary-color);
     display: inline-block;
-    font-size: 13px;
+    font-size: 14px;
+    font-weight: 500;
     letter-spacing: 1px;
-    padding: 10px 30px;
+    padding: 12px 30px;
     text-transform: uppercase;
-    border-radius: 5px;
+    border-radius: 8px;
     background: var(--primary-color);
     width: 100%;
+    transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
 }
 
 .btn-transparent:hover {
     color: #fff;
+    background: var(--primary-color-dark);
+    border-color: var(--primary-color-dark);
+}
+
+.btn-transparent:active {
+    background: var(--primary-color-darker);
+    border-color: var(--primary-color-darker);
 }
 
 .border {
@@ -292,5 +316,23 @@ fieldset[disabled] .btn-login.active {
     margin: 20px auto 20px;
     position: relative;
     width: 80px;
-    background: #28ABE3;
+    background: var(--primary-color);
+}
+
+/* ===== Captcha (verificação) - cantos levemente arredondados ===== */
+.captcha-field img,
+.captcha-field .captcha,
+img.captcha,
+.captcha {
+    border-radius: 8px;
+    border: 1px solid #dedede;
+}
+
+.captcha-field input.form-control {
+    border-radius: 8px;
+}
+
+/* Checkbox "manter conectado" alinhado com a cor de marca */
+.auto_login_box input[type="checkbox"] {
+    accent-color: var(--primary-color);
 }
