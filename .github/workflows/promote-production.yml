@@ -1,0 +1,39 @@
+name: Promote to Production
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+
+jobs:
+  promote:
+    if: github.event.pull_request.merged == true && github.event.pull_request.head.ref == 'dev'
+    runs-on: ubuntu-24.04-arm
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout main (post-merge)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.ref }}
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_PAT }}
+
+      - name: Compute production tag
+        id: version
+        run: |
+          LAST_TAG=$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n1)
+          if [ -z "${LAST_TAG}" ]; then
+            echo "No vX.Y.Z tag found to promote" >&2
+            exit 1
+          fi
+          echo "prod_tag=${LAST_TAG}-stable" >> "$GITHUB_OUTPUT"
+          echo "Promoting ${LAST_TAG} -> ${LAST_TAG}-stable"
+
+      - name: Create and push production tag
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git tag ${{ steps.version.outputs.prod_tag }}
+          git push origin ${{ steps.version.outputs.prod_tag }}
