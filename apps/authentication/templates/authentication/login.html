@@ -17,24 +17,30 @@
     <script src="{% static 'js/jumpserver.js' %}?v=10"></script>
 
     <style>
-        .login-content {
-        {% comment %} box-shadow: 0 5px 5px -3px rgb(0 0 0 / 15%), 0 8px 10px 1px rgb(0 0 0 / 14%), 0 3px 14px 2px rgb(0 0 0 / 12%); {% endcomment %}
+        :root {
+            --primary-color: #00aeef;
+            --primary-color-dark: #0089bf;
+            --primary-color-darker: #006c96;
         }
 
-        .login-footer {
-            height: 50px;
-            width: 1000px;
-            margin: 40px auto;
-            text-align: center;
+        * {
+            box-sizing: border-box;
         }
 
-        .footer-item {
-            padding: 5px 20px;
-            color: gray;
+        html, body {
+            height: 100%;
+            margin: 0;
         }
 
-        .footer-item a {
-            color: gray;
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            width: 100vw;
+            background-color: #eef1f3;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
         }
 
         .help-block {
@@ -49,155 +55,133 @@
         }
 
         .form-group {
-            margin-bottom: 30px;
-            margin-top: 20px;
-        }
-
-        .extra-fields-1 .form-group {
-            margin-bottom: 30px;
-            margin-top: 15px;
-        }
-
-        .extra-fields-2 .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 22px;
             margin-top: 10px;
         }
 
-        .extra-fields-3 .form-group {
-            margin-bottom: 10px;
-            margin-top: 10px;
-        }
-
+        /* ===== Container principal dividido ao meio ===== */
         .login-content {
-            height: 500px;
+            display: flex;
             width: 1000px;
-            margin-top: auto;
-            margin-bottom: auto;
+            max-width: 100%;
+            min-height: 560px;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.12);
+            background-color: #ffffff;
         }
 
-
-        body {
-            box-sizing: border-box;
-            min-height: 100%;
+        /* ===== Lado esquerdo: usuário, senha, captcha e login ===== */
+        .left-form-box {
+            width: 50%;
+            position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
-            flex-direction: column;
-            width: 100vw;
-            height: 100vh;
-            background-color: #f3f3f3;
-        {#height: calc(100vh - (100vh - 470px) / 3);#}
-        }
-
-
-        .captcha {
-            float: right;
-        }
-
-        .right-image-box {
-            height: 100%;
-            width: 50%;
-            float: right;
-        }
-
-        .left-form-box {
-            text-align: center;
-            background-color: white;
-            height: 100%;
-            width: 50%;
-            border-right: 1px solid #EFF0F1;
+            background-color: #ffffff;
+            padding: 40px 30px;
         }
 
         .left-form-box .form-panel {
-            position: relative;
-            top: 50%;
-            transform: translateY(-50%);
+            width: 100%;
+            max-width: 340px;
         }
 
-        .left-form-box .form-panel {
-            position: relative;
-            top: 50%;
-            transform: translateY(-50%);
-        }
-
-        .left-form-box .form-panel .form-mobile {
-            padding: 15px 60px;
-            text-align: left
-        }
-
-        .left-form-box .form-panel .form-mobile h2 {
-            display: inline
+        .contact-form {
+            overflow: hidden;
         }
 
         .red-fonts {
             color: red;
         }
 
+        .alert {
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            line-height: 1.6;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            text-align: left;
+        }
+
+        .alert-danger {
+            background-color: #FDECEC;
+            color: #a12622;
+            border-left: 4px solid #e24b4a;
+        }
+
+        .alert-info {
+            background-color: #E6F6FD;
+            color: #036a92;
+            border-left: 4px solid var(--primary-color);
+        }
+
         .form-group.has-error {
             margin-bottom: 0;
         }
 
+        /* Erros de campo (ex: usuário inválido) usam a mesma cor/tom da caixa de alerta acima */
+        .has-error .help-block {
+            display: block;
+            border-radius: 8px;
+            background-color: #FDECEC;
+            color: #a12622;
+            border-left: 4px solid #e24b4a;
+            padding: 10px 14px;
+            margin-top: 8px;
+            font-size: 13px;
+            line-height: 1.5;
+            text-align: left;
+        }
+
         .captcha-field .has-error .help-block {
-            margin-top: -8px !important;
+            margin-top: 10px !important;
         }
 
-        .jms-title {
-        {#padding: 22px 10px 10px;#}
-        }
-
-        .more-login-items {
-            margin-top: 15px;
-        }
-
-        .more-login-item {
-            border-right: 1px dashed #dedede;
-            padding: 2px 5px;
-        }
-
-        .more-login-item:last-child {
-            border-right: none;
-        }
-
-        .select-con {
-            width: 35%;
-        }
-
-        .mfa-div {
+        .captcha-field .form-group {
+            margin-bottom: 5px;
             width: 100%;
         }
 
-        .login-page-language {
-            font-size: 12px !important;
-            margin-right: -32px !important;
-            padding-top: 12px !important;
-            padding-left: 0 !important;
-            padding-bottom: 8px !important;
-            color: #8F959E !important;
-            font-weight: 350 !important;
-            min-height: auto !important;
-        }
-
-        .right-image {
-            height: 100%;
-            width: 100%
-        }
-
-        .jms-title {
+        .auto-login.form-group {
+            margin-bottom: 22px;
             display: flex;
-            justify-content: center;
             align-items: center;
-            font-size: 21px;
-            font-weight: 400;
-            color: #151515;
-            letter-spacing: 0;
+            justify-content: space-between;
+        }
+
+        .auto_login_box {
+            display: inline-block;
+        }
+
+        #forgot_password {
+            color: #8f959e;
+            white-space: nowrap;
+        }
+
+        #forgot_password:hover {
+            color: var(--primary-color);
+        }
+
+        .more-login {
+            margin-top: 16px;
+        }
+
+        .has-error .more-login {
+            margin-top: 0;
         }
 
         .more-methods-title {
             position: relative;
             margin-top: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #8f959e;
         }
 
-        .more-methods-title:before, .more-methods-title:after {
+        .more-methods-title:before,
+        .more-methods-title:after {
             position: absolute;
             top: 50%;
             transform: translateY(-50%);
@@ -214,41 +198,23 @@
             right: 0;
         }
 
-        .more-methods-title.ja:before, .more-methods-title.ja:after {
-            width: 26%;
+        .more-login-items {
+            margin-top: 15px;
+            text-align: center;
         }
 
-        .captcha-field .form-group {
-            margin-bottom: 5px;
+        .more-login-item {
+            border-right: 1px dashed #dedede;
+            padding: 2px 10px;
+            color: gray;
         }
 
-        .auto-login.form-group .checkbox {
-            margin: 5px 0;
+        .more-login-item:last-child {
+            border-right: none;
         }
 
-        .more-login {
-            margin-top: 20px;
-        }
-
-        .has-error .more-login {
-            margin-top: 0;
-        }
-
-        .welcome-message {
-            color: #646A73;
-        }
-
-        .navbar-right .dropdown-menu {
-            right: -24px !important;
-            left: auto;
-        }
-
-        .auto_login_box {
-            display: inline-block;
-        }
-
-        .auto-login input[type=checkbox] {
-
+        .mfa-div {
+            width: 100%;
         }
 
         .error-info {
@@ -256,51 +222,110 @@
             text-align: center;
         }
 
+        /* ===== Seletor de idioma ===== */
+        .login-page-language {
+            position: absolute;
+            top: 18px;
+            right: 24px;
+            font-size: 12px !important;
+            color: #8F959E !important;
+            font-weight: 350 !important;
+        }
+
+        .login-page-language:hover {
+            color: var(--primary-color) !important;
+        }
+
+        .navbar-right .dropdown-menu {
+            right: 0;
+            left: auto;
+        }
+
+        /* ===== Lado direito: marca / logo ===== */
+        .right-image-box {
+            width: 50%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-color-darker) 100%);
+        }
+
+        /* campo levemente escurecido e transparente, com a logo centralizada acima dele */
+        .brand-card {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(0, 0, 0, 0.18);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 18px;
+            padding: 55px 65px;
+            max-width: 78%;
+        }
+
+        .brand-card img {
+            max-width: 220px;
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* Logo exibida apenas em telas pequenas, quando o lado direito é ocultado */
         .mobile-logo {
             display: none;
+        }
+
+        .mobile-logo img {
+            max-width: 130px;
+            height: auto;
+        }
+
+        /* ===== Responsivo ===== */
+        @media (max-width: 992px) {
+            .login-content {
+                width: 92%;
+            }
+
+            .brand-card {
+                padding: 40px 30px;
+            }
+
+            .brand-card img {
+                max-width: 170px;
+            }
         }
 
         @media (max-width: 768px) {
             body {
                 background-color: #ffffff;
+                padding: 0;
             }
 
             .login-content {
+                flex-direction: column;
                 width: 100%;
-            }
-
-            .left-form-box {
-                width: 100%;
-                border-right: none;
+                min-height: 100vh;
+                border-radius: 0;
+                box-shadow: none;
             }
 
             .right-image-box {
                 display: none;
             }
 
-            .navbar-top-links {
-                display: inline;
-                float: right;
-            }
-
             .mobile-logo {
-                display: block;
-                padding: 0 45px;
-                text-align: left;
+                display: flex;
+                justify-content: center;
+                padding: 40px 0 10px;
             }
 
-            .right-image {
-                height: revert;
-                width: revert;
-            }
-
-            .left-form-box .form-panel {
-                transform: translateY(-65%);
-            }
-
-            .left-form-box .form-panel .form-mobile h2 {
-                padding: 0;
-                margin: 0;
+            .left-form-box {
+                width: 100%;
+                padding: 10px 24px 40px;
             }
         }
     </style>
@@ -315,52 +340,20 @@
     </div>
 {% endif %}
 <div class="login-content extra-fields-{{ extra_fields_count }}">
-    <div class="right-image-box">
-        <a href="{% if not XPACK_ENABLED %}https://github.com/jumpserver/jumpserver.git{% endif %}">
-            <img src="{{ INTERFACE.login_image }}" class="right-image" alt="screen-image"/>
-        </a>
-    </div>
+
     <div class="left-form-box {% if not form.challenge and not form.captcha %} no-captcha-challenge {% endif %}">
-        <div class="mobile-logo" style="padding-bottom: 45px; box-sizing: border-box">
-            <div class="jms-title">
-                <img style="width: 60px; height: 60px" src="{{ INTERFACE.logo_logout }}" alt="Logo"/>
-                <span style="padding-left: 10px">{{ INTERFACE.login_title }}</span>
-            </div>
+        <div class="mobile-logo">
+            <img src="{{ INTERFACE.logo_logout }}" alt="Logo"/>
         </div>
         <div class="form-panel">
-            <div class="form-mobile">
-                <h2 style='font-weight: 400;'>
-                    {% trans 'Login' %}
-                </h2>
-                <ul class=" nav navbar-top-links navbar-right">
-                    <li class="dropdown">
-                        <a class="dropdown-toggle login-page-language" data-bs-toggle="dropdown" href="#"
-                           target="_blank">
-                            <i class="fa fa-globe fa-lg" style="margin-right: 2px"></i>
-                            <span>{{ current_lang.title }}<b class="caret"></b></span>
-                        </a>
-                        <ul class="dropdown-menu profile-dropdown dropdown-menu-right">
-                            {% for lang in langs %}
-                                <li>
-                                    <a href="{% url 'i18n-switch' lang=lang.code %}">
-                                        <span>{{ lang.title }}</span>
-                                    </a>
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    </li>
-                </ul>
-            </div>
             <div class="contact-form col-md-10 col-md-offset-1" style='float: none; overflow: hidden'>
                 <form id="login-form" autocomplete="off" action="" method="post" role="form" novalidate="novalidate">
                     {% csrf_token %}
-                    <div style="line-height: 17px;margin-bottom: 20px;color: #999999;">
-                        {% if form.non_field_errors %}
-                            <p class="help-block red-fonts">
-                                {{ form.non_field_errors.as_text }}
-                            </p>
-                        {% endif %}
-                    </div>
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors.as_text }}
+                        </div>
+                    {% endif %}
 
                     {% bootstrap_field form.username autocomplete="off" show_label=False %}
                     <div class="form-group {% if form.password.errors %} has-error {% endif %}">
@@ -370,9 +363,9 @@
                         <input id="password-hidden" type="text" style="display:none"
                                name="{{ form.password.html_name }}" autocomplete="off" aria-hidden="true" tabindex="-1">
                         {% if form.password.errors %}
-                            <p class="help-block" style="text-align: left">
+                            <div class="alert alert-danger" style="margin-top: 8px; margin-bottom: 0;">
                                 {{ form.password.errors.as_text }}
-                            </p>
+                            </div>
                         {% endif %}
                     </div>
                     {% if form.challenge %}
@@ -386,19 +379,11 @@
                             {% bootstrap_field form.captcha show_label=False %}
                         </div>
                     {% endif %}
-                    <div class="form-group auto-login" style="margin-bottom: 10px">
-                        <div class="row" style="overflow: hidden;">
-                            <div class="col-md-6 col-xs-6" style="text-align: left">
-                                {% if form.auto_login %}
-                                    {% bootstrap_field form.auto_login form_group_class='auto_login_box' %}
-                                {% endif %}
-                            </div>
-
-                            <div class="col-md-6 col-xs-6" style="line-height: 25px">
-                                <a id="forgot_password" href="{{ forgot_password_url }}" style="float: right">
-                                    <small>{% trans 'Forgot password' %}?</small>
-                                </a>
-                            </div>
+                    <div class="form-group auto-login">
+                        <div>
+                            {% if form.auto_login %}
+                                {% bootstrap_field form.auto_login form_group_class='auto_login_box' %}
+                            {% endif %}
                         </div>
                     </div>
 
@@ -429,15 +414,19 @@
                                     </a>
                                 {% endfor %}
                             </div>
-                        {% else %}
-                            <div class="text-center" style="display: inline-block;">
                         {% endif %}
-                        </div>
                     </div>
                 </form>
             </div>
         </div>
     </div>
+
+    <div class="right-image-box">
+        <div class="brand-card">
+            <img src="{{ INTERFACE.logo_logout }}" alt="Logo"/>
+        </div>
+    </div>
+
 </div>
 
 </body>

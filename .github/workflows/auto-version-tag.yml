@@ -18,10 +18,18 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.RELEASE_PAT }}
 
-      - name: Compute next version
+      - name: Compute next version (js-jumpserver is the canonical source)
         id: version
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_PAT }}
         run: |
-          LAST_TAG=$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n1)
+          LAST_TAG=$(gh api repos/matheus-marques-ft/js-jumpserver/tags --paginate --jq '.[].name' \
+            | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n1)
+          if [ -z "$LAST_TAG" ]; then
+            LAST_STABLE=$(gh api repos/matheus-marques-ft/js-jumpserver/tags --paginate --jq '.[].name' \
+              | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+-stable$' | sort -V | tail -n1)
+            LAST_TAG="${LAST_STABLE%-stable}"
+          fi
           if [ -z "$LAST_TAG" ]; then
             NEW_TAG="v0.1.1"
           else
@@ -39,9 +47,31 @@ jobs:
           echo "new_tag=$NEW_TAG" >> "$GITHUB_OUTPUT"
           echo "Next version: $NEW_TAG"
 
-      - name: Create and push tag
+      - name: Tag this repo and propagate to all siblings
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_PAT }}
         run: |
+          NEW_TAG="${{ steps.version.outputs.new_tag }}"
+          OWNER="matheus-marques-ft"
+          REPOS="js-jumpserver js-koko js-lion js-luna js-lina js-chen js-docker-web js-installer js-client"
+          THIS_REPO="$(basename "${{ github.repository }}")"
+
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
-          git tag ${{ steps.version.outputs.new_tag }}
-          git push origin ${{ steps.version.outputs.new_tag }}
+          git tag "${NEW_TAG}"
+          git push origin "${NEW_TAG}"
+
+          for repo in ${REPOS}; do
+            if [ "${repo}" = "${THIS_REPO}" ]; then
+              continue
+            fi
+            BRANCH_REF="heads/dev"
+            if [ "${repo}" = "js-client" ]; then
+              BRANCH_REF="heads/main"
+            fi
+            SHA=$(gh api "repos/${OWNER}/${repo}/git/refs/${BRANCH_REF}" --jq '.object.sha')
+            gh api -X POST "repos/${OWNER}/${repo}/git/refs" \
+              -f ref="refs/tags/${NEW_TAG}" -f sha="${SHA}" \
+              && echo "  ${repo} -> ${NEW_TAG}" \
+              || echo "  WARNING: could not tag ${repo} with ${NEW_TAG}"
+          done

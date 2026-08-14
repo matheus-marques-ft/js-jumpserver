@@ -1,8 +1,11 @@
 {% load i18n %}
 {% spaceless %}
-    <img src="{{ image }}" alt="captcha" class="captcha" />
-    <div class="row" style="padding-bottom: 10px">
-        <div class="col-sm-6">
+    <div class="captcha-hint" style="color: #8f959e; font-size: 13px; margin-bottom: 8px; text-align: left;">
+        {% trans "Captcha" %}
+    </div>
+    <div class="captcha-wrapper" style="display: flex; align-items: center; gap: 12px; width: 100%;">
+        <img src="{{ image }}" alt="captcha" class="captcha" />
+        <div style="flex: 1; min-width: 0;">
             <div class="input-group-prepend">
                 {% if audio %}
                     <a title="{% trans "Play CAPTCHA as audio file" %}" href="{{ audio }}"></a>
@@ -12,7 +15,6 @@
          </div>
     </div>
     <script>
-        var placeholder = '{% trans "Captcha" %}'
         function refresh_captcha() {
             $.getJSON("{% url "captcha-refresh" %}",
                 function (result) {
@@ -22,7 +24,7 @@
         }
         $(document).ready(function () {
             $('.captcha').click(refresh_captcha)
-            $('#id_captcha_1').addClass('form-control').attr('placeholder', placeholder)
+            $('#id_captcha_1').addClass('form-control')
         })
     </script>
 

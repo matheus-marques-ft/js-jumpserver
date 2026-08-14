@@ -1,30 +1,256 @@
-{% extends '_base_only_content.html' %}
 {% load static %}
 {% load i18n %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <link rel="shortcut icon" href="{{ INTERFACE.favicon }}" type="image/x-icon">
+    <title>
+        {% trans 'MFA Auth' %}
+    </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% include '_head_css_js.html' %}
+    <link href="{% static 'css/jumpserver.css' %}" rel="stylesheet">
+    <link href="{% static 'css/login-style.css' %}" rel="stylesheet">
+    <script src="{% static 'js/jumpserver.js' %}?v=10"></script>
 
-{% block title %}
-    {% trans 'MFA Auth' %}
-{% endblock %}
-
-{% block content %}
-    <form class="m-t" role="form" method="post" action="">
-        {% csrf_token %}
-        {% if 'code' in form.errors %}
-            <p class="red-fonts">{{ form.code.errors.as_text }}</p>
-        {% endif %}
-        <div class="form-group">
-            {% include '_mfa_login_field.html' %}
-        </div>
-        <button id='submit_button' type="submit" class="btn btn-primary block full-width m-b">
-            {% trans 'Next' %}
-        </button>
-        <div>
-            <small>{% trans "Can't provide security? Please contact the administrator!" %}</small>
-        </div>
-    </form>
     <style>
-        .mfa-div {
-            margin-top: 15px;
+        :root {
+            --primary-color: #00aeef;
+            --primary-color-dark: #0089bf;
+            --primary-color-darker: #006c96;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            width: 100vw;
+            background-color: #eef1f3;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+        }
+
+        .login-content {
+            display: flex;
+            width: 1000px;
+            max-width: 100%;
+            min-height: 560px;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.12);
+            background-color: #ffffff;
+        }
+
+        .left-form-box {
+            width: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #ffffff;
+            padding: 40px 30px;
+        }
+
+        .left-form-box .form-panel {
+            width: 100%;
+            max-width: 340px;
+        }
+
+        .contact-form {
+            overflow: hidden;
+        }
+
+        .mfa-heading {
+            font-size: 20px;
+            font-weight: 500;
+            color: #151515;
+            margin: 0 0 26px;
+        }
+
+        .form-group {
+            margin-bottom: 22px;
+            margin-top: 10px;
+        }
+
+        .alert {
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            line-height: 1.6;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            text-align: left;
+        }
+
+        .alert-danger {
+            background-color: #FDECEC;
+            color: #a12622;
+            border-left: 4px solid #e24b4a;
+        }
+
+        .btn-outline-secondary {
+            display: inline-block;
+            width: 100%;
+            text-align: center;
+            padding: 12px 30px;
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            border-radius: 8px;
+            border: 1px solid #dedede;
+            background: transparent;
+            color: #555555;
+            transition: border-color 0.15s ease-in-out, color 0.15s ease-in-out;
+            margin-top: 12px;
+        }
+
+        .btn-outline-secondary:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .right-image-box {
+            width: 50%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-color-darker) 100%);
+        }
+
+        .brand-card {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(0, 0, 0, 0.18);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 18px;
+            padding: 55px 65px;
+            max-width: 78%;
+        }
+
+        .brand-card img {
+            max-width: 220px;
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .mobile-logo {
+            display: none;
+        }
+
+        .mobile-logo img {
+            max-width: 130px;
+            height: auto;
+        }
+
+        @media (max-width: 992px) {
+            .login-content {
+                width: 92%;
+            }
+
+            .brand-card {
+                padding: 40px 30px;
+            }
+
+            .brand-card img {
+                max-width: 170px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                background-color: #ffffff;
+                padding: 0;
+            }
+
+            .login-content {
+                flex-direction: column;
+                width: 100%;
+                min-height: 100vh;
+                border-radius: 0;
+                box-shadow: none;
+            }
+
+            .right-image-box {
+                display: none;
+            }
+
+            .mobile-logo {
+                display: flex;
+                justify-content: center;
+                padding: 40px 0 10px;
+            }
+
+            .left-form-box {
+                width: 100%;
+                padding: 10px 24px 40px;
+            }
         }
     </style>
-{% endblock %}
+</head>
+
+<body>
+<div class="login-content">
+
+    <div class="left-form-box">
+        <div class="mobile-logo">
+            <img src="{{ INTERFACE.logo_logout }}" alt="Logo"/>
+        </div>
+        <div class="form-panel">
+            <h2 class="mfa-heading">{% trans 'MFA Auth' %}</h2>
+            <div class="contact-form">
+                <form class="m-t" role="form" method="post" action="">
+                    {% csrf_token %}
+                    {% if 'code' in form.errors %}
+                        <div class="alert alert-danger">{{ form.code.errors.as_text }}</div>
+                    {% endif %}
+                    {% if 'mfa_type' in form.errors %}
+                        <div class="alert alert-danger">{{ form.mfa_type.errors.as_text }}</div>
+                    {% endif %}
+                    <input type="hidden" name="mfa_type" value="otp">
+
+                    <div class="form-group">
+                        <input type="text" class="form-control" name="code"
+                               placeholder="{% trans 'Six figures' %}"
+                               autocomplete="off" autofocus required>
+                    </div>
+
+                    <button id="submit_button" type="submit" class="btn btn-transparent">
+                        {% trans 'Login' %}
+                    </button>
+                    <div style="margin-top: 14px;">
+                        <small style="color: #8f959e;">{% trans "Can't provide security? Please contact the administrator!" %}</small>
+                    </div>
+                </form>
+            </div>
+            <a href="{% url 'index' %}" class="btn-outline-secondary">{% trans 'Home page' %}</a>
+        </div>
+    </div>
+
+    <div class="right-image-box">
+        <div class="brand-card">
+            <img src="{{ INTERFACE.logo_logout }}" alt="Logo"/>
+        </div>
+    </div>
+
+</div>
+</body>
+{% include '_foot_js.html' %}
+</html>

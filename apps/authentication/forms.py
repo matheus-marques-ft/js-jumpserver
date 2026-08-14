@@ -58,7 +58,10 @@ class CustomCaptchaTextInput(CaptchaTextInput):
 
 
 class CaptchaMixin(forms.Form):
-    captcha = CaptchaField(widget=CustomCaptchaTextInput, label=_('Captcha'))
+    captcha = CaptchaField(
+        widget=CustomCaptchaTextInput, label=_('Captcha'),
+        error_messages={'invalid': _('Incorrect verification code')}
+    )
 
 
 class ChallengeMixin(forms.Form):

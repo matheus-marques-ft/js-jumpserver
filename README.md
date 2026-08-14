@@ -142,3 +142,4 @@ This is the JumpServer **core** — the Django backend that everything else in t
 [license-shield]: https://img.shields.io/github/license/matheus-marques-ft/js-jumpserver
 [deepwiki-shield]: https://img.shields.io/badge/deepwiki-devin?color=blue
 [discord-shield]: https://img.shields.io/discord/1194233267294052363?style=flat&logo=discord&logoColor=%23f5f5f5&labelColor=%235462eb&color=%235462eb
+

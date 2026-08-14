@@ -42,6 +42,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Publish Release
-        run: gh release edit ${{ steps.get_version.outputs.TAG }} --draft=false -R $GITHUB_REPOSITORY
+        run: |
+          case "${{ steps.get_version.outputs.TAG }}" in
+            *-stable) PRERELEASE=false ;;
+            *)        PRERELEASE=true ;;
+          esac
+          gh release edit ${{ steps.get_version.outputs.TAG }} --draft=false --prerelease=$PRERELEASE -R $GITHUB_REPOSITORY
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
