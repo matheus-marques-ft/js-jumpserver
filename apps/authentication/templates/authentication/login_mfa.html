@@ -221,6 +221,10 @@
                     {% if 'code' in form.errors %}
                         <div class="alert alert-danger">{{ form.code.errors.as_text }}</div>
                     {% endif %}
+                    {% if 'mfa_type' in form.errors %}
+                        <div class="alert alert-danger">{{ form.mfa_type.errors.as_text }}</div>
+                    {% endif %}
+                    <input type="hidden" name="mfa_type" value="otp">
 
                     <div class="form-group">
                         <input type="text" class="form-control" name="code"

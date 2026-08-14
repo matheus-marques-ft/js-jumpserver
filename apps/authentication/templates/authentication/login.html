@@ -121,25 +121,27 @@
             margin-bottom: 0;
         }
 
-        .captcha-field .has-error .help-block {
-            margin-top: -8px !important;
+        /* Erros de campo (ex: usuário inválido) usam a mesma cor/tom da caixa de alerta acima */
+        .has-error .help-block {
+            display: block;
+            border-radius: 8px;
+            background-color: #FDECEC;
+            color: #a12622;
+            border-left: 4px solid #e24b4a;
+            padding: 10px 14px;
+            margin-top: 8px;
+            font-size: 13px;
+            line-height: 1.5;
+            text-align: left;
         }
 
-        .captcha-field {
-            display: flex;
-            align-items: center;
-            gap: 10px;
+        .captcha-field .has-error .help-block {
+            margin-top: 10px !important;
         }
 
         .captcha-field .form-group {
             margin-bottom: 5px;
             width: 100%;
-        }
-
-        .captcha-field .controls {
-            display: flex;
-            align-items: center;
-            gap: 10px;
         }
 
         .auto-login.form-group {
