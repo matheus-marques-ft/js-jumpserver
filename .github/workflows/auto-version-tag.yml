@@ -53,7 +53,7 @@ jobs:
         run: |
           NEW_TAG="${{ steps.version.outputs.new_tag }}"
           OWNER="matheus-marques-ft"
-          REPOS="js-jumpserver js-koko js-lion js-luna js-lina js-chen js-docker-web js-installer js-client"
+          REPOS="js-jumpserver js-sdk-go js-koko js-lion js-luna js-lina js-chen js-docker-web js-installer js-client"
           THIS_REPO="$(basename "${{ github.repository }}")"
 
           git config user.name 'github-actions[bot]'

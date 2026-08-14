@@ -7,14 +7,17 @@ on:
 name: Create Release And Upload assets
 
 jobs:
-  create-realese:
+  create-release:
     name: Create Release
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
+
       - name: Get version
         id: get_version
         run: |
@@ -28,25 +31,39 @@ jobs:
           sed -i "s@^VERSION=.*@VERSION=v${VERSION}@" quick_start.sh
           echo "TAG=$TAG" >> "$GITHUB_OUTPUT"
           echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
+
       - name: Create Release
         id: create_release
-        uses: release-drafter/release-drafter@v5
+        uses: release-drafter/release-drafter@v6
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           config-name: release-config.yml
           version: ${{ steps.get_version.outputs.TAG }}
           tag: ${{ steps.get_version.outputs.TAG }}
-      - name: Upload Quick Start Script
-        run: gh release upload ${{ steps.get_version.outputs.TAG }} ./quick_start.sh -R $GITHUB_REPOSITORY --clobber
+          disable-releaser: true
+
+      - name: Clean up any existing release for this tag
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Publish Release
         run: |
-          case "${{ steps.get_version.outputs.TAG }}" in
-            *-stable) PRERELEASE=false ;;
-            *)        PRERELEASE=true ;;
-          esac
-          gh release edit ${{ steps.get_version.outputs.TAG }} --draft=false --prerelease=$PRERELEASE -R $GITHUB_REPOSITORY
+          TAG="${{ steps.get_version.outputs.TAG }}"
+          gh api "repos/${{ github.repository }}/releases?per_page=100" --jq \
+            ".[] | select(.tag_name == \"${TAG}\") | .id" \
+          | while read -r id; do
+              gh api -X DELETE "repos/${{ github.repository }}/releases/${id}" && echo "Deleted existing release ${id} for ${TAG}"
+            done
+
+      - name: Release Upload Assets
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          draft: false
+          prerelease: ${{ !endsWith(steps.get_version.outputs.TAG, '-stable') }}
+          make_latest: ${{ endsWith(steps.get_version.outputs.TAG, '-stable') }}
+          name: ${{ steps.get_version.outputs.TAG }}
+          body: ${{ steps.create_release.outputs.body }}
+          files: |
+            quick_start.sh
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

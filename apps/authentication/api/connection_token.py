@@ -1,6 +1,7 @@
 import base64
 import json
 import os
+import re
 import urllib.parse
 from struct import pack
 
@@ -804,6 +805,8 @@ class SuperConnectionTokenViewSet(ConnectionTokenViewSet):
         'get_applet_info': 'authentication.view_superconnectiontoken',
         'release_applet_account': 'authentication.view_superconnectiontoken',
         'get_virtual_app_info': 'authentication.view_superconnectiontoken',
+        'get_k8s_aliases': 'authentication.view_superconnectiontokensecret',
+        'set_k8s_alias': 'authentication.view_superconnectiontokensecret',
     }
 
     def get_queryset(self):
@@ -883,6 +886,59 @@ class SuperConnectionTokenViewSet(ConnectionTokenViewSet):
             token.expire()
 
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    K8S_ALIAS_NAME_RE = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_.-]{0,63}$')
+    K8S_ALIAS_MAX_COUNT = 50
+    K8S_ALIAS_COMMAND_MAX_LENGTH = 256
+
+    @staticmethod
+    def _get_k8s_aliases_token(request):
+        token_id = request.data.get('id') or ''
+        token = ConnectionToken.get_typed_connection_token(token_id)
+        if not token:
+            raise PermissionDenied('Token {} is not valid'.format(token_id))
+        return token
+
+    @staticmethod
+    def _get_k8s_aliases(user):
+        aliases = user.preference.get_value('k8s_shell_aliases', category='koko', default={})
+        if isinstance(aliases, str):
+            try:
+                aliases = json.loads(aliases or '{}')
+            except json.JSONDecodeError:
+                aliases = {}
+        if not isinstance(aliases, dict):
+            aliases = {}
+        return aliases
+
+    @action(methods=['POST'], detail=False, url_path='k8s-aliases')
+    def get_k8s_aliases(self, request, *args, **kwargs):
+        token = self._get_k8s_aliases_token(request)
+        aliases = self._get_k8s_aliases(token.user)
+        return Response({'aliases': aliases}, status=status.HTTP_200_OK)
+
+    @action(methods=['POST'], detail=False, url_path='k8s-aliases/set')
+    def set_k8s_alias(self, request, *args, **kwargs):
+        token = self._get_k8s_aliases_token(request)
+        name = request.data.get('name') or ''
+        command = request.data.get('command') or ''
+
+        if not self.K8S_ALIAS_NAME_RE.match(name):
+            raise ValidationError('Invalid alias name: {}'.format(name))
+        if len(command) > self.K8S_ALIAS_COMMAND_MAX_LENGTH:
+            raise ValidationError('Alias command is too long (max {} chars)'.format(
+                self.K8S_ALIAS_COMMAND_MAX_LENGTH
+            ))
+        if re.search(r'[\r\n\x00]', command):
+            raise ValidationError('Alias command contains invalid control characters')
+
+        aliases = self._get_k8s_aliases(token.user)
+        if name not in aliases and len(aliases) >= self.K8S_ALIAS_MAX_COUNT:
+            raise ValidationError('Too many aliases saved (max {})'.format(self.K8S_ALIAS_MAX_COUNT))
+
+        aliases[name] = command
+        token.user.preference.set_value('k8s_shell_aliases', json.dumps(aliases), category='koko')
+        return Response({'aliases': aliases}, status=status.HTTP_200_OK)
 
     @action(methods=['POST'], detail=False, url_path='applet-option')
     def get_applet_info(self, *args, **kwargs):
