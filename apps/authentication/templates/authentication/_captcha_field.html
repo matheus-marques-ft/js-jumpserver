@@ -1,17 +1,15 @@
 {% load i18n %}
 {% spaceless %}
-    <div class="captcha-wrapper" style="display: flex; align-items: center; gap: 12px;">
+    <div class="captcha-wrapper" style="display: flex; align-items: center; gap: 12px; width: 100%;">
         <img src="{{ image }}" alt="captcha" class="captcha" />
-        <div class="row" style="margin: 0; flex: 1;">
-            <div class="col-sm-6" style="padding: 0;">
-                <div class="input-group-prepend">
-                    {% if audio %}
-                        <a title="{% trans "Play CAPTCHA as audio file" %}" href="{{ audio }}"></a>
-                    {% endif %}
-                    </div>
-                {% include "django/forms/widgets/multiwidget.html" %}
-             </div>
-        </div>
+        <div style="flex: 1; min-width: 0;">
+            <div class="input-group-prepend">
+                {% if audio %}
+                    <a title="{% trans "Play CAPTCHA as audio file" %}" href="{{ audio }}"></a>
+                {% endif %}
+                </div>
+            {% include "django/forms/widgets/multiwidget.html" %}
+         </div>
     </div>
     <script>
         var placeholder = '{% trans "Captcha" %}'

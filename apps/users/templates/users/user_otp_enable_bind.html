@@ -1,59 +1,316 @@
-{% extends 'users/_base_otp.html' %}
 {% load static %}
 {% load i18n %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <link rel="shortcut icon" href="{{ INTERFACE.favicon }}" type="image/x-icon">
+    <title>
+        {% trans 'Bind one-time password authenticator' %}
+    </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% include '_head_css_js.html' %}
+    <link href="{% static 'css/jumpserver.css' %}" rel="stylesheet">
+    <link href="{% static 'css/login-style.css' %}" rel="stylesheet">
+    <script src="{% static 'js/jumpserver.js' %}?v=10"></script>
+    <link rel="stylesheet" href="{% static 'css/otp.css' %}"/>
+    <script src="{% static 'js/plugins/qrcode/qrcode.js' %}"></script>
 
-{% block small_title %}
-    {% trans 'Bind one-time password authenticator' %}
-{% endblock %}
-
-{% block content %}
-    <div class="verify">
-        <p style="margin:20px auto;">
-            <strong style="color: #000000">
-            {% trans 'Use the MFA Authenticator application to scan the following qr code for a 6-bit verification code' %}
-            </strong>
-        </p>
-
-        <div id="qr_code"></div>
-        <div style="display: block; margin: 0">Secret: {{ otp_secret_key }}</div>
-        <form id="bind-form" class="" role="form" method="post" action="">
-            {% csrf_token %}
-            <div class="form-input">
-                <input type="text" class="" name="otp_code" placeholder="{% trans 'Six figures' %}" required="">
-            </div>
-            <a type="submit" class="next button" onclick="submitForm()">{% trans 'Next' %}</a>
-            {% if 'otp_code' in form.errors %}
-                <p style="color: #ed5565">{{ form.otp_code.errors.as_text }}</p>
-            {% endif %}
-        </form>
-    </div>
-
-
-    <script>
-        $('.change-color li:eq(1) i').css('color', '{{ INTERFACE.primary_color }}');
-        $('.change-color li:eq(2) i').css('color', '{{ INTERFACE.primary_color }}');
-
-        function submitForm() {
-            $('#bind-form').submit()
+    <style>
+        :root {
+            --primary-color: #00aeef;
+            --primary-color-dark: #0089bf;
+            --primary-color-darker: #006c96;
         }
 
-        $(document).ready(function() {
-            // Generate the QR code for the user to bind OTP
-            var qrcode = new QRCode(document.getElementById('qr_code'), {
-                text: "{{ otp_uri|safe}}",
-                width: 190 ,
-                height: 190,
-                colorDark: '#000000',
-                colorLight: '#ffffff',
-                correctlevel: QRCode.CorrectLevel.H
-            });
+        * {
+            box-sizing: border-box;
+        }
 
-            document.getElementById('qr_code').removeAttribute("title");
-        })
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
 
-    </script>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            width: 100vw;
+            background-color: #eef1f3;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+        }
 
+        .login-content {
+            display: flex;
+            width: 1000px;
+            max-width: 100%;
+            min-height: 560px;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.12);
+            background-color: #ffffff;
+        }
 
+        .left-form-box {
+            width: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #ffffff;
+            padding: 40px 30px;
+        }
 
-{% endblock %}
+        .left-form-box .form-panel {
+            width: 100%;
+            max-width: 380px;
+            text-align: center;
+        }
 
+        .contact-form {
+            overflow: hidden;
+        }
+
+        .btn-outline-secondary {
+            display: inline-block;
+            width: 100%;
+            text-align: center;
+            padding: 12px 30px;
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            border-radius: 8px;
+            border: 1px solid #dedede;
+            background: transparent;
+            color: #555555;
+            transition: border-color 0.15s ease-in-out, color 0.15s ease-in-out;
+            margin-top: 12px;
+        }
+
+        .btn-outline-secondary:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .step-indicator {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--primary-color);
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .mfa-heading {
+            font-size: 20px;
+            font-weight: 500;
+            color: #151515;
+            margin: 0 0 18px;
+        }
+
+        .mfa-description {
+            font-size: 14px;
+            color: #737373;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .qr-card {
+            background: #ffffff;
+            border: 1px solid #ececec;
+            border-radius: 12px;
+            padding: 20px;
+            display: inline-block;
+            margin: 0 auto 16px;
+        }
+
+        .secret-badge {
+            display: inline-block;
+            background: #f1f3f5;
+            border-radius: 6px;
+            padding: 6px 14px;
+            font-family: monospace;
+            font-size: 13px;
+            color: #333333;
+            margin-bottom: 24px;
+            word-break: break-all;
+        }
+
+        .otp-form .form-input {
+            margin-bottom: 20px;
+        }
+
+        .alert {
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            line-height: 1.6;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            text-align: left;
+        }
+
+        .alert-danger {
+            background-color: #FDECEC;
+            color: #a12622;
+            border-left: 4px solid #e24b4a;
+        }
+
+        .right-image-box {
+            width: 50%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-color-darker) 100%);
+        }
+
+        .brand-card {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(0, 0, 0, 0.18);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 18px;
+            padding: 55px 65px;
+            max-width: 78%;
+        }
+
+        .brand-card img {
+            max-width: 220px;
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .mobile-logo {
+            display: none;
+        }
+
+        .mobile-logo img {
+            max-width: 130px;
+            height: auto;
+        }
+
+        @media (max-width: 992px) {
+            .login-content {
+                width: 92%;
+            }
+
+            .brand-card {
+                padding: 40px 30px;
+            }
+
+            .brand-card img {
+                max-width: 170px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                background-color: #ffffff;
+                padding: 0;
+            }
+
+            .login-content {
+                flex-direction: column;
+                width: 100%;
+                min-height: 100vh;
+                border-radius: 0;
+                box-shadow: none;
+            }
+
+            .right-image-box {
+                display: none;
+            }
+
+            .mobile-logo {
+                display: flex;
+                justify-content: center;
+                padding: 40px 0 10px;
+            }
+
+            .left-form-box {
+                width: 100%;
+                padding: 10px 24px 40px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div class="login-content">
+
+    <div class="left-form-box">
+        <div class="mobile-logo">
+            <img src="{{ INTERFACE.logo_logout }}" alt="Logo"/>
+        </div>
+        <div class="form-panel">
+            <div class="step-indicator">Passo 3 de 3</div>
+            <h2 class="mfa-heading">{% trans 'Bind one-time password authenticator' %}</h2>
+            <p class="mfa-description">
+                <strong style="color: #000000;">
+                    {% trans 'Use the MFA Authenticator application to scan the following qr code for a 6-bit verification code' %}
+                </strong>
+            </p>
+
+            <div class="qr-card">
+                <div id="qr_code"></div>
+            </div>
+            <div>
+                <span class="secret-badge">Secret: {{ otp_secret_key }}</span>
+            </div>
+
+            <div class="contact-form">
+                <form id="bind-form" class="otp-form" role="form" method="post" action="">
+                    {% csrf_token %}
+                    {% if 'otp_code' in form.errors %}
+                        <div class="alert alert-danger">{{ form.otp_code.errors.as_text }}</div>
+                    {% endif %}
+                    <div class="form-group">
+                        <input type="text" class="form-control" name="otp_code" placeholder="{% trans 'Six figures' %}" required>
+                    </div>
+                    <a class="btn btn-transparent" onclick="submitForm()">{% trans 'Next' %}</a>
+                </form>
+            </div>
+            <a href="{% url 'index' %}" class="btn-outline-secondary">{% trans 'Home page' %}</a>
+        </div>
+    </div>
+
+    <div class="right-image-box">
+        <div class="brand-card">
+            <img src="{{ INTERFACE.logo_logout }}" alt="Logo"/>
+        </div>
+    </div>
+
+</div>
+</body>
+{% include '_foot_js.html' %}
+
+<script>
+    function submitForm() {
+        $('#bind-form').submit()
+    }
+
+    $(document).ready(function() {
+        // Generate the QR code for the user to bind OTP
+        var qrcode = new QRCode(document.getElementById('qr_code'), {
+            text: "{{ otp_uri|safe }}",
+            width: 190,
+            height: 190,
+            colorDark: '#000000',
+            colorLight: '#ffffff',
+            correctlevel: QRCode.CorrectLevel.H
+        });
+
+        document.getElementById('qr_code').removeAttribute("title");
+    })
+</script>
+</html>
