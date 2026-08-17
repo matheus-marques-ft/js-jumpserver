@@ -8,6 +8,11 @@ on:
         required: true
         default: '3.11-slim-bullseye-v1'
         type: string
+      branch:
+        description: 'Branch used to build the Python base image'
+        required: true
+        type: string
+        default: 'dev'
 
 jobs:
   build-and-push:
@@ -16,7 +21,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.ref }}
+          ref: ${{ inputs.branch }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
