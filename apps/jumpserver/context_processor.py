@@ -13,7 +13,7 @@ default_interface = dict((
     ('logo_white', static('img/logo_white.png')),
     ('logo_text_white', static('img/logo_text_white.png')),
     ('favicon', static('img/facio.ico')),
-    ('login_title', _('JumpServer - An open-source PAM')),
+    ('login_title', _('Frete.com - Privileged Access Management')),
     ('theme', 'classic_green'),
     ('theme_info', {}),
     ('footer_content', ''),
