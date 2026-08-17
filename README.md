@@ -121,7 +121,6 @@ This is the JumpServer **core** — the Django backend that everything else in t
 | `build-ansible-executor.yml` | `ghcr.io/matheus-marques-ft/ansible-executor:<timestamp>` / `:latest` |
 | `build-release-image.yml` | `ghcr.io/matheus-marques-ft/core:<tag>` (and `:latest`) — triggered on `v*` tags |
 | `release-drafter.yml` | drafts a GitHub Release with a patched `quick_start.sh` asset (pointed at this fork's installer/registry) — triggered on `v*` tags |
-| `i18n-auto-translate.yml` | not a build — auto-translates `apps/i18n/**` catalogs via OpenAI/Anthropic API keys (needs `secrets` configured to run; harmless no-op otherwise) |
 
 <!-- JumpServer official link -->
 [docs-link]: https://jumpserver.com/docs
