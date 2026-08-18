@@ -20,10 +20,19 @@ jobs:
 
       - name: Get version
         id: get_version
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_PAT }}
         run: |
           TAG=$(basename ${GITHUB_REF})
           VERSION=${TAG/v/}
-          wget https://raw.githubusercontent.com/matheus-marques-ft/js-installer/main/quick_start.sh
+          # js-installer is a private repo - the plain raw.githubusercontent.com URL
+          # 404s without auth even though the file exists, so fetch it through the
+          # authenticated Contents API instead (RELEASE_PAT, same token used for
+          # cross-repo tagging, since the default GITHUB_TOKEN has no access outside
+          # this repo).
+          gh api -H "Accept: application/vnd.github.raw" \
+            "repos/matheus-marques-ft/js-installer/contents/quick_start.sh?ref=main" \
+            > quick_start.sh
           sed -i "s@^GITHUB_HOST=.*@GITHUB_HOST=https://github.com@" quick_start.sh
           sed -i "s@^GITHUB_OWNER=.*@GITHUB_OWNER=matheus-marques-ft@" quick_start.sh
           sed -i "s@^REPO_PREFIX=.*@REPO_PREFIX=js-@" quick_start.sh

@@ -48,8 +48,10 @@ jobs:
         # Fetch all remote branches
         git fetch --all --prune
 
-        # Get branches starting with pr or repr
-        branches=$(git branch -r | grep -E 'origin/(pr|repr)' | sed 's/origin\///' | grep -v 'HEAD')
+        # Get branches starting with pr or repr (no matches is a valid outcome,
+        # not a failure - grep's exit 1 would otherwise kill this step under
+        # the default `set -e -o pipefail` shell)
+        branches=$(git branch -r | grep -E 'origin/(pr|repr)' | sed 's/origin\///' | grep -v 'HEAD' || true)
         
         echo "Found branches matching pattern:"
         echo "$branches"
