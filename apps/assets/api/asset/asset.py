@@ -219,9 +219,7 @@ class BaseAssetViewSet(OrgBulkModelViewSet):
         with tmp_to_root_org():
             asset_count = Asset.objects.order_by().count()
 
-        if not settings.XPACK_LICENSE_IS_VALID and asset_count >= 5000:
-            error = gettext('The number of assets exceeds the limit of 5000')
-            return Response({'error': error}, status=400)
+        # Fork policy: no license tier in this fork; no hard asset-count limit applies.
 
         if settings.XPACK_LICENSE_IS_VALID:
             license_asset_limit = get_license_asset_limit()

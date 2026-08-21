@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
 from accounts.const import AutomationTypes, SecretType
@@ -30,8 +29,7 @@ class PushAccountAutomation(ChangeSecretMixin, AccountBaseAutomation):
 
     def save(self, *args, **kwargs):
         self.type = AutomationTypes.push_account
-        if not settings.XPACK_LICENSE_IS_VALID:
-            self.is_periodic = False
+        # Fork policy: no license tier in this fork; periodic push is always allowed.
         super().save(*args, **kwargs)
 
     class Meta:

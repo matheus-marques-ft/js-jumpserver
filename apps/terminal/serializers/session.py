@@ -168,7 +168,7 @@ class SessionSerializer(BulkOrgResourceModelSerializer):
         is_finished = validated_data.get('is_finished')
         if (
                 instance.protocol != 'vnc' and  # VNC sessions do not require secret change
-                settings.XPACK_LICENSE_IS_VALID and
+                # Fork policy: no license tier in this fork; only the setting toggle matters.
                 settings.CHANGE_SECRET_AFTER_SESSION_END and
                 is_finished and not instance.is_finished and instance.is_success
         ):

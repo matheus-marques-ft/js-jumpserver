@@ -82,19 +82,16 @@ class NativeClient(TextChoices):
     def get_methods(cls, os='windows'):
         clients_map = cls.get_native_clients()
         methods = defaultdict(list)
-        xpack_protocols = Protocol.xpack_protocols()
 
         for protocol, _clients in clients_map.items():
-            if not settings.XPACK_LICENSE_IS_VALID and protocol in xpack_protocols:
-                continue
+            # Fork policy: no license tier in this fork; xpack protocols are always available.
             if isinstance(_clients, dict):
                 if os == 'all':
                     _clients = list(itertools.chain(*_clients.values()))
                 else:
                     _clients = _clients.get(os, _clients['default'])
             for client in _clients:
-                if not settings.XPACK_LICENSE_IS_VALID and client in cls.xpack_methods():
-                    continue
+                # Fork policy: no license tier in this fork; xpack methods are always available.
                 methods[protocol].append({
                     'value': client.value,
                     'label': client.label,
@@ -267,8 +264,9 @@ class ConnectMethodUtil:
             'razor': 'TERMINAL_RAZOR_ENABLED',
             'magnus': 'TERMINAL_MAGNUS_ENABLED',
         }
+        # Fork policy: no license tier in this fork; only the component-enabled setting matters.
         disabled_component = [comp for comp, attr in component_setting.items() if
-                              not (getattr(settings, attr) and settings.XPACK_LICENSE_IS_VALID)]
+                              not getattr(settings, attr)]
         if not disabled_component:
             return methods
 

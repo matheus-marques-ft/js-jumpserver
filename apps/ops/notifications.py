@@ -145,8 +145,7 @@ class ServerPerformanceCheckUtil(object):
     def initial_terminals(self):
         terminals = []
         exclude_types = [TerminalType.core, TerminalType.celery, TerminalType.kael]
-        if not settings.XPACK_LICENSE_IS_VALID:
-            exclude_types.append(TerminalType.magnus)
+        # Fork policy: no license tier in this fork; magnus terminals are monitored too.
         for terminal in Terminal.objects.filter(is_deleted=False).exclude(type__in=exclude_types):
             if not terminal.is_active:
                 continue

@@ -31,10 +31,8 @@ class MFAFace(BaseMFA, AuthFaceMixin):
 
     @staticmethod
     def global_enabled():
-        return (
-                settings.XPACK_LICENSE_IS_VALID and
-                settings.FACE_RECOGNITION_ENABLED
-        )
+        # Fork policy: no license tier in this fork; only the setting toggle matters.
+        return settings.FACE_RECOGNITION_ENABLED
 
     def get_enable_url(self) -> str:
         return '/ui/#/profile/index'

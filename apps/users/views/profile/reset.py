@@ -92,13 +92,13 @@ class UserForgotPasswordView(FormView):
     @staticmethod
     def get_validate_backends_context(has_phone):
         validate_backends = [{'name': _('Email'), 'is_active': True, 'value': 'email'}]
-        if settings.XPACK_LICENSE_IS_VALID:
-            if settings.SMS_ENABLED and has_phone:
-                is_active = True
-            else:
-                is_active = False
-            sms_backend = {'name': _('SMS'), 'is_active': is_active, 'value': 'sms'}
-            validate_backends.append(sms_backend)
+        # Fork policy: no license tier in this fork; SMS backend follows only SMS_ENABLED.
+        if settings.SMS_ENABLED and has_phone:
+            is_active = True
+        else:
+            is_active = False
+        sms_backend = {'name': _('SMS'), 'is_active': is_active, 'value': 'sms'}
+        validate_backends.append(sms_backend)
         return {'validate_backends': validate_backends}
 
     def get_context_data(self, has_phone=False, **kwargs):
