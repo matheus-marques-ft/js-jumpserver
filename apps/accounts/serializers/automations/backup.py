@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 #
-from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
 from accounts.const import AutomationTypes, AccountBackupType
@@ -50,8 +49,7 @@ class BackupAccountSerializer(BaseAutomationSerializer):
         field_backup_type = self.fields.get("backup_type")
         if not field_backup_type:
             return
-        if not settings.XPACK_LICENSE_IS_VALID:
-            field_backup_type._choices.pop(AccountBackupType.object_storage, None)
+        # Fork policy: no license tier in this fork; object storage backup is always available.
 
     @property
     def model_type(self):

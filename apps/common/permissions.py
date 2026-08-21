@@ -106,16 +106,19 @@ class ServiceAccountSignaturePermission(permissions.BasePermission):
 class IsValidLicense(permissions.BasePermission):
 
     def has_permission(self, request, view):
-        return settings.XPACK_LICENSE_IS_VALID
+        # Fork policy: this fork has no Enterprise/XPack license tier, so the
+        # license gate is permanently disabled here. Normal RBAC permission
+        # checks (RBACPermission) still run independently and are untouched.
+        return True
 
 
 class IsValidLicenseForWriteAction(permissions.BasePermission):
     """Allow read for all, require valid license for write operations"""
 
     def has_permission(self, request, view):
-        if request.method in permissions.SAFE_METHODS:
-            return True
-        return settings.XPACK_LICENSE_IS_VALID
+        # Fork policy: same as IsValidLicense above - license gate disabled,
+        # RBAC checks still apply via the other permission classes in the view.
+        return True
 
 
 class IsOwnerOrAdminWritable(IsValidUser):

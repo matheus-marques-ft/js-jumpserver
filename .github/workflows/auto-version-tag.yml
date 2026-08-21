@@ -65,11 +65,7 @@ jobs:
             if [ "${repo}" = "${THIS_REPO}" ]; then
               continue
             fi
-            BRANCH_REF="heads/dev"
-            if [ "${repo}" = "js-client" ]; then
-              BRANCH_REF="heads/main"
-            fi
-            SHA=$(gh api "repos/${OWNER}/${repo}/git/refs/${BRANCH_REF}" --jq '.object.sha')
+            SHA=$(gh api "repos/${OWNER}/${repo}/git/refs/heads/dev" --jq '.object.sha')
             gh api -X POST "repos/${OWNER}/${repo}/git/refs" \
               -f ref="refs/tags/${NEW_TAG}" -f sha="${SHA}" \
               && echo "  ${repo} -> ${NEW_TAG}" \

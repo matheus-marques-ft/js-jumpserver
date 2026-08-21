@@ -68,17 +68,13 @@ class ActionAclSerializer(serializers.Serializer):
         field_action = self.fields.get("action")
         if not field_action:
             return
-        if not settings.XPACK_LICENSE_IS_VALID:
-            field_action._choices.pop(ActionChoices.review, None)
-        if not (
-            settings.XPACK_LICENSE_IS_VALID and
-            settings.FACE_RECOGNITION_ENABLED
-        ):
+        # Fork policy: no license tier in this fork; 'review' action is always available.
+        if not settings.FACE_RECOGNITION_ENABLED:
             field_action._choices.pop(ActionChoices.face_verify, None)
             field_action._choices.pop(ActionChoices.face_online, None)
         for choice in self.Meta.action_choices_exclude:
             field_action._choices.pop(choice, None)
-        if not settings.XPACK_LICENSE_IS_VALID or not settings.CHANGE_SECRET_AFTER_SESSION_END:
+        if not settings.CHANGE_SECRET_AFTER_SESSION_END:
             field_action._choices.pop(ActionChoices.change_secret, None)
 
 

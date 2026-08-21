@@ -1,6 +1,5 @@
 from copy import deepcopy
 
-from django.conf import settings
 from django.db import models
 from django.db.models import TextChoices
 from django.utils.translation import gettext_lazy as _
@@ -127,7 +126,6 @@ class BaseType(TextChoices):
 
     @classmethod
     def get_choices(cls):
+        # Fork policy: no license tier in this fork; full choice list is always available.
         choices = cls.choices
-        if not settings.XPACK_LICENSE_IS_VALID and hasattr(cls, 'get_community_types'):
-            choices = [(tp.value, tp.label) for tp in cls.get_community_types()]
         return choices

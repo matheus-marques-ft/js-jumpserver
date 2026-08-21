@@ -316,10 +316,8 @@ class SizedModelFieldsMixin(BaseDynamicFieldsPlugin):
 
 class XPACKModelFieldsMixin(BaseDynamicFieldsPlugin):
     def get_exclude_field_names(self):
-        if settings.XPACK_LICENSE_IS_VALID:
-            return set()
-        fields_xpack = set(getattr(self.serializer.Meta, "fields_xpack", set()))
-        return fields_xpack
+        # Fork policy: no license tier in this fork; xpack-only fields are always included.
+        return set()
 
 
 class DefaultValueFieldsMixin:
