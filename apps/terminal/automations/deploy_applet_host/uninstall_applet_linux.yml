@@ -1,0 +1,10 @@
+---
+- hosts: all
+  vars:
+    applet_name: chrome
+
+  tasks:
+    - name: Remove applet
+      ansible.builtin.file:
+        path: "/opt/jumpserver/applets/{{ applet_name }}"
+        state: absent

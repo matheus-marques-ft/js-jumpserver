@@ -59,6 +59,19 @@ class DeployAppletHostManager:
             raise ValueError("applet is required for uninstall_applet")
         return self._run_playbook(generate_playbook, **kwargs)
 
+    @property
+    def is_linux(self):
+        return self.deployment.host.platform.type == 'linux'
+
+    def _zip_applet(self, applet):
+        """Zip applet.path into run_dir, for local->remote push via the Linux
+        playbooks (ansible.builtin.unarchive). Same packaging the download API
+        action already does (apps/terminal/api/applet/applet.py `download`)."""
+        os.makedirs(self.run_dir, exist_ok=True)
+        archive_base = os.path.join(self.run_dir, applet.name)
+        zip_path = shutil.make_archive(archive_base, 'zip', applet.path)
+        return zip_path
+
     def generate_initial_playbook(self):
         site_url = settings.SITE_URL
         download_host = settings.APPLET_DOWNLOAD_HOST
@@ -85,24 +98,49 @@ class DeployAppletHostManager:
                 play["vars"]["HOST_ID"] = host_id
                 play["vars"]["HOST_NAME"] = hostname
                 play["vars"]["INSTALL_APPLETS"] = self.install_applets
+                if self.is_linux:
+                    play["vars"]["SHIM_SRC_PATH"] = os.path.join(CURRENT_DIR, "files", "applet_shim.py")
             return plays
 
-        return self._generate_playbook("playbook.yml", handler)
+        playbook_name = "playbook_linux.yml" if self.is_linux else "playbook.yml"
+        return self._generate_playbook(playbook_name, handler)
 
     def generate_install_all_playbook(self):
-        return self._generate_playbook("install_all.yml")
+        if not self.is_linux:
+            return self._generate_playbook("install_all.yml")
+
+        applets = list(self.deployment.host.applet_set.filter(is_active=True))
+        zips = {applet.name: self._zip_applet(applet) for applet in applets}
+
+        def handler(plays):
+            for play in plays:
+                play["vars"]["applet_zips"] = zips
+            return plays
+
+        return self._generate_playbook("install_all_linux.yml", handler)
 
     def generate_install_applet_playbook(self):
         applet_name = self.applet.name
         options = self.deployment.host.deploy_options
 
+        if not self.is_linux:
+            def handler(plays):
+                for play in plays:
+                    play["vars"].update(options)
+                    play["vars"]["applet_name"] = applet_name
+                return plays
+
+            return self._generate_playbook("install_applet.yml", handler)
+
+        zip_path = self._zip_applet(self.applet)
+
         def handler(plays):
             for play in plays:
-                play["vars"].update(options)
                 play["vars"]["applet_name"] = applet_name
+                play["vars"]["applet_zip_path"] = zip_path
             return plays
 
-        return self._generate_playbook("install_applet.yml", handler)
+        return self._generate_playbook("install_applet_linux.yml", handler)
 
     def generate_uninstall_applet_playbook(self):
         applet_name = self.applet.name
@@ -112,7 +150,8 @@ class DeployAppletHostManager:
                 play["vars"]["applet_name"] = applet_name
             return plays
 
-        return self._generate_playbook("uninstall_applet.yml", handler)
+        playbook_name = "uninstall_applet_linux.yml" if self.is_linux else "uninstall_applet.yml"
+        return self._generate_playbook(playbook_name, handler)
 
     def generate_inventory(self):
         inventory = JMSInventory(

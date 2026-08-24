@@ -63,6 +63,7 @@ class TerminalType(TextChoices):
     magnus = 'magnus', 'Magnus'
     razor = 'razor', 'Razor'
     tinker = 'tinker', 'Tinker'
+    applet_shim = 'applet_shim', 'Applet Shim'
     video_worker = 'video_worker', 'Video Worker'
     chen = 'chen', 'Chen'
     kael = 'kael', 'Kael'
