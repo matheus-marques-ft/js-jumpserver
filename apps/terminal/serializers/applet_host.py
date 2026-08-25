@@ -121,7 +121,11 @@ class AppletHostSerializer(HostSerializer):
         platform_data = data.get('platform')
 
         if isinstance(platform_data, dict):
-            platform_id = platform_data.get('id')
+            # The platform field's related-object widget sends {'pk': id}, not {'id': id}
+            # (same ambiguity handled in assets/serializers/asset/database.py:39) - only
+            # checking 'id' meant a real selection always looked "unset" here and silently
+            # fell back to RemoteAppHost below.
+            platform_id = platform_data.get('id') or platform_data.get('pk')
         elif isinstance(platform_data, (int, str)):
             # A frontend select commonly round-trips the id as a numeric string
             # (e.g. "13"), not a native int - str is accepted here too, or any
