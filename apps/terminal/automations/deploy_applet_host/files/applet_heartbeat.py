@@ -93,6 +93,15 @@ def main():
     while True:
         try:
             send_heartbeat(core_host, access_key, access_secret)
+        except urllib.error.HTTPError as e:
+            # e.__str__() only gives the status line ("HTTP Error 401: Unauthorized"),
+            # which throws away the actual reason - common/auth/signature.py raises two
+            # distinct messages for a 401 ("Invalid signature." for a bad key_id/signature
+            # vs "Ip is not in access ip list." for an IP outside the access key's allow
+            # list), and only the DRF error body carries that distinction. See
+            # applet_shim.py's fetch_secret_detail() for the same read-the-body pattern.
+            detail = e.read()[:500]
+            sys.stderr.write(f"heartbeat failed: HTTP {e.code} {detail}\n")
         except (urllib.error.URLError, OSError) as e:
             sys.stderr.write(f"heartbeat failed: {e}\n")
         time.sleep(INTERVAL_SECONDS)

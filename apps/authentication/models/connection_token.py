@@ -264,6 +264,15 @@ class ConnectionToken(JMSOrgBaseModel):
         gateway = host.zone.select_gateway() if host.zone else None
         platform = host.platform
 
+        data = {
+            'id': lock_key,
+            'applet': applet,
+            'host': host,
+            'gateway': gateway,
+            'platform': platform,
+            'account': account,
+        }
+
         if platform.type == 'linux':
             # xrdp ignores the RAIL params in remote_app_option (no server-side
             # RAIL support - confirmed empirically), so app selection can't ride
@@ -272,17 +281,18 @@ class ConnectionToken(JMSOrgBaseModel):
             # as every xrdp session's shell) picks it up and resolves everything
             # else (user/asset/account/platform/connect_options) by calling this
             # same core API itself, the same way Tinker does on Windows.
+            #
+            # Deliberately do NOT set `remote_app_option` here: xrdp doesn't
+            # implement RAIL server-side, and sending the RemoteApplicationMode
+            # RDP params (in particular the base64 JSON in
+            # `remoteapplicationcmdline:s`) to a non-RAIL server corrupts the
+            # client's initial RDP logon info packet on xrdp's side - it shows
+            # up there as an absurdly long "password" and the connection is
+            # rejected before login is even attempted.
             self._stage_remote_app_token_for_linux(host, account)
+        else:
+            data['remote_app_option'] = self.get_remote_app_option()
 
-        data = {
-            'id': lock_key,
-            'applet': applet,
-            'host': host,
-            'gateway': gateway,
-            'platform': platform,
-            'account': account,
-            'remote_app_option': self.get_remote_app_option()
-        }
         return data
 
     def _stage_remote_app_token_for_linux(self, host, account):
