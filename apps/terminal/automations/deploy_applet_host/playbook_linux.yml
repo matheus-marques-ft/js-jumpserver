@@ -14,6 +14,12 @@
 # docs.aws.amazon.com/linux/al2023/ug/configure-spal-repository.html (requires AL2023
 # >= 2023.9.20251117).
 - hosts: all
+  # deploy_applet_host's inventory generation (apps/terminal/automations/deploy_applet_host/__init__.py)
+  # doesn't pass task_type, so JMSInventory never auto-wires ansible_become for this task
+  # the way it does for change_secret/push_account (apps/ops/ansible/inventory.py) - every
+  # task here (dnf/apt installs, systemd, /etc/xrdp writes) needs root regardless of which
+  # unprivileged login account (e.g. ec2-user) is used to connect.
+  become: true
   vars:
     APPLET_DOWNLOAD_HOST: https://demo.example.com
     IGNORE_VERIFY_CERTS: true
