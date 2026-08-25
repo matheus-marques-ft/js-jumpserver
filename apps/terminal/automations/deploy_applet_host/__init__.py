@@ -100,6 +100,7 @@ class DeployAppletHostManager:
                 play["vars"]["INSTALL_APPLETS"] = self.install_applets
                 if self.is_linux:
                     play["vars"]["SHIM_SRC_PATH"] = os.path.join(CURRENT_DIR, "files", "applet_shim.py")
+                    play["vars"]["HEARTBEAT_SRC_PATH"] = os.path.join(CURRENT_DIR, "files", "applet_heartbeat.py")
             return plays
 
         playbook_name = "playbook_linux.yml" if self.is_linux else "playbook.yml"

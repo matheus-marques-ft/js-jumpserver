@@ -29,6 +29,7 @@
     BOOTSTRAP_TOKEN: PleaseChangeMe
     INSTALL_APPLETS: true
     SHIM_SRC_PATH: /dev/null
+    HEARTBEAT_SRC_PATH: /dev/null
 
   tasks:
     - block:
@@ -185,6 +186,51 @@
             dest: /opt/jumpserver/applet_shim.py
             mode: "0755"
 
+        # AppletHost.load stays "offline" forever without this: it's read from a
+        # Redis cache (3-min TTL) only written by POST /api/v1/terminal/status/, and
+        # unlike Windows' Tinker (a persistent service), applet_shim.py above only
+        # runs transiently per RDP session and never calls that endpoint - see the
+        # file's own header comment for the full trace.
+        - name: Push the heartbeat daemon (keeps AppletHost.load out of "offline")
+          ansible.builtin.copy:
+            src: "{{ HEARTBEAT_SRC_PATH }}"
+            dest: /opt/jumpserver/applet_heartbeat.py
+            mode: "0755"
+
+        - name: Install the heartbeat daemon's systemd unit
+          ansible.builtin.copy:
+            dest: /etc/systemd/system/jumpserver-applet-heartbeat.service
+            mode: "0644"
+            content: |
+              [Unit]
+              Description=JumpServer AppletHost heartbeat
+              After=network-online.target
+              Wants=network-online.target
+
+              [Service]
+              ExecStart=/opt/jumpserver/applet-env/bin/python3 /opt/jumpserver/applet_heartbeat.py
+              Restart=always
+              RestartSec=10
+
+              [Install]
+              WantedBy=multi-user.target
+          register: heartbeat_unit
+
+        # ansible.builtin.systemd fails on this stack (see the xrdp task below for
+        # the full explanation) - ansible.builtin.command is already proven working
+        # here, so use it for every systemctl call instead.
+        - name: Reload systemd units
+          ansible.builtin.command: systemctl daemon-reload
+          when: heartbeat_unit.changed
+
+        - name: Enable the heartbeat daemon
+          ansible.builtin.command: systemctl enable jumpserver-applet-heartbeat
+
+        # Restart (not just enable --now) on every deploy so a redeployed
+        # applet_heartbeat.py is actually picked up, not just left running stale.
+        - name: (Re)start the heartbeat daemon
+          ansible.builtin.command: systemctl restart jumpserver-applet-heartbeat
+
         - name: Make every xrdp session run the shim instead of a desktop (kiosk mode)
           ansible.builtin.copy:
             dest: /etc/xrdp/startwm.sh
@@ -193,11 +239,16 @@
               #!/bin/sh
               exec /opt/jumpserver/applet-env/bin/python3 /opt/jumpserver/applet_shim.py
 
+        # ansible.builtin.systemd fails here with "module (ansible.builtin.systemd) is
+        # missing interpreter line" under JumpServer's ansible-core fork (v2.16.18.3,
+        # see pyproject.toml [tool.uv.sources]) running on the Python 3.14 controller
+        # (Dockerfile/pyproject.toml requires-python) - confirmed this is the only
+        # playbook in the whole codebase that exercises ansible.builtin.systemd, so it's
+        # a previously-unhit gap in that fork's Python 3.14 support, not a config issue
+        # here. ansible.builtin.command is already exercised successfully elsewhere in
+        # this same play under the same stack, so use it instead.
         - name: Enable and (re)start xrdp
-          ansible.builtin.systemd:
-            name: xrdp
-            enabled: true
-            state: restarted
+          ansible.builtin.command: systemctl enable --now xrdp
 
       rescue:
         - debug:
