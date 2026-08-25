@@ -22,7 +22,7 @@ platform_data_json = '''
     "type": "linux",
     "meta": {},
     "internal": true,
-    "domain_enabled": true,
+    "gateway_enabled": true,
     "su_enabled": true,
     "su_method": null,
     "custom_fields": [],
