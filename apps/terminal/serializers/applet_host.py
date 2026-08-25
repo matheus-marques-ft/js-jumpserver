@@ -122,8 +122,14 @@ class AppletHostSerializer(HostSerializer):
 
         if isinstance(platform_data, dict):
             platform_id = platform_data.get('id')
-        elif isinstance(platform_data, int):
-            platform_id = platform_data
+        elif isinstance(platform_data, (int, str)):
+            # A frontend select commonly round-trips the id as a numeric string
+            # (e.g. "13"), not a native int - str is accepted here too, or any
+            # legitimately-selected platform silently falls back to RemoteAppHost below.
+            try:
+                platform_id = int(platform_data)
+            except (TypeError, ValueError):
+                platform_id = None
 
         default_platform = Platform.objects.get(name='RemoteAppHost')
         if (
