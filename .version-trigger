@@ -1,0 +1,3 @@
+Arquivo usado apenas para disparar o workflow "Release" (job `tag`) e
+gerar a próxima versão sincronizada em todos os 10 repos do fork.
+Pode ser sobrescrito/ignorado a cada novo disparo manual.
