@@ -2,6 +2,8 @@ import base64
 import json
 from datetime import timedelta
 
+import paramiko
+
 from django.conf import settings
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
@@ -269,9 +271,56 @@ class ConnectionToken(JMSOrgBaseModel):
             'gateway': gateway,
             'platform': platform,
             'account': account,
-            'remote_app_option': self.get_remote_app_option()
         }
+
+        if platform.type == 'linux':
+            # xrdp ignores the RAIL params in remote_app_option (no server-side
+            # RAIL support - confirmed empirically), so app selection can't ride
+            # the RDP connection itself. Stage just the token id for the account
+            # that's about to log in; the generic shim (applet_shim.py, running
+            # as every xrdp session's shell) picks it up and resolves everything
+            # else (user/asset/account/platform/connect_options) by calling this
+            # same core API itself, the same way Tinker does on Windows.
+            #
+            # Deliberately do NOT set `remote_app_option` here: xrdp doesn't
+            # implement RAIL server-side, and sending the RemoteApplicationMode
+            # RDP params (in particular the base64 JSON in
+            # `remoteapplicationcmdline:s`) to a non-RAIL server corrupts the
+            # client's initial RDP logon info packet on xrdp's side - it shows
+            # up there as an absurdly long "password" and the connection is
+            # rejected before login is even attempted.
+            self._stage_remote_app_token_for_linux(host, account)
+        else:
+            data['remote_app_option'] = self.get_remote_app_option()
+
         return data
+
+    def _stage_remote_app_token_for_linux(self, host, account):
+        """Write this token's id to /opt/jumpserver/staging/<username>.token on the
+        Linux AppletHost, over the same SSH login the RDP connection is about to
+        use. Sticky-bit-world-writable staging dir (see playbook_linux.yml) means
+        each pooled account can write only its own file, no separate management
+        credential needed."""
+        ip = host.get_target_ip()
+        port = host.get_target_ssh_port()
+
+        client = paramiko.SSHClient()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        try:
+            client.connect(
+                hostname=ip, port=port, username=account.username,
+                password=account.secret, timeout=10, banner_timeout=10, auth_timeout=10,
+            )
+            sftp = client.open_sftp()
+            try:
+                with sftp.file(f'/opt/jumpserver/staging/{account.username}.token', 'w') as f:
+                    f.write(str(self.id))
+            finally:
+                sftp.close()
+        except Exception as e:
+            raise JMSException({'error': 'Failed to stage RemoteApp token on Linux host: {}'.format(e)})
+        finally:
+            client.close()
 
     @staticmethod
     def release_applet_account(lock_key):

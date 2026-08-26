@@ -82,6 +82,15 @@ class HostTypes(BaseType):
                 {
                     'name': GATEWAY_NAME,
                     'gateway_enabled': True,
+                },
+                {
+                    'name': 'RemoteAppHostLinux',
+                    '_protocols': ['rdp', 'ssh'],
+                    'protocols_setting': {
+                        'ssh': {
+                            'required': True
+                        }
+                    }
                 }
             ],
             cls.UNIX: [

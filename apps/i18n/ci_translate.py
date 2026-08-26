@@ -203,12 +203,12 @@ def _discover_work_items_from_diff(base: str, head: str) -> list[WorkItem]:
             continue
 
         # json modules
-        if p.endswith("/zh.json") and "/LC_MESSAGES/" not in p:
+        if p.endswith("/en.json") and "/LC_MESSAGES/" not in p:
             items.append(WorkItem(kind="json", src_relpath=p))
             continue
 
         # gettext sources
-        if p.endswith("/zh/LC_MESSAGES/django.po") or p.endswith("/zh/LC_MESSAGES/djangojs.po"):
+        if p.endswith("/en/LC_MESSAGES/django.po") or p.endswith("/en/LC_MESSAGES/djangojs.po"):
             items.append(WorkItem(kind="po", src_relpath=p))
             continue
 

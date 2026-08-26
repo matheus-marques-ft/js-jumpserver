@@ -1,0 +1,22 @@
+---
+- hosts: all
+  vars:
+    applet_name: chrome
+    applet_zip_path: /dev/null
+
+  tasks:
+    - name: Remove any previous version of this applet
+      ansible.builtin.file:
+        path: "/opt/jumpserver/applets/{{ applet_name }}"
+        state: absent
+
+    - name: Create applet directory
+      ansible.builtin.file:
+        path: "/opt/jumpserver/applets/{{ applet_name }}"
+        state: directory
+        mode: "0755"
+
+    - name: Extract applet package
+      ansible.builtin.unarchive:
+        src: "{{ applet_zip_path }}"
+        dest: "/opt/jumpserver/applets/{{ applet_name }}"

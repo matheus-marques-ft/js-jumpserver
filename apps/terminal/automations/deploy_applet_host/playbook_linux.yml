@@ -1,0 +1,257 @@
+---
+# Linux/xrdp equivalent of playbook.yml (Windows RDS + Tinker) - see jumpserver/README.md,
+# "RemoteApp / Migracao Windows RDS -> Linux" for the architecture this implements
+# (kiosk-mode xrdp sessions, generic shim replacing Tinker, token staged per-OS-account
+# before the RDP connect). Covers both apt (Debian/Ubuntu) and dnf (RHEL family, incl.
+# Amazon Linux 2023) - real Chrome, not Chromium, on both arm64/aarch64 and x86_64:
+# Google shipped an official Chrome ARM64 Linux build in Q2 2026 (both the apt repo at
+# dl.google.com/linux/chrome/deb and the rpm repo at dl.google.com/linux/chrome/rpm/stable
+# now serve arm64/aarch64), so there's no need for the Chromium fingerprint tradeoff.
+# xrdp/xorgxrdp aren't in Amazon Linux 2023's own repos - AWS's EPEL compat page
+# (docs.aws.amazon.com/linux/al2023/ug/epel.html) says no EPEL release is binary-compatible
+# with AL2023 and points at SPAL (Supplementary Packages for Amazon Linux, AL2023-native
+# rebuilds of EPEL9) instead, which does carry xrdp/xorgxrdp - see
+# docs.aws.amazon.com/linux/al2023/ug/configure-spal-repository.html (requires AL2023
+# >= 2023.9.20251117).
+- hosts: all
+  # deploy_applet_host's inventory generation (apps/terminal/automations/deploy_applet_host/__init__.py)
+  # doesn't pass task_type, so JMSInventory never auto-wires ansible_become for this task
+  # the way it does for change_secret/push_account (apps/ops/ansible/inventory.py) - every
+  # task here (dnf/apt installs, systemd, /etc/xrdp writes) needs root regardless of which
+  # unprivileged login account (e.g. ec2-user) is used to connect.
+  become: true
+  vars:
+    APPLET_DOWNLOAD_HOST: https://demo.example.com
+    IGNORE_VERIFY_CERTS: true
+    HOST_NAME: test
+    HOST_ID: 00000000-0000-0000-0000-000000000000
+    CORE_HOST: https://demo.example.com
+    BOOTSTRAP_TOKEN: PleaseChangeMe
+    INSTALL_APPLETS: true
+    SHIM_SRC_PATH: /dev/null
+    HEARTBEAT_SRC_PATH: /dev/null
+
+  tasks:
+    - block:
+        - name: Check if CORE_HOST is redirecting
+          ansible.builtin.uri:
+            url: "{{ CORE_HOST }}"
+            method: GET
+            follow_redirects: none
+            status_code: [200, 301, 302, 303, 307, 308]
+            validate_certs: "{{ not IGNORE_VERIFY_CERTS }}"
+          register: core_host_redirects
+
+        - name: Check failed
+          fail:
+            msg: "CORE_HOST {{ CORE_HOST }} is redirecting to {{ core_host_redirects.location }}, please use the final url"
+          when: core_host_redirects.status is defined and core_host_redirects.status >= 300 and core_host_redirects.status < 400
+
+        # deb repo arch names don't match uname/rpm arch names (amd64 vs x86_64,
+        # arm64 vs aarch64) - the rpm repo path segment matches uname's arch as-is.
+        - name: Determine architecture-specific package identifiers
+          ansible.builtin.set_fact:
+            deb_arch: "{{ {'x86_64': 'amd64', 'aarch64': 'arm64'}[ansible_facts['architecture']] }}"
+            rpm_arch: "{{ ansible_facts['architecture'] }}"
+
+        - name: Add Google Chrome apt key
+          when: ansible_facts['os_family'] == 'Debian'
+          ansible.builtin.apt_key:
+            url: https://dl.google.com/linux/linux_signing_key.pub
+            state: present
+
+        - name: Add Google Chrome apt repo
+          when: ansible_facts['os_family'] == 'Debian'
+          ansible.builtin.apt_repository:
+            repo: "deb [arch={{ deb_arch }}] http://dl.google.com/linux/chrome/deb/ stable main"
+            filename: google-chrome
+            state: present
+
+        - name: Install xrdp, Chrome and runtime dependencies (Debian/Ubuntu)
+          when: ansible_facts['os_family'] == 'Debian'
+          ansible.builtin.apt:
+            name:
+              - xrdp
+              - xorgxrdp
+              - dbus-x11
+              - xterm
+              - python3
+              - python3-venv
+              - python3-pip
+              - google-chrome-stable
+            state: present
+            update_cache: true
+
+        # xrdp/xorgxrdp aren't in AL2023's own repos - SPAL carries the AL2023-native
+        # rebuild (see file header). spal-release itself is resolvable straight from
+        # AL2023's default repos, no repo file needs adding first.
+        - name: Install SPAL repository (provides xrdp/xorgxrdp on Amazon Linux 2023)
+          when: ansible_facts['os_family'] == 'RedHat' and ansible_facts['distribution'] == 'Amazon'
+          ansible.builtin.dnf:
+            name: spal-release
+            state: present
+
+        - name: Add Google Chrome yum repo
+          when: ansible_facts['os_family'] == 'RedHat'
+          ansible.builtin.yum_repository:
+            name: google-chrome
+            description: google-chrome
+            baseurl: "https://dl.google.com/linux/chrome/rpm/stable/{{ rpm_arch }}"
+            gpgcheck: true
+            gpgkey: https://dl.google.com/linux/linux_signing_key.pub
+            enabled: true
+
+        - name: Install xrdp, Chrome and runtime dependencies (RHEL family / Amazon Linux)
+          when: ansible_facts['os_family'] == 'RedHat'
+          ansible.builtin.dnf:
+            name:
+              - xrdp
+              - xorgxrdp
+              - dbus-x11
+              - xterm
+              - python3
+              - python3-pip
+              - google-chrome-stable
+            state: present
+
+        - name: Ensure /opt/jumpserver directories exist
+          ansible.builtin.file:
+            path: "{{ item }}"
+            state: directory
+            mode: "0755"
+          loop:
+            - /opt/jumpserver
+            - /opt/jumpserver/applets
+
+        - name: Ensure staging dir exists (sticky+world-writable, like /tmp)
+          # Each pooled account stages its own <username>.token file here over SFTP
+          # using its own login (see ConnectionToken.stage_applet_token_for_linux) -
+          # the sticky bit means an account can create/read its own file but not
+          # touch another account's, without needing a separate management login.
+          ansible.builtin.file:
+            path: /opt/jumpserver/staging
+            state: directory
+            mode: "1777"
+
+        - name: Check if this host is already registered
+          ansible.builtin.stat:
+            path: /opt/jumpserver/.service_account
+          register: service_account_file
+
+        - name: Register this host as a service account on core
+          ansible.builtin.uri:
+            url: "{{ CORE_HOST }}/api/v1/terminal/terminal-registrations/"
+            method: POST
+            body_format: json
+            body:
+              name: "[AppletShim]-{{ HOST_NAME }}"
+              comment: applet_shim
+              type: applet_shim
+            headers:
+              Authorization: "BootstrapToken {{ BOOTSTRAP_TOKEN }}"
+            validate_certs: "{{ not IGNORE_VERIFY_CERTS }}"
+            status_code: [200, 201]
+          register: registration
+          when: not service_account_file.stat.exists
+
+        - name: Save service account credentials
+          ansible.builtin.copy:
+            content: "{{ registration.json.service_account.access_key.id }}:{{ registration.json.service_account.access_key.secret }}"
+            dest: /opt/jumpserver/.service_account
+            mode: "0600"
+          when: not service_account_file.stat.exists
+
+        - name: Save core host address
+          ansible.builtin.copy:
+            content: "{{ CORE_HOST }}"
+            dest: /opt/jumpserver/.core_host
+            mode: "0644"
+
+        - name: Create dedicated venv for applets and the shim
+          ansible.builtin.command:
+            cmd: python3 -m venv /opt/jumpserver/applet-env
+            creates: /opt/jumpserver/applet-env/bin/python3
+
+        - name: Install shim/applet runtime dependencies in the venv
+          ansible.builtin.pip:
+            name:
+              - httpsig
+              - DrissionPage
+              - pyotp
+            virtualenv: /opt/jumpserver/applet-env
+
+        - name: Push the generic applet shim
+          ansible.builtin.copy:
+            src: "{{ SHIM_SRC_PATH }}"
+            dest: /opt/jumpserver/applet_shim.py
+            mode: "0755"
+
+        # AppletHost.load stays "offline" forever without this: it's read from a
+        # Redis cache (3-min TTL) only written by POST /api/v1/terminal/status/, and
+        # unlike Windows' Tinker (a persistent service), applet_shim.py above only
+        # runs transiently per RDP session and never calls that endpoint - see the
+        # file's own header comment for the full trace.
+        - name: Push the heartbeat daemon (keeps AppletHost.load out of "offline")
+          ansible.builtin.copy:
+            src: "{{ HEARTBEAT_SRC_PATH }}"
+            dest: /opt/jumpserver/applet_heartbeat.py
+            mode: "0755"
+
+        - name: Install the heartbeat daemon's systemd unit
+          ansible.builtin.copy:
+            dest: /etc/systemd/system/jumpserver-applet-heartbeat.service
+            mode: "0644"
+            content: |
+              [Unit]
+              Description=JumpServer AppletHost heartbeat
+              After=network-online.target
+              Wants=network-online.target
+
+              [Service]
+              ExecStart=/opt/jumpserver/applet-env/bin/python3 /opt/jumpserver/applet_heartbeat.py
+              Restart=always
+              RestartSec=10
+
+              [Install]
+              WantedBy=multi-user.target
+          register: heartbeat_unit
+
+        # ansible.builtin.systemd fails on this stack (see the xrdp task below for
+        # the full explanation) - ansible.builtin.command is already proven working
+        # here, so use it for every systemctl call instead.
+        - name: Reload systemd units
+          ansible.builtin.command: systemctl daemon-reload
+          when: heartbeat_unit.changed
+
+        - name: Enable the heartbeat daemon
+          ansible.builtin.command: systemctl enable jumpserver-applet-heartbeat
+
+        # Restart (not just enable --now) on every deploy so a redeployed
+        # applet_heartbeat.py is actually picked up, not just left running stale.
+        - name: (Re)start the heartbeat daemon
+          ansible.builtin.command: systemctl restart jumpserver-applet-heartbeat
+
+        - name: Make every xrdp session run the shim instead of a desktop (kiosk mode)
+          ansible.builtin.copy:
+            dest: /etc/xrdp/startwm.sh
+            mode: "0755"
+            content: |
+              #!/bin/sh
+              exec /opt/jumpserver/applet-env/bin/python3 /opt/jumpserver/applet_shim.py
+
+        # ansible.builtin.systemd fails here with "module (ansible.builtin.systemd) is
+        # missing interpreter line" under JumpServer's ansible-core fork (v2.16.18.3,
+        # see pyproject.toml [tool.uv.sources]) running on the Python 3.14 controller
+        # (Dockerfile/pyproject.toml requires-python) - confirmed this is the only
+        # playbook in the whole codebase that exercises ansible.builtin.systemd, so it's
+        # a previously-unhit gap in that fork's Python 3.14 support, not a config issue
+        # here. ansible.builtin.command is already exercised successfully elsewhere in
+        # this same play under the same stack, so use it instead.
+        - name: Enable and (re)start xrdp
+          ansible.builtin.command: systemctl enable --now xrdp
+
+      rescue:
+        - debug:
+            var: ansible_failed_result
+        - fail:
+            msg: "Failed to deploy Linux applet host"

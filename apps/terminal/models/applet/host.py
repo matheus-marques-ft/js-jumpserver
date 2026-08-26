@@ -8,10 +8,12 @@ from simple_history.utils import bulk_create_with_history
 
 from assets.models import Host
 from common.db.models import JMSBaseModel
-from common.utils import random_string
+from common.utils import get_logger, random_string
 from terminal.const import PublishStatus
 
 __all__ = ['AppletHost', 'AppletHostDeployment']
+
+logger = get_logger(__file__)
 
 
 class AppletHost(Host):
@@ -88,18 +90,31 @@ class AppletHost(Host):
     def generate_accounts(self):
         if not self.auto_create_accounts:
             return
-        self.generate_public_accounts()
-        self.generate_private_accounts()
+        new_accounts = list(self.generate_public_accounts())
+        new_accounts += list(self.generate_private_accounts())
+        # New accounts are created with `is_active=False` above. On Linux applet
+        # hosts they must actually be provisioned as OS users before being made
+        # selectable, otherwise remote app connections fail at SSH login time
+        # (the account is visible in JumpServer but doesn't exist on the box).
+        # This call flips `is_active` to True only for accounts it successfully
+        # provisions. It intentionally isn't done inside
+        # `generate_private_accounts_by_usernames` itself, since that method is
+        # also invoked synchronously from the `User` post_save signal handler
+        # (see `terminal/signal_handlers/applet.py`); running an Ansible push
+        # there would block user creation requests.
+        self.provision_and_activate_accounts(new_accounts)
 
     def generate_public_accounts(self):
         now_count = self.accounts.filter(privileged=False, username__startswith='jms').count()
         need = self.accounts_create_amount - now_count
 
         accounts = []
+        usernames = []
         account_model = self.accounts.model
         for i in range(need):
             username = self.random_username()
             password = self.random_password()
+            usernames.append(username)
             account = account_model(
                 username=username, secret=password, name=username,
                 asset_id=self.id, secret_type='password', version=1,
@@ -107,13 +122,18 @@ class AppletHost(Host):
             )
             accounts.append(account)
         bulk_create_with_history(accounts, account_model, batch_size=20, ignore_conflicts=True)
+        if not usernames:
+            return []
+        return list(self.accounts.filter(username__in=usernames))
 
     def generate_private_accounts_by_usernames(self, usernames):
         accounts = []
+        created_usernames = []
         account_model = self.accounts.model
         for username in usernames:
             password = self.random_password()
             username = 'js_' + username
+            created_usernames.append(username)
             account = account_model(
                 username=username, secret=password, name=username,
                 asset_id=self.id, secret_type='password', version=1,
@@ -121,6 +141,9 @@ class AppletHost(Host):
             )
             accounts.append(account)
         bulk_create_with_history(accounts, account_model, batch_size=20, ignore_conflicts=True)
+        if not created_usernames:
+            return []
+        return list(self.accounts.filter(username__in=created_usernames))
 
     def generate_private_accounts(self):
         from users.models import User
@@ -131,7 +154,65 @@ class AppletHost(Host):
         account_usernames = self.accounts.all().values_list('username', flat=True)
         account_usernames = [username[3:] for username in account_usernames if username.startswith('js_')]
         not_exist_users = set(usernames) - set(account_usernames)
-        self.generate_private_accounts_by_usernames(not_exist_users)
+        return self.generate_private_accounts_by_usernames(not_exist_users)
+
+    def provision_and_activate_accounts(self, accounts):
+        """
+        Provision newly created accounts as real OS users on this applet host,
+        and only mark them `is_active=True` once that provisioning actually
+        succeeds. Reuses the same posix `push_account` automation
+        (apps/accounts/automations/push_account/host/posix/main.yml,
+        `ansible.builtin.user`) that's already used for regular assets, run
+        ad-hoc against just these accounts via `quickstart_automation_by_snapshot`
+        (the same helper `accounts.tasks.push_account.push_accounts_to_assets_task`
+        and `accounts.tasks.automation.execute_automation_record_task` use to run
+        an automation without a persisted model row).
+
+        Only applies to Linux applet hosts. Windows applet host accounts are
+        provisioned through a separate (Tinker-driven) mechanism and are left
+        untouched here.
+        """
+        if not accounts:
+            return
+        if self.platform.type != 'linux':
+            return
+
+        from accounts.const import AutomationTypes, ChangeSecretRecordStatusChoice
+        from accounts.models import Account, PushAccountAutomation, PushSecretRecord
+        from accounts.tasks.common import quickstart_automation_by_snapshot
+
+        account_ids = [str(account.id) for account in accounts]
+        task_name = PushAccountAutomation.generate_unique_name(_('Push applet host accounts '))
+        snapshot = {
+            'params': {},
+            'accounts': account_ids,
+            'assets': [str(self.id)],
+        }
+        try:
+            quickstart_automation_by_snapshot(task_name, AutomationTypes.push_account, snapshot)
+        except Exception as e:
+            logger.error(
+                'Provision applet host accounts on "%s" failed, accounts stay inactive: %s',
+                self, e
+            )
+            return
+
+        success_account_ids = list(
+            PushSecretRecord.objects.filter(
+                account_id__in=account_ids,
+                status=ChangeSecretRecordStatusChoice.success.value,
+            ).values_list('account_id', flat=True)
+        )
+        if success_account_ids:
+            Account.objects.filter(id__in=success_account_ids).update(is_active=True)
+
+        failed_count = len(account_ids) - len(success_account_ids)
+        if failed_count:
+            logger.error(
+                'Provision applet host accounts on "%s": %s/%s accounts failed '
+                'to provision as OS users and remain inactive',
+                self, failed_count, len(account_ids)
+            )
 
 
 class AppletHostDeployment(JMSBaseModel):

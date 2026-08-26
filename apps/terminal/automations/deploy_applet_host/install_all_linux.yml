@@ -1,0 +1,24 @@
+---
+- hosts: all
+  vars:
+    applet_zips: {}
+
+  tasks:
+    - name: Remove any previous version of each published applet
+      ansible.builtin.file:
+        path: "/opt/jumpserver/applets/{{ item.key }}"
+        state: absent
+      loop: "{{ applet_zips | dict2items }}"
+
+    - name: Create applet directories
+      ansible.builtin.file:
+        path: "/opt/jumpserver/applets/{{ item.key }}"
+        state: directory
+        mode: "0755"
+      loop: "{{ applet_zips | dict2items }}"
+
+    - name: Extract each applet package
+      ansible.builtin.unarchive:
+        src: "{{ item.value }}"
+        dest: "/opt/jumpserver/applets/{{ item.key }}"
+      loop: "{{ applet_zips | dict2items }}"

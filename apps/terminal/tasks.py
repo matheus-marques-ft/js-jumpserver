@@ -164,11 +164,14 @@ def run_applet_host_deployment_uninstall_applet(ids, applet_id):
 
 
 @shared_task(
+    queue='ansible',
     verbose_name=_('Generate applet host accounts'),
     activity_callback=lambda self, host_id, *args, **kwargs: ([host_id],),
     description=_(
-        """When a remote publishing server is created and an account needs to be created 
-        automatically, this task will be executed"""
+        """When a remote publishing server is created and an account needs to be created
+        automatically, this task will be executed. For Linux hosts, this also
+        provisions the new accounts as OS users via Ansible, which is why it runs
+        on the 'ansible' queue"""
     )
 )
 def applet_host_generate_accounts(host_id):
