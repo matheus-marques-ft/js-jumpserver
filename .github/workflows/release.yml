@@ -18,7 +18,7 @@ on:
 
 jobs:
   tag:
-    if: github.ref == 'refs/heads/dev' && github.actor != 'github-actions[bot]'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/dev' && github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     permissions:
       contents: write
