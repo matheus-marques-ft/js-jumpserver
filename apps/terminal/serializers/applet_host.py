@@ -1,3 +1,5 @@
+import os
+
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
@@ -18,6 +20,28 @@ __all__ = [
     'AppletHostStartupSerializer', 'AppletSetupSerializer'
 ]
 
+# apps/jumpserver/conf.py's own default for SITE_URL when nothing was ever
+# configured - CORE_HOST below falls back past it instead of prefilling every
+# new AppletHost with a URL that's unreachable from any other machine.
+UNCONFIGURED_SITE_URL = 'http://127.0.0.1'
+
+
+def get_core_host_default():
+    site_url = settings.SITE_URL
+    if site_url and site_url != UNCONFIGURED_SITE_URL:
+        return site_url
+    # Both already reach every container via docker-compose (see
+    # js-installer/config-example.txt's SERVER_HOSTNAME=${HOSTNAME}) - prefer
+    # the DNS hostname (works from anywhere it resolves), fall back to the
+    # docker host's LAN IP (works at least from the same network segment).
+    hostname = os.environ.get('SERVER_HOSTNAME')
+    if hostname:
+        return f'http://{hostname}'
+    host_ip = os.environ.get('HOST_IP')
+    if host_ip:
+        return f'http://{host_ip}'
+    return site_url
+
 
 class DeployOptionsSerializer(serializers.Serializer):
     LICENSE_MODE_CHOICES = (
@@ -34,7 +58,7 @@ class DeployOptionsSerializer(serializers.Serializer):
     )
 
     CORE_HOST = serializers.CharField(
-        default=settings.SITE_URL, label=_('Core API'), max_length=1024,
+        default=get_core_host_default, label=_('Core API'), max_length=1024,
         help_text=_(""" 
         Tips: The application release machine communicates with the Core service. 
         If the release machine and the Core service are on the same network segment, 
