@@ -281,9 +281,29 @@
         - name: (Re)start the heartbeat daemon
           ansible.builtin.command: systemctl restart jumpserver-applet-heartbeat
 
-        - name: Make every xrdp session run the shim instead of a desktop (kiosk mode)
+        # sesman doesn't read /etc/xrdp/startwm.sh directly on every distro - it depends
+        # on sesman.ini's DefaultWindowManager= setting (confirmed on this AL2023/SPAL
+        # xrdp build: `sesman.ini` has DefaultWindowManager=startwm-bash.sh, which
+        # sesman resolves to /usr/libexec/xrdp/startwm-bash.sh - a vendor script that
+        # just sources /usr/libexec/xrdp/startwm.sh, NOT /etc/xrdp/startwm.sh at all.
+        # Debian/Ubuntu's xrdp package uses /etc/xrdp/startwm.sh as sesman's actual
+        # default. Writing only the Debian path meant sesman silently ran its own
+        # empty/no-op default here (0-second "window manager" exit, session closes
+        # instantly, nothing of ours ever runs) - write both, each only applies on its
+        # own distro family.
+        - name: Make every xrdp session run the shim instead of a desktop (kiosk mode, Debian/Ubuntu)
+          when: ansible_facts['os_family'] == 'Debian'
           ansible.builtin.copy:
             dest: /etc/xrdp/startwm.sh
+            mode: "0755"
+            content: |
+              #!/bin/sh
+              exec /opt/jumpserver/applet-env/bin/python3 /opt/jumpserver/applet_shim.py
+
+        - name: Make every xrdp session run the shim instead of a desktop (kiosk mode, RHEL family / Amazon Linux)
+          when: ansible_facts['os_family'] == 'RedHat'
+          ansible.builtin.copy:
+            dest: /usr/libexec/xrdp/startwm.sh
             mode: "0755"
             content: |
               #!/bin/sh
