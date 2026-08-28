@@ -12,7 +12,7 @@ from perms.filters import PermedAssetFilterSet
 from perms.pagination import NodePermedAssetPagination, AllPermedAssetPagination
 from perms.utils import UserPermAssetUtil, PermAssetDetailUtil
 from .mixin import (
-    SelfOrPKUserMixin
+    SelfOrPKUserMixin, RebuildTreeMixin
 )
 
 __all__ = [
@@ -39,7 +39,14 @@ class UserPermedAssetRetrieveApi(SelfOrPKUserMixin, RetrieveAPIView):
             return asset
 
 
-class BaseUserPermedAssetsApi(SelfOrPKUserMixin, ExtraFilterFieldsMixin, ListAPIView):
+class BaseUserPermedAssetsApi(SelfOrPKUserMixin, RebuildTreeMixin, ExtraFilterFieldsMixin, ListAPIView):
+    # Without RebuildTreeMixin, a newly granted asset only shows up here once
+    # UserAssetGrantedTreeNodeRelation happens to get rebuilt by some OTHER
+    # request (e.g. a tree/node endpoint that already had this mixin) - this
+    # endpoint itself never triggered it, so a plain flat asset list (no node
+    # browsing involved) could go stale indefinitely. Matches the same mixin
+    # already used by BaseUserPermedNodesApi (nodes.py) and AssetTreeMixin
+    # (tree/asset.py) for the same reason.
     ordering = []
     search_fields = ('name', 'address', 'comment')
     ordering_fields = ("name", "address", "connectivity", "date_updated")
