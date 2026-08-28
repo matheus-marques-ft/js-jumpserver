@@ -20,7 +20,7 @@ from assets.const.host import GATEWAY_NAME
 from authentication.const import ConnectionTokenType
 from common.db.fields import EncryptTextField
 from common.exceptions import JMSException
-from common.utils import lazyproperty, pretty_string, bulk_get, is_uuid
+from common.utils import lazyproperty, pretty_string, bulk_get, is_uuid, get_logger
 from common.utils.timezone import as_current_tz
 from orgs.mixins.models import JMSOrgBaseModel
 from orgs.utils import tmp_to_org
@@ -30,6 +30,9 @@ from terminal.models import Applet, VirtualApp
 
 def date_expired_default():
     return timezone.now() + timedelta(seconds=settings.CONNECTION_TOKEN_ONETIME_EXPIRATION)
+
+
+logger = get_logger(__file__)
 
 
 class ConnectionToken(JMSOrgBaseModel):
@@ -265,6 +268,11 @@ class ConnectionToken(JMSOrgBaseModel):
         gateway = host.zone.select_gateway() if host.zone else None
         platform = host.platform
 
+        logger.info(
+            'get_applet_option: selected account %s (secret_type=%s, secret set=%s) on host %s for applet %s',
+            account.username, account.secret_type, bool(account.secret), host, applet.name
+        )
+
         data = {
             'id': lock_key,
             'applet': applet,
@@ -290,8 +298,20 @@ class ConnectionToken(JMSOrgBaseModel):
             # client's initial RDP logon info packet on xrdp's side - it shows
             # up there as an absurdly long "password" and the connection is
             # rejected before login is even attempted.
+            logger.info(
+                'get_applet_option: staging token %s for account %s on linux host %s (%s)',
+                self.id, account.username, host, host.get_target_ip()
+            )
             self._stage_remote_app_token_for_linux(host, account)
+            logger.info(
+                'get_applet_option: staged token %s for account %s successfully',
+                self.id, account.username
+            )
         else:
+            logger.info(
+                'get_applet_option: platform.type is %r (not "linux"), using remote_app_option/Tinker path '
+                'for account %s on host %s', platform.type, account.username, host
+            )
             data['remote_app_option'] = self.get_remote_app_option()
 
         return data
