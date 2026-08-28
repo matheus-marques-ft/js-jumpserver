@@ -31,15 +31,17 @@ def get_core_host_default():
     if site_url and site_url != UNCONFIGURED_SITE_URL:
         return site_url
     # Both already reach every container via docker-compose (see
-    # js-installer/config-example.txt's SERVER_HOSTNAME=${HOSTNAME}) - prefer
-    # the DNS hostname (works from anywhere it resolves), fall back to the
-    # docker host's LAN IP (works at least from the same network segment).
-    hostname = os.environ.get('SERVER_HOSTNAME')
-    if hostname:
-        return f'http://{hostname}'
+    # js-installer/config-example.txt's SERVER_HOSTNAME=${HOSTNAME}) - prefer the
+    # docker host's LAN IP: it needs no DNS resolution at all, whereas
+    # SERVER_HOSTNAME is whatever `$HOSTNAME` happens to be (on EC2, the
+    # AWS-assigned internal DNS name, e.g. ip-10-6-0-25.ec2.internal - resolvable,
+    # but an extra dependency an applet host connecting back to core doesn't need).
     host_ip = os.environ.get('HOST_IP')
     if host_ip:
         return f'http://{host_ip}'
+    hostname = os.environ.get('SERVER_HOSTNAME')
+    if hostname:
+        return f'http://{hostname}'
     return site_url
 
 

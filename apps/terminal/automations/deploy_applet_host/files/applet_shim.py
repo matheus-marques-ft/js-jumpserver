@@ -44,6 +44,12 @@ def fatal(msg):
     sys.exit(1)
 
 
+def read_tail(path, n=40):
+    with open(path, "rb") as f:
+        lines = f.read().splitlines()[-n:]
+    return b"\n".join(lines).decode(errors="replace")
+
+
 def load_pending_token():
     username = getpass.getuser()
     staging_path = os.path.join(STAGING_DIR, f"{username}.token")
@@ -103,7 +109,25 @@ def main():
     payload_b64 = base64.b64encode(json.dumps(payload).encode()).decode()
 
     os.chdir(applet_dir)
-    os.execv(sys.executable, [sys.executable, main_py, payload_b64])
+    # Previously os.execv'd straight into the applet, matching Tinker's behavior
+    # (session ends when the app exits) - but that means a crashing applet just
+    # closes the RDP session with zero visible feedback (the black-screen reports
+    # this kept producing) and nothing captured server-side either. Running it as
+    # a child instead keeps the same end-of-session behavior (this script still
+    # exits right after, ending the xrdp session) while letting a non-zero exit
+    # surface through the same fatal()/xterm path load_pending_token() already uses.
+    log_path = f"/tmp/jumpserver-applet-{getpass.getuser()}.log"
+    with open(log_path, "wb") as log_file:
+        result = subprocess.run(
+            [sys.executable, main_py, payload_b64],
+            stdout=log_file, stderr=subprocess.STDOUT,
+        )
+    if result.returncode != 0:
+        fatal(
+            f"Applet '{app_name}' exited with code {result.returncode}. "
+            f"Last output (full log: {log_path}):\n{read_tail(log_path)}"
+        )
+    sys.exit(0)
 
 
 if __name__ == "__main__":
