@@ -133,6 +133,26 @@
             state: directory
             mode: "1777"
 
+        # The auto-created accounts (both the random 'frete_...' pool and any
+        # per-user ones) are password-based - but cloud images (this Amazon Linux
+        # AMI included) ship sshd with password auth disabled by default, only
+        # allowing publickey/gssapi. Without this, every one of those accounts
+        # fails to connect with "Bad authentication type", account existing on
+        # the box or not. Named 00- so it's read (and wins, first-match-wins in
+        # sshd) before any other drop-in that might also set PasswordAuthentication.
+        - name: Allow password authentication (auto-created accounts are password-based)
+          ansible.builtin.copy:
+            content: "PasswordAuthentication yes\n"
+            dest: /etc/ssh/sshd_config.d/00-jumpserver-applet.conf
+            mode: "0644"
+          register: sshd_password_auth
+
+        - name: Reload sshd to apply password authentication setting
+          ansible.builtin.systemd:
+            name: "{{ 'ssh' if ansible_facts['os_family'] == 'Debian' else 'sshd' }}"
+            state: reloaded
+          when: sshd_password_auth is changed
+
         # Every deploy run registers a brand-new service account instead of trusting
         # a locally-cached one: a previous registration's Terminal/AccessKey can go
         # stale server-side (e.g. the AppletHost was recreated) with no local way to

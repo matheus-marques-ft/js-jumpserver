@@ -90,18 +90,16 @@ class AppletHost(Host):
     def generate_accounts(self):
         if not self.auto_create_accounts:
             return
+        # Only the random/pooled accounts (random_username(), 'frete_...') are
+        # auto-created - per-user private accounts (generate_private_accounts,
+        # 'js_<username>') are intentionally not wired in here anymore.
         new_accounts = list(self.generate_public_accounts())
-        new_accounts += list(self.generate_private_accounts())
         # New accounts are created with `is_active=False` above. On Linux applet
         # hosts they must actually be provisioned as OS users before being made
         # selectable, otherwise remote app connections fail at SSH login time
         # (the account is visible in JumpServer but doesn't exist on the box).
         # This call flips `is_active` to True only for accounts it successfully
-        # provisions. It intentionally isn't done inside
-        # `generate_private_accounts_by_usernames` itself, since that method is
-        # also invoked synchronously from the `User` post_save signal handler
-        # (see `terminal/signal_handlers/applet.py`); running an Ansible push
-        # there would block user creation requests.
+        # provisions.
         self.provision_and_activate_accounts(new_accounts)
 
     def generate_public_accounts(self):
