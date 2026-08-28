@@ -17,6 +17,7 @@ import json
 import os
 import subprocess
 import sys
+import tempfile
 import urllib.request
 import urllib.error
 import wsgiref.handlers
@@ -40,7 +41,16 @@ def read_first_line(path):
 def fatal(msg):
     sys.stderr.write(msg + "\n")
     # Give the operator something to look at instead of an instantly-closing session.
-    subprocess.run(["xterm", "-e", f"echo '{msg}'; read -p 'press enter to close'"])
+    # msg often embeds a raw HTTP error body (quotes, apostrophes, newlines - e.g. a
+    # DRF "doesn't have permission" message) - interpolating it straight into a shell
+    # string (the previous `f"echo '{msg}'; ..."`) breaks the quoting and makes xterm's
+    # `-e` command a syntax error, so it exits instantly with NOTHING shown - exactly
+    # the "black screen, no popup" symptom this was supposed to prevent. Writing it to
+    # a file and having the shell just `cat` that file sidesteps quoting entirely.
+    with tempfile.NamedTemporaryFile("w", suffix=".txt", delete=False) as f:
+        f.write(msg)
+        msg_path = f.name
+    subprocess.run(["xterm", "-e", "sh", "-c", f"cat {msg_path}; read -p 'press enter to close'"])
     sys.exit(1)
 
 
