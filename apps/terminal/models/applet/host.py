@@ -85,15 +85,23 @@ class AppletHost(Host):
         return 'frete_' + random_string(8)
 
     @staticmethod
+    def random_password():
+        return random_string(16, special_char=True)
+
+    @staticmethod
     def random_ssh_key():
-        # Password accounts hit a wall on hardened cloud images (this one included):
-        # sshd ships with PasswordAuthentication disabled by default, and even after
-        # turning it on and reloading sshd, password auth kept failing - so these
-        # accounts use a generated keypair instead, same as Account.gen_key()/
-        # SecretGenerator.generate_ssh_key() do elsewhere. push_account's posix
-        # playbook already knows how to push a ssh_key account's public key into
-        # authorized_keys (accounts/automations/base/manager.py's
-        # handle_ssh_secret() derives it from this private key automatically).
+        # Kept for accounts that are explicitly ssh_key (push_account's posix
+        # playbook and _stage_remote_app_token_for_linux both already support
+        # either type) - but NOT used by the auto-created pool below anymore.
+        # RDP login on Linux applet hosts goes through xrdp's own PAM auth
+        # against /etc/shadow, completely separate from sshd - an ssh_key
+        # account never gets a real password set (push_account's posix
+        # playbook only does that `when: secret_type == "password"`), so xrdp
+        # has nothing to authenticate against and every RDP connection fails
+        # with a generic "Upstream error" (Guacamole status 515). Password
+        # accounts need PasswordAuthentication yes in sshd for SFTP token
+        # staging to work (see playbook_linux.yml) - that's the actual fix for
+        # the "Bad authentication type" SSH failures, not switching to keys.
         private_key, _public_key = ssh_key_gen()
         return private_key
 
@@ -121,11 +129,11 @@ class AppletHost(Host):
         account_model = self.accounts.model
         for i in range(need):
             username = self.random_username()
-            private_key = self.random_ssh_key()
+            password = self.random_password()
             usernames.append(username)
             account = account_model(
-                username=username, secret=private_key, name=username,
-                asset_id=self.id, secret_type=SecretType.SSH_KEY, version=1,
+                username=username, secret=password, name=username,
+                asset_id=self.id, secret_type=SecretType.PASSWORD, version=1,
                 org_id=self.LOCKING_ORG, is_active=False,
             )
             accounts.append(account)
@@ -139,12 +147,12 @@ class AppletHost(Host):
         created_usernames = []
         account_model = self.accounts.model
         for username in usernames:
-            private_key = self.random_ssh_key()
+            password = self.random_password()
             username = 'js_' + username
             created_usernames.append(username)
             account = account_model(
-                username=username, secret=private_key, name=username,
-                asset_id=self.id, secret_type=SecretType.SSH_KEY, version=1,
+                username=username, secret=password, name=username,
+                asset_id=self.id, secret_type=SecretType.PASSWORD, version=1,
                 org_id=self.LOCKING_ORG, is_active=False,
             )
             accounts.append(account)

@@ -13,6 +13,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from rest_framework.exceptions import PermissionDenied
 
+from accounts.const import SecretType
 from accounts.models import VirtualAccount
 from assets.const import Protocol
 from assets.const.host import GATEWAY_NAME
@@ -304,12 +305,23 @@ class ConnectionToken(JMSOrgBaseModel):
         ip = host.get_target_ip()
         port = host.get_target_ssh_port()
 
+        # Auto-created applet accounts are ssh_key now, not password (this AMI's
+        # sshd ships with PasswordAuthentication off, and password auth kept
+        # failing even after turning it back on) - but any pre-existing/manually
+        # added account could still be either, so honor whichever secret_type
+        # the account actually has instead of assuming one.
+        connect_kwargs = {}
+        if account.secret_type == SecretType.SSH_KEY:
+            connect_kwargs['pkey'] = account.private_key_obj
+        else:
+            connect_kwargs['password'] = account.secret
+
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         try:
             client.connect(
                 hostname=ip, port=port, username=account.username,
-                password=account.secret, timeout=10, banner_timeout=10, auth_timeout=10,
+                timeout=10, banner_timeout=10, auth_timeout=10, **connect_kwargs,
             )
             sftp = client.open_sftp()
             try:
