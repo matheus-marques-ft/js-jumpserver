@@ -145,13 +145,18 @@
             content: "PasswordAuthentication yes\n"
             dest: /etc/ssh/sshd_config.d/00-jumpserver-applet.conf
             mode: "0644"
-          register: sshd_password_auth
 
         - name: Reload sshd to apply password authentication setting
-          ansible.builtin.systemd:
-            name: "{{ 'ssh' if ansible_facts['os_family'] == 'Debian' else 'sshd' }}"
-            state: reloaded
-          when: sshd_password_auth is changed
+          # ansible.builtin.systemd (not used anywhere else in this playbook)
+          # fails here with "module is missing interpreter line" - same
+          # systemctl-via-command pattern the heartbeat daemon tasks already use.
+          # Unconditional (no `when: sshd_password_auth is changed`) on purpose:
+          # a reload is cheap and safe to repeat, and gating on the copy step's
+          # changed-ness means this would never fire again once the file first
+          # matches - including on a host where a previous, failed run wrote the
+          # file but never actually got sshd to reload it.
+          ansible.builtin.command: >
+            systemctl reload {{ 'ssh' if ansible_facts['os_family'] == 'Debian' else 'sshd' }}
 
         # Every deploy run registers a brand-new service account instead of trusting
         # a locally-cached one: a previous registration's Terminal/AccessKey can go
@@ -294,6 +299,33 @@
         # this same play under the same stack, so use it instead.
         - name: Enable and (re)start xrdp
           ansible.builtin.command: systemctl enable --now xrdp
+
+        # Nothing deprovisions an account today when it's deleted/regenerated in
+        # JumpServer (soft-delete, "regenerate accounts", accounts_create_amount
+        # shrinking) - the OS user is just left behind. Sanitize on every deploy
+        # instead of trying to catch every deletion path individually.
+        - name: Get current OS accounts
+          ansible.builtin.command: getent passwd
+          register: os_passwd
+          changed_when: false
+
+        - name: Determine orphaned applet accounts (on the box, no longer tracked in JumpServer)
+          ansible.builtin.set_fact:
+            orphaned_applet_accounts: >-
+              {{ (os_passwd.stdout_lines | map('regex_replace', '^([^:]+):.*$', '\1') | list)
+                 | select('match', '^(frete_|js_)')
+                 | list
+                 | difference(VALID_ACCOUNT_USERNAMES) }}
+
+        - name: Remove orphaned applet accounts no longer tracked in JumpServer
+          ansible.builtin.user:
+            name: "{{ item }}"
+            state: absent
+            remove: true
+          loop: "{{ orphaned_applet_accounts }}"
+          # Best-effort: an orphan mid-RDP-session shouldn't fail the whole
+          # deploy - it just gets swept on the next one instead.
+          ignore_errors: true
 
       rescue:
         - debug:

@@ -7,8 +7,9 @@ from rest_framework.exceptions import ValidationError
 from simple_history.utils import bulk_create_with_history
 
 from assets.models import Host
+from accounts.const import SecretType
 from common.db.models import JMSBaseModel
-from common.utils import get_logger, random_string
+from common.utils import get_logger, random_string, ssh_key_gen
 from terminal.const import PublishStatus
 
 __all__ = ['AppletHost', 'AppletHostDeployment']
@@ -84,8 +85,17 @@ class AppletHost(Host):
         return 'frete_' + random_string(8)
 
     @staticmethod
-    def random_password():
-        return random_string(16, special_char=True)
+    def random_ssh_key():
+        # Password accounts hit a wall on hardened cloud images (this one included):
+        # sshd ships with PasswordAuthentication disabled by default, and even after
+        # turning it on and reloading sshd, password auth kept failing - so these
+        # accounts use a generated keypair instead, same as Account.gen_key()/
+        # SecretGenerator.generate_ssh_key() do elsewhere. push_account's posix
+        # playbook already knows how to push a ssh_key account's public key into
+        # authorized_keys (accounts/automations/base/manager.py's
+        # handle_ssh_secret() derives it from this private key automatically).
+        private_key, _public_key = ssh_key_gen()
+        return private_key
 
     def generate_accounts(self):
         if not self.auto_create_accounts:
@@ -111,11 +121,11 @@ class AppletHost(Host):
         account_model = self.accounts.model
         for i in range(need):
             username = self.random_username()
-            password = self.random_password()
+            private_key = self.random_ssh_key()
             usernames.append(username)
             account = account_model(
-                username=username, secret=password, name=username,
-                asset_id=self.id, secret_type='password', version=1,
+                username=username, secret=private_key, name=username,
+                asset_id=self.id, secret_type=SecretType.SSH_KEY, version=1,
                 org_id=self.LOCKING_ORG, is_active=False,
             )
             accounts.append(account)
@@ -129,12 +139,12 @@ class AppletHost(Host):
         created_usernames = []
         account_model = self.accounts.model
         for username in usernames:
-            password = self.random_password()
+            private_key = self.random_ssh_key()
             username = 'js_' + username
             created_usernames.append(username)
             account = account_model(
-                username=username, secret=password, name=username,
-                asset_id=self.id, secret_type='password', version=1,
+                username=username, secret=private_key, name=username,
+                asset_id=self.id, secret_type=SecretType.SSH_KEY, version=1,
                 org_id=self.LOCKING_ORG, is_active=False,
             )
             accounts.append(account)

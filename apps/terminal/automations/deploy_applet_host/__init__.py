@@ -101,6 +101,17 @@ class DeployAppletHostManager:
                 if self.is_linux:
                     play["vars"]["SHIM_SRC_PATH"] = os.path.join(CURRENT_DIR, "files", "applet_shim.py")
                     play["vars"]["HEARTBEAT_SRC_PATH"] = os.path.join(CURRENT_DIR, "files", "applet_heartbeat.py")
+                    # Accounts JumpServer still tracks for this host (pooled
+                    # 'frete_...' and any legacy per-user 'js_...') - anything
+                    # else matching those prefixes on the box is orphaned (e.g.
+                    # a soft-deleted/regenerated Account whose OS user was never
+                    # cleaned up) and gets removed on every deploy. See
+                    # "Sanitize orphaned applet accounts" in playbook_linux.yml.
+                    play["vars"]["VALID_ACCOUNT_USERNAMES"] = list(
+                        self.deployment.host.accounts
+                        .filter(username__regex=r'^(frete_|js_)')
+                        .values_list('username', flat=True)
+                    )
             return plays
 
         playbook_name = "playbook_linux.yml" if self.is_linux else "playbook.yml"
