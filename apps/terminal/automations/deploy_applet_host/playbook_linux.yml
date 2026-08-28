@@ -133,6 +133,18 @@
             state: directory
             mode: "1777"
 
+        # Every deploy run registers a brand-new service account instead of trusting
+        # a locally-cached one: a previous registration's Terminal/AccessKey can go
+        # stale server-side (e.g. the AppletHost was recreated) with no local way to
+        # tell - the old key_id then just fails signature auth forever ("Invalid
+        # signature." - see common/auth/signature.py, which can't distinguish
+        # "bad signature" from "key_id doesn't exist" by design). Deploy is the
+        # natural point to force a clean slate instead of debugging a stale key by hand.
+        - name: Remove any previously cached service account (always re-register on deploy)
+          ansible.builtin.file:
+            path: /opt/jumpserver/.service_account
+            state: absent
+
         - name: Check if this host is already registered
           ansible.builtin.stat:
             path: /opt/jumpserver/.service_account
@@ -165,6 +177,19 @@
           ansible.builtin.copy:
             content: "{{ CORE_HOST }}"
             dest: /opt/jumpserver/.core_host
+            mode: "0644"
+
+        # AppletHost.load stays "offline" forever without this too: registering
+        # a service account only creates a brand-new Terminal row, it never links
+        # back to this pre-existing AppletHost - that link only happens when
+        # something calls POST .../applet-hosts/{id}/startup/ as that service
+        # account (see AppletHost.check_terminal_binding). Tinker does this on
+        # its own service start on Windows; the heartbeat daemon does the Linux
+        # equivalent (applet_heartbeat.py), so it needs this host's own id.
+        - name: Save this host's AppletHost id (for the heartbeat daemon's startup call)
+          ansible.builtin.copy:
+            content: "{{ HOST_ID }}"
+            dest: /opt/jumpserver/.host_id
             mode: "0644"
 
         - name: Create dedicated venv for applets and the shim

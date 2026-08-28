@@ -81,7 +81,7 @@ class AppletHost(Host):
 
     @staticmethod
     def random_username():
-        return 'jms_' + random_string(8)
+        return 'frete_' + random_string(8)
 
     @staticmethod
     def random_password():
@@ -105,7 +105,7 @@ class AppletHost(Host):
         self.provision_and_activate_accounts(new_accounts)
 
     def generate_public_accounts(self):
-        now_count = self.accounts.filter(privileged=False, username__startswith='jms').count()
+        now_count = self.accounts.filter(privileged=False, username__startswith='frete_').count()
         need = self.accounts_create_amount - now_count
 
         accounts = []

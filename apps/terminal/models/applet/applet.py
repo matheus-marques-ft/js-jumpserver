@@ -278,7 +278,7 @@ class Applet(JMSBaseModel):
         accounts_username_used = list(cache.get_many(using_keys).values())
         logger.debug('Applet host account using: {}: {}'.format(host.name, accounts_username_used))
         accounts = valid_accounts.exclude(username__in=accounts_username_used)
-        public_accounts = accounts.filter(username__startswith='jms_')
+        public_accounts = accounts.filter(username__startswith='frete_')
         if not public_accounts:
             public_accounts = accounts \
                 .exclude(username__in=['Administrator', 'root']) \

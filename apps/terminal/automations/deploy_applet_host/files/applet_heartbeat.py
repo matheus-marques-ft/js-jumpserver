@@ -28,6 +28,7 @@ from httpsig import HeaderSigner
 
 SERVICE_ACCOUNT_FILE = "/opt/jumpserver/.service_account"
 CORE_HOST_FILE = "/opt/jumpserver/.core_host"
+HOST_ID_FILE = "/opt/jumpserver/.host_id"
 STATUS_PATH = "/api/v1/terminal/status/"
 INTERVAL_SECONDS = 90  # comfortably under the 3-minute TERMINAL_STATUS_<id> cache TTL
 
@@ -71,24 +72,41 @@ def collect_stats():
     return {"sessions": [], "cpu_load": cpu_load, "memory_used": memory_used, "disk_used": disk_used}
 
 
-def send_heartbeat(core_host, access_key, access_secret):
-    body = json.dumps(collect_stats()).encode()
+def _signed_request(core_host, path, access_key, access_secret, body=b"{}"):
     signer = HeaderSigner(
         key_id=access_key, secret=access_secret,
         algorithm="hmac-sha256", headers=["(request-target)", "date"],
     )
     headers = signer.sign({"date": wsgiref.handlers.format_date_time(None)},
-                          method="POST", path=STATUS_PATH)
+                          method="POST", path=path)
     headers["content-type"] = "application/json"
 
-    req = urllib.request.Request(core_host + STATUS_PATH, data=body, method="POST", headers=headers)
+    req = urllib.request.Request(core_host + path, data=body, method="POST", headers=headers)
     with urllib.request.urlopen(req, timeout=15) as resp:
         resp.read()
+
+
+def send_heartbeat(core_host, access_key, access_secret):
+    body = json.dumps(collect_stats()).encode()
+    _signed_request(core_host, STATUS_PATH, access_key, access_secret, body)
+
+
+def call_startup(core_host, host_id, access_key, access_secret):
+    # Registering a service account only creates a brand-new Terminal row - it
+    # never links back to this AppletHost, so AppletHost.load stays "offline"
+    # forever (see AppletHost.load / AppletHost.check_terminal_binding) no matter
+    # how well the heartbeat above is doing. That link only happens when something
+    # calls this endpoint as the service account. Tinker does this on its own
+    # service start on Windows; this is the Linux equivalent. Safe to call every
+    # cycle - check_terminal_binding() is a no-op once already bound.
+    _signed_request(core_host, f"/api/v1/terminal/applet-hosts/{host_id}/startup/",
+                     access_key, access_secret)
 
 
 def main():
     core_host = read_first_line(CORE_HOST_FILE).rstrip("/")
     access_key, access_secret = read_first_line(SERVICE_ACCOUNT_FILE).split(":", 1)
+    host_id = read_first_line(HOST_ID_FILE)
 
     while True:
         try:
@@ -104,6 +122,15 @@ def main():
             sys.stderr.write(f"heartbeat failed: HTTP {e.code} {detail}\n")
         except (urllib.error.URLError, OSError) as e:
             sys.stderr.write(f"heartbeat failed: {e}\n")
+
+        try:
+            call_startup(core_host, host_id, access_key, access_secret)
+        except urllib.error.HTTPError as e:
+            detail = e.read()[:500]
+            sys.stderr.write(f"startup binding failed: HTTP {e.code} {detail}\n")
+        except (urllib.error.URLError, OSError) as e:
+            sys.stderr.write(f"startup binding failed: {e}\n")
+
         time.sleep(INTERVAL_SECONDS)
 
 

@@ -53,11 +53,17 @@ def on_user_create_create_account(sender, instance: User, created=False, **kwarg
     if instance.is_service_account:
         return
     with tmp_to_builtin_org(system=1):
-        applet_hosts = AppletHost.objects.all()
+        applet_hosts = AppletHost.objects.filter(auto_create_accounts=True)
         for host in applet_hosts:
-            if not host.auto_create_accounts:
-                continue
-            host.generate_private_accounts_by_usernames([instance.username])
+            # Was: host.generate_private_accounts_by_usernames([instance.username])
+            # here, synchronously - that only inserts the DB Account row
+            # (is_active=False) without ever provisioning it as a real OS user on
+            # Linux applet hosts (that step, provision_and_activate_accounts, is
+            # only reachable through generate_accounts()). Dispatching to the same
+            # Celery task on_applet_host_update_or_create already uses (below)
+            # avoids blocking this request on an Ansible push, and gets the
+            # account actually provisioned instead of just inserted.
+            applet_host_generate_accounts.delay(host.id)
 
 
 @receiver(post_delete, sender=User)
