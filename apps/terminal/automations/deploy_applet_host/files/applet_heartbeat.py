@@ -30,6 +30,7 @@ SERVICE_ACCOUNT_FILE = "/opt/jumpserver/.service_account"
 CORE_HOST_FILE = "/opt/jumpserver/.core_host"
 HOST_ID_FILE = "/opt/jumpserver/.host_id"
 STATUS_PATH = "/api/v1/terminal/status/"
+APPLETS_DIR = "/opt/jumpserver/applets"
 INTERVAL_SECONDS = 90  # comfortably under the 3-minute TERMINAL_STATUS_<id> cache TTL
 
 
@@ -91,6 +92,50 @@ def send_heartbeat(core_host, access_key, access_secret):
     _signed_request(core_host, STATUS_PATH, access_key, access_secret, body)
 
 
+def _read_manifest_field(manifest_path, field):
+    # Not using PyYAML: the venv this daemon runs in only has httpsig/DrissionPage/
+    # pyotp installed (see playbook_linux.yml), and manifest.yml's `name`/`version`
+    # are always plain unquoted scalars on their own line - a full YAML parser
+    # (needed anyway for the Jinja-ish i18n templating in other fields, see
+    # apps/terminal/models/applet/applet.py's yaml_load_with_i18n) is more than
+    # this needs.
+    with open(manifest_path) as f:
+        for line in f:
+            line = line.strip()
+            if line.startswith(field + ":"):
+                return line.split(":", 1)[1].strip().strip("'\"")
+    return None
+
+
+def collect_installed_applets():
+    """List {name, version} for every applet actually on disk here, matching what
+    apps/terminal/api/applet/relation.py's `reports` action
+    (AppletHostAppletViewSet) expects - the same report Tinker sends on Windows
+    after installing/checking each app. Without this, every AppletPublication on
+    a Linux host stays stuck at PublishStatus.pending forever (nothing else ever
+    transitions it), which makes Applet.filter_available_hosts()/select_host()
+    treat this host as having zero usable applets - see the TypeError crash this
+    was written to fix."""
+    applets = []
+    if not os.path.isdir(APPLETS_DIR):
+        return applets
+    for entry in os.listdir(APPLETS_DIR):
+        manifest_path = os.path.join(APPLETS_DIR, entry, "manifest.yml")
+        if not os.path.isfile(manifest_path):
+            continue
+        name = _read_manifest_field(manifest_path, "name") or entry
+        version = _read_manifest_field(manifest_path, "version")
+        if version:
+            applets.append({"name": name, "version": version})
+    return applets
+
+
+def report_installed_applets(core_host, host_id, access_key, access_secret):
+    body = json.dumps(collect_installed_applets()).encode()
+    _signed_request(core_host, f"/api/v1/terminal/applet-hosts/{host_id}/applets/reports/",
+                     access_key, access_secret, body)
+
+
 def call_startup(core_host, host_id, access_key, access_secret):
     # Registering a service account only creates a brand-new Terminal row - it
     # never links back to this AppletHost, so AppletHost.load stays "offline"
@@ -130,6 +175,14 @@ def main():
             sys.stderr.write(f"startup binding failed: HTTP {e.code} {detail}\n")
         except (urllib.error.URLError, OSError) as e:
             sys.stderr.write(f"startup binding failed: {e}\n")
+
+        try:
+            report_installed_applets(core_host, host_id, access_key, access_secret)
+        except urllib.error.HTTPError as e:
+            detail = e.read()[:500]
+            sys.stderr.write(f"applet report failed: HTTP {e.code} {detail}\n")
+        except (urllib.error.URLError, OSError) as e:
+            sys.stderr.write(f"applet report failed: {e}\n")
 
         time.sleep(INTERVAL_SECONDS)
 
