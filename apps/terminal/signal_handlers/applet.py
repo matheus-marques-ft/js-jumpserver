@@ -61,9 +61,18 @@ def on_applet_host_delete(sender, instance, **kwargs):
 
 
 @receiver(post_save, sender=Applet)
+@on_transaction_commit
 def on_applet_create(sender, instance, created=False, **kwargs):
     if not created:
         return
+    # Mirrors on_applet_host_create's `instance.applets.set(...)` from the other
+    # direction: that one only backfills publications for hosts that already
+    # existed when a NEW host is created. Without this, a newly installed/uploaded
+    # applet is never linked (AppletPublication) to any pre-existing AppletHost -
+    # it just never shows up as an option to deploy anywhere, on any host type,
+    # until that host happens to get recreated.
+    for host in AppletHost.objects.all():
+        host.applets.add(instance)
     applet_host_change_pub_sub.publish(True)
 
 

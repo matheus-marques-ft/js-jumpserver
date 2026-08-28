@@ -1,5 +1,8 @@
 ---
 - hosts: all
+  # See install_applet_linux.yml - /opt/jumpserver/applets is root-owned, this needs
+  # become: true too or every write under it fails with "Permission denied".
+  become: true
   vars:
     applet_zips: {}
 

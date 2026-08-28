@@ -43,6 +43,16 @@ def get_core_host_default():
     return site_url
 
 
+# Computed once at import time, not passed as a callable to CORE_HOST's `default=`
+# below: common/drf/metadata.py's SimpleMetadataWithFilters (the OPTIONS metadata
+# the frontend's auto-form reads to prefill this field) only surfaces `field.default`
+# when `isinstance(default, (str, int, bool, float, datetime, list))` - a callable
+# fails that check silently, so the field showed up blank instead of falling back to
+# get_core_host_default()'s value. Env vars don't change during a container's
+# lifetime, so computing this once here is equivalent to calling it per-request.
+CORE_HOST_DEFAULT = get_core_host_default()
+
+
 class DeployOptionsSerializer(serializers.Serializer):
     LICENSE_MODE_CHOICES = (
         (2, _('Per Device (Device number limit)')),
@@ -58,7 +68,7 @@ class DeployOptionsSerializer(serializers.Serializer):
     )
 
     CORE_HOST = serializers.CharField(
-        default=get_core_host_default, label=_('Core API'), max_length=1024,
+        default=CORE_HOST_DEFAULT, label=_('Core API'), max_length=1024,
         help_text=_(""" 
         Tips: The application release machine communicates with the Core service. 
         If the release machine and the Core service are on the same network segment, 

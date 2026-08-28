@@ -1,5 +1,9 @@
 ---
 - hosts: all
+  # /opt/jumpserver/applets is created root-owned (mode 0755) by playbook_linux.yml's
+  # `become: true` play - without it here too, this connects as the unprivileged SSH
+  # login (e.g. ec2-user) and fails with "Permission denied" on every write under it.
+  become: true
   vars:
     applet_name: chrome
     applet_zip_path: /dev/null
