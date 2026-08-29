@@ -18,6 +18,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import traceback
 import urllib.request
 import urllib.error
 import wsgiref.handlers
@@ -141,4 +142,15 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except SystemExit:
+        raise
+    except Exception:
+        # Anything not already funneled through fatal() (a bare URLError from a
+        # connection failure, a KeyError on an unexpected API response shape, etc.)
+        # would otherwise just print to stderr - which nobody watching the RDP
+        # session ever sees - and exit 1 silently. This is the catch-all that was
+        # missing: every failure mode now surfaces the same way, via fatal()'s
+        # xterm popup, instead of some producing a black screen with zero feedback.
+        fatal("applet_shim.py crashed:\n" + traceback.format_exc())
