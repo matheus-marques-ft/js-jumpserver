@@ -121,13 +121,24 @@ class AppletHost(Host):
         self.provision_and_activate_accounts(new_accounts)
 
     def generate_public_accounts(self):
-        now_count = self.accounts.filter(privileged=False, username__startswith='frete_').count()
-        need = self.accounts_create_amount - now_count
+        # Counting every 'frete_*' row (active or not) toward "already have
+        # enough" - not just the active ones - means an account that was
+        # created but never successfully provisioned as an OS user (see
+        # provision_and_activate_accounts) permanently occupies a pool slot:
+        # `need` drops to 0 and stays there, so a stuck account is silently
+        # never retried, generate_accounts() looks like a no-op forever, and
+        # a fresh EC2/host swap (accounts_create_amount unchanged, but every
+        # existing row now points at OS users that don't exist there) never
+        # tops the pool back up either. Retry the inactive ones instead of
+        # ignoring them, and only create brand-new rows to make up the rest.
+        existing = list(self.accounts.filter(privileged=False, username__startswith='frete_'))
+        pending = [account for account in existing if not account.is_active]
+        need = self.accounts_create_amount - len(existing)
 
-        accounts = []
+        new_accounts = []
         usernames = []
         account_model = self.accounts.model
-        for i in range(need):
+        for i in range(max(need, 0)):
             username = self.random_username()
             password = self.random_password()
             usernames.append(username)
@@ -136,11 +147,11 @@ class AppletHost(Host):
                 asset_id=self.id, secret_type=SecretType.PASSWORD, version=1,
                 org_id=self.LOCKING_ORG, is_active=False,
             )
-            accounts.append(account)
-        bulk_create_with_history(accounts, account_model, batch_size=20, ignore_conflicts=True)
-        if not usernames:
-            return []
-        return list(self.accounts.filter(username__in=usernames))
+            new_accounts.append(account)
+        if new_accounts:
+            bulk_create_with_history(new_accounts, account_model, batch_size=20, ignore_conflicts=True)
+            new_accounts = list(self.accounts.filter(username__in=usernames))
+        return pending + new_accounts
 
     def generate_private_accounts_by_usernames(self, usernames):
         accounts = []

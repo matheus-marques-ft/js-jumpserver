@@ -379,7 +379,7 @@
           ansible.builtin.set_fact:
             orphaned_applet_accounts: >-
               {{ (os_passwd.stdout_lines | map('regex_replace', '^([^:]+):.*$', '\1') | list)
-                 | select('match', '^(frete_|js_)')
+                 | select('match', '^(frete_|js_|jms_)')
                  | list
                  | difference(VALID_ACCOUNT_USERNAMES) }}
 

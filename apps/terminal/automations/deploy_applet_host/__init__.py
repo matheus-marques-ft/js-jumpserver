@@ -102,14 +102,19 @@ class DeployAppletHostManager:
                     play["vars"]["SHIM_SRC_PATH"] = os.path.join(CURRENT_DIR, "files", "applet_shim.py")
                     play["vars"]["HEARTBEAT_SRC_PATH"] = os.path.join(CURRENT_DIR, "files", "applet_heartbeat.py")
                     # Accounts JumpServer still tracks for this host (pooled
-                    # 'frete_...' and any legacy per-user 'js_...') - anything
+                    # 'frete_...', legacy per-user 'js_...', and 'jms_...' from
+                    # before the pool prefix was renamed to 'frete_') - anything
                     # else matching those prefixes on the box is orphaned (e.g.
                     # a soft-deleted/regenerated Account whose OS user was never
                     # cleaned up) and gets removed on every deploy. See
                     # "Sanitize orphaned applet accounts" in playbook_linux.yml.
+                    # NOTE: 'jms_' was missing here (only 'frete_|js_') - real
+                    # accounts using that older prefix silently never matched,
+                    # so they were never swept and looked like the cleanup step
+                    # was doing nothing at all.
                     play["vars"]["VALID_ACCOUNT_USERNAMES"] = list(
                         self.deployment.host.accounts
-                        .filter(username__regex=r'^(frete_|js_)')
+                        .filter(username__regex=r'^(frete_|js_|jms_)')
                         .values_list('username', flat=True)
                     )
             return plays
