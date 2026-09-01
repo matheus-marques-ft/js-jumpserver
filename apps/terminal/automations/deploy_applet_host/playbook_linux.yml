@@ -360,11 +360,42 @@
             option: KillDisconnected
             value: "true"
             mode: "0644"
-          register: sesman_kill_disconnected
 
-        - name: Reload xrdp-sesman to apply KillDisconnected
+        # Not `when: <ini_file task>.changed` - a sesman process already
+        # running (from an earlier deploy, or a reboot/crash-recovery cycle)
+        # keeps whatever config it loaded at ITS OWN startup, regardless of
+        # what the file says now. If the file already had the right value
+        # (changed: false) that process never gets told, and keeps
+        # reconnecting disconnected sessions (reconnectwm.sh) instead of
+        # killing them - confirmed live: `systemctl restart xrdp-sesman`
+        # alone fixed it with no other change.
+        #
+        # But xrdp-sesman is ONE process for the whole host, shared by every
+        # pooled account's session - not restarting unconditionally, because
+        # a deploy can happen while other people are mid-session on this same
+        # host (the whole point of the account pool). Only restart when no
+        # other xrdp session is currently active, so an unrelated deploy
+        # never risks disrupting someone else's connection; if sessions are
+        # active, this just gets picked up on the next deploy where the host
+        # is idle instead.
+        - name: Check for active xrdp sessions before restarting sesman
+          ansible.builtin.shell: who | grep -c 'xrdp' || true
+          register: active_xrdp_sessions
+          changed_when: false
+
+        - name: Reload xrdp-sesman to apply KillDisconnected (only if host is idle)
           ansible.builtin.command: systemctl restart xrdp-sesman
-          when: sesman_kill_disconnected.changed
+          when: (active_xrdp_sessions.stdout | trim | int) == 0
+
+        - name: Warn that KillDisconnected won't be active until the next idle deploy
+          ansible.builtin.debug:
+            msg: >-
+              Skipped restarting xrdp-sesman because {{ active_xrdp_sessions.stdout | trim }}
+              xrdp session(s) are currently active on this host - the KillDisconnected
+              config change above is saved but won't take effect until sesman is
+              restarted (next deploy while the host is idle, or a manual
+              `systemctl restart xrdp-sesman`).
+          when: (active_xrdp_sessions.stdout | trim | int) > 0
 
         # Nothing deprovisions an account today when it's deleted/regenerated in
         # JumpServer (soft-delete, "regenerate accounts", accounts_create_amount
