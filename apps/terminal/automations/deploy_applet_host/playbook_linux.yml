@@ -343,6 +343,25 @@
         - name: Enable and (re)start xrdp
           ansible.builtin.command: systemctl enable --now xrdp
 
+        # A deploy on this host must always converge to a clean state -
+        # sessions belong to random throwaway pool accounts (frete_/js_/jms_),
+        # there's no "important" state worth preserving mid-deploy. Force-kill
+        # every process owned by every pooled account BEFORE touching sesman
+        # config/orphan cleanup below, so those steps never have to tiptoe
+        # around an account that's "currently in use" - after this, nothing is.
+        - name: Find pooled applet accounts currently on the box
+          ansible.builtin.shell: "getent passwd | cut -d: -f1 | grep -E '^(frete_|js_|jms_)' || true"
+          register: pooled_accounts_precheck
+          changed_when: false
+
+        - name: Kill every process owned by pooled applet accounts (deploy always forces sessions closed)
+          ansible.builtin.command: pkill -9 -u "{{ item }}"
+          loop: "{{ pooled_accounts_precheck.stdout_lines }}"
+          register: pkill_result
+          # rc=1 just means "no matching processes" (account was idle) - not an error.
+          failed_when: pkill_result.rc not in [0, 1]
+          changed_when: pkill_result.rc == 0
+
         # xrdp's default behavior on client disconnect (network drop, closing the
         # browser tab, guacd connection dropping) is to leave the session running
         # and reconnect to it later - fine for a normal desktop, wrong here: these
@@ -361,41 +380,31 @@
             value: "true"
             mode: "0644"
 
+        # KillDisconnected on its own does nothing - confirmed live (guacd logs
+        # showed "Internal RDP client disconnected" firing correctly on tab
+        # close, yet xrdp-sesman never killed the session, just kept
+        # reconnecting to it minutes/tens of minutes later) and in xrdp's own
+        # docs: DisconnectedTimeLimit=0 doesn't mean "kill immediately", it
+        # means "automatic killing is disabled" - the session sits
+        # disconnected forever with no timer armed. Needs a real positive
+        # value for KillDisconnected to ever actually fire.
+        - name: Set a real (non-zero) disconnected-session timeout so KillDisconnected actually fires
+          ansible.builtin.ini_file:
+            path: /etc/xrdp/sesman.ini
+            section: Sessions
+            option: DisconnectedTimeLimit
+            value: "5"
+            mode: "0644"
+
         # Not `when: <ini_file task>.changed` - a sesman process already
-        # running (from an earlier deploy, or a reboot/crash-recovery cycle)
-        # keeps whatever config it loaded at ITS OWN startup, regardless of
-        # what the file says now. If the file already had the right value
-        # (changed: false) that process never gets told, and keeps
-        # reconnecting disconnected sessions (reconnectwm.sh) instead of
-        # killing them - confirmed live: `systemctl restart xrdp-sesman`
-        # alone fixed it with no other change.
-        #
-        # But xrdp-sesman is ONE process for the whole host, shared by every
-        # pooled account's session - not restarting unconditionally, because
-        # a deploy can happen while other people are mid-session on this same
-        # host (the whole point of the account pool). Only restart when no
-        # other xrdp session is currently active, so an unrelated deploy
-        # never risks disrupting someone else's connection; if sessions are
-        # active, this just gets picked up on the next deploy where the host
-        # is idle instead.
-        - name: Check for active xrdp sessions before restarting sesman
-          ansible.builtin.shell: who | grep -c 'xrdp' || true
-          register: active_xrdp_sessions
-          changed_when: false
-
-        - name: Reload xrdp-sesman to apply KillDisconnected (only if host is idle)
+        # running keeps whatever config it loaded at ITS OWN startup,
+        # regardless of what the file says now (confirmed live:
+        # `systemctl restart xrdp-sesman` alone fixed a stuck reconnect
+        # behavior with no other change). Safe to restart unconditionally
+        # here - every pooled-account process was just force-killed above,
+        # so there's no live session on this host left to disrupt.
+        - name: Restart xrdp-sesman to apply KillDisconnected (host was just forced clean above)
           ansible.builtin.command: systemctl restart xrdp-sesman
-          when: (active_xrdp_sessions.stdout | trim | int) == 0
-
-        - name: Warn that KillDisconnected won't be active until the next idle deploy
-          ansible.builtin.debug:
-            msg: >-
-              Skipped restarting xrdp-sesman because {{ active_xrdp_sessions.stdout | trim }}
-              xrdp session(s) are currently active on this host - the KillDisconnected
-              config change above is saved but won't take effect until sesman is
-              restarted (next deploy while the host is idle, or a manual
-              `systemctl restart xrdp-sesman`).
-          when: (active_xrdp_sessions.stdout | trim | int) > 0
 
         # Nothing deprovisions an account today when it's deleted/regenerated in
         # JumpServer (soft-delete, "regenerate accounts", accounts_create_amount
@@ -420,8 +429,12 @@
             state: absent
             remove: true
           loop: "{{ orphaned_applet_accounts }}"
-          # Best-effort: an orphan mid-RDP-session shouldn't fail the whole
-          # deploy - it just gets swept on the next one instead.
+          # Every pooled account's processes were force-killed earlier in this
+          # play, so this should never actually hit a "still in use" error
+          # anymore - ignore_errors stays only as a safety net against a brand
+          # new connection landing in the tiny window between that kill step
+          # and this one; if it ever does trigger, it just gets swept on the
+          # next deploy instead of failing the whole run.
           ignore_errors: true
 
       rescue:
