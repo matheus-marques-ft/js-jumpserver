@@ -18,6 +18,8 @@ import os
 import subprocess
 import sys
 import tempfile
+import threading
+import time
 import traceback
 import urllib.request
 import urllib.error
@@ -53,6 +55,29 @@ def fatal(msg):
         msg_path = f.name
     subprocess.run(["xterm", "-e", "sh", "-c", f"cat {msg_path}; read -p 'press enter to close'"])
     sys.exit(1)
+
+
+def maximize_active_window_async():
+    """Kiosk mode runs with no window manager at all (see startwm.sh's
+    "Make every xrdp session run the shim instead of a desktop" task in
+    playbook_linux.yml) - a freshly launched app just opens at whatever size it
+    picks by default instead of filling the display. There's nothing WM-specific
+    to hook into, so poll for the app's window with xdotool and force it to
+    cover the whole screen once it appears. Runs in a background thread since
+    the app itself is launched as a blocking subprocess.run() call."""
+
+    def _run():
+        deadline = time.monotonic() + 20
+        while time.monotonic() < deadline:
+            result = subprocess.run(
+                ["xdotool", "getactivewindow", "windowsize", "100%", "100%", "windowmove", "0", "0"],
+                capture_output=True,
+            )
+            if result.returncode == 0:
+                return
+            time.sleep(0.5)
+
+    threading.Thread(target=_run, daemon=True).start()
 
 
 def read_tail(path, n=40):
@@ -128,6 +153,7 @@ def main():
     # exits right after, ending the xrdp session) while letting a non-zero exit
     # surface through the same fatal()/xterm path load_pending_token() already uses.
     log_path = f"/tmp/jumpserver-applet-{getpass.getuser()}.log"
+    maximize_active_window_async()
     with open(log_path, "wb") as log_file:
         result = subprocess.run(
             [sys.executable, main_py, payload_b64],

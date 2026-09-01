@@ -272,6 +272,8 @@ class Applet(JMSBaseModel):
         return account
 
     accounts_using_key_tmpl = 'applet_host_accounts_{}_{}_{}'
+    # {user.id}_{asset.id}_{lock_key} -> lock_key (see select_host_account)
+    account_lock_idx_key_tmpl = 'applet_lock_idx_{}_{}_{}'
 
     def select_a_public_account(self, user, host, valid_accounts):
         using_keys = cache.keys(self.accounts_using_key_tmpl.format(host.id, '*', '*')) or []
@@ -374,6 +376,17 @@ class Applet(JMSBaseModel):
         ttl = 60 * 60 * 24
         lock_key = self.accounts_using_key_tmpl.format(host.id, account.username, self.name)
         cache.set(lock_key, account.username, ttl)
+
+        # Reverse index: a finishing Session only knows user_id/asset_id (see
+        # terminal/signal_handlers/session.py), not this lock_key, so it can't
+        # cache.delete(lock_key) directly. Suffixed with the lock_key itself
+        # so two concurrent applet sessions for the same user+asset get their
+        # own index entry instead of the second overwriting the first's.
+        # Without this, the account only frees up after the 24h ttl above,
+        # regardless of the session actually ending sooner (timeout or the
+        # user closing the tab).
+        idx_key = self.account_lock_idx_key_tmpl.format(user.id, asset.id, lock_key)
+        cache.set(idx_key, lock_key, ttl)
 
         res = {
             'host': host,

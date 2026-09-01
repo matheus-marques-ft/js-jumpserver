@@ -78,6 +78,17 @@
               - python3
               - python3-venv
               - python3-pip
+              # Not pip-installable (it's a Tcl/Tk binding compiled against the
+              # system interpreter) - some applets (e.g. a TOTP/code entry dialog)
+              # import tkinter directly. python3 -m venv inherits stdlib extension
+              # modules from the system interpreter, so installing this OS package
+              # is enough to make it available inside applet-env too.
+              - python3-tk
+              # Kiosk mode runs with no window manager at all (see startwm.sh
+              # below), so a freshly launched app just opens at whatever size it
+              # picks by default instead of filling the display - applet_shim.py
+              # uses this to force it fullscreen after launch.
+              - xdotool
               - google-chrome-stable
             state: present
             update_cache: true
@@ -111,6 +122,11 @@
               - xterm
               - python3
               - python3-pip
+              # See the Debian task's python3-tk comment - same reason, different
+              # package name on the RHEL/Fedora family (incl. Amazon Linux 2023).
+              - python3-tkinter
+              # See the Debian task's xdotool comment - same reason.
+              - xdotool
               - google-chrome-stable
             state: present
 
@@ -192,10 +208,17 @@
           when: not service_account_file.stat.exists
 
         - name: Save service account credentials
+          # 0644, not 0600: applet_shim.py needs to read this too, and it runs as
+          # whichever pooled account (frete_xxxx) is logged into the xrdp session,
+          # not root - a 0600 file only the heartbeat daemon (root, via systemd)
+          # could read caused a silent PermissionError in the shim for every
+          # session, past the point where a token was actually staged. This host
+          # is single-purpose (only ephemeral applet-launching accounts live here),
+          # same trust boundary already accepted for /opt/jumpserver/staging (1777).
           ansible.builtin.copy:
             content: "{{ registration.json.service_account.access_key.id }}:{{ registration.json.service_account.access_key.secret }}"
             dest: /opt/jumpserver/.service_account
-            mode: "0600"
+            mode: "0644"
           when: not service_account_file.stat.exists
 
         - name: Save core host address
@@ -319,6 +342,29 @@
         # this same play under the same stack, so use it instead.
         - name: Enable and (re)start xrdp
           ansible.builtin.command: systemctl enable --now xrdp
+
+        # xrdp's default behavior on client disconnect (network drop, closing the
+        # browser tab, guacd connection dropping) is to leave the session running
+        # and reconnect to it later - fine for a normal desktop, wrong here: these
+        # are throwaway accounts from a shared pool (host.py's random_username()),
+        # so a lingering session (a) never releases the account/resources and
+        # (b) could hand the NEXT person to get this same account a reconnect
+        # into the PREVIOUS person's still-logged-in browser session. Confirmed
+        # via testing: without this, disconnecting just leaves the session as a
+        # zombie that reconnectwm.sh reattaches to on the next login, silently
+        # skipping applet_shim.py entirely.
+        - name: Kill sessions immediately on client disconnect (pooled accounts must not linger/reconnect)
+          ansible.builtin.ini_file:
+            path: /etc/xrdp/sesman.ini
+            section: Sessions
+            option: KillDisconnected
+            value: "true"
+            mode: "0644"
+          register: sesman_kill_disconnected
+
+        - name: Reload xrdp-sesman to apply KillDisconnected
+          ansible.builtin.command: systemctl restart xrdp-sesman
+          when: sesman_kill_disconnected.changed
 
         # Nothing deprovisions an account today when it's deleted/regenerated in
         # JumpServer (soft-delete, "regenerate accounts", accounts_create_amount
