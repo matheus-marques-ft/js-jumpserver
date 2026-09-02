@@ -272,8 +272,15 @@ class Applet(JMSBaseModel):
         return account
 
     accounts_using_key_tmpl = 'applet_host_accounts_{}_{}_{}'
-    # {user.id}_{asset.id}_{lock_key} -> lock_key (see select_host_account)
+    # {user.id}_{asset.id}_{lock_key} -> {lock_key, host_id, account_id} (see
+    # select_host_account) - a *pending* claim, consumed by exactly one
+    # Session at creation time (terminal/signal_handlers/session.py), since
+    # two concurrent sessions for the same user+asset would otherwise both
+    # match the same (user_id, asset_id) pair with no way to tell them apart.
     account_lock_idx_key_tmpl = 'applet_lock_idx_{}_{}_{}'
+    # {session.id} -> {lock_key, host_id, account_id}, once a Session has
+    # claimed one of the entries above - see claim_applet_account_lock.
+    session_claim_key_tmpl = 'applet_session_claim_{}'
 
     def select_a_public_account(self, user, host, valid_accounts):
         using_keys = cache.keys(self.accounts_using_key_tmpl.format(host.id, '*', '*')) or []

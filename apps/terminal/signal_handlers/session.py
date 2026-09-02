@@ -43,6 +43,13 @@ def on_session_pre_save(sender, instance, **kwargs):
 
 
 @receiver(post_save, sender=Session)
+def on_session_created(sender, instance: Session, created, **kwargs):
+    if not created:
+        return
+    claim_applet_account_lock(instance)
+
+
+@receiver(post_save, sender=Session)
 def on_session_finished(sender, instance: Session, created, **kwargs):
     if not instance.is_finished:
         return
@@ -50,13 +57,10 @@ def on_session_finished(sender, instance: Session, created, **kwargs):
     Session.unlock_session(instance.id)
     # instance.account_id/asset_id are the RemoteApp's own virtual account/asset
     # (e.g. "SemUser"/"Google") - NOT the real pooled OS account or AppletHost VM,
-    # which only released_host_accounts below actually knows about. Passing the
-    # instance ids straight to the kill task was a real bug: AppletHost lookup by
-    # that asset_id always missed, so the task returned instantly without ever
-    # attempting to kill anything (confirmed live - task "succeeded" in ~26ms with
-    # the process still running on the host after).
-    released_host_accounts = release_applet_account_locks(instance)
-    for host_id, account_id in released_host_accounts:
+    # which only released_host_account below actually knows about.
+    released = release_applet_account_lock(instance)
+    if released:
+        host_id, account_id = released
         # Don't rely on xrdp/xorgxrdp's own disconnect-timeout to free the OS
         # session - live testing showed xrdp-sesman can keep believing a
         # session is still alive (and reconnect new logins into it, black
@@ -67,31 +71,43 @@ def on_session_finished(sender, instance: Session, created, **kwargs):
         kill_applet_host_session_processes.delay(account_id, host_id)
 
 
-def release_applet_account_locks(session):
+def claim_applet_account_lock(session):
     """
-    Releases the pooled-account lock/cache entries for a finished applet
-    session. Returns a list of (host_id, account_id) pairs actually released
-    (empty if this session wasn't an applet session) - callers use this both
-    to know whether there's applet-host-specific cleanup to do, and to get
-    back to the real pooled OS account/AppletHost, which session.account_id/
-    asset_id don't point at (see on_session_finished).
+    Claims exactly one pending applet-account lock for this brand-new
+    session, if one is pending for (user_id, asset_id) - i.e. this is a
+    RemoteApp session and Applet.select_host_account() locked a pooled
+    account for it moments ago, in the same connect request that led here
+    (see applet.py). The claim is stored keyed by this session's own id, so
+    release_applet_account_lock() can look it up directly and exactly later
+    instead of a (user_id, asset_id) search - which can't tell two
+    concurrent sessions to the same asset apart (confirmed live: closing one
+    of two concurrent sessions to the same asset was releasing, and killing
+    the OS processes of, both).
     """
-    # Applet.select_host_account() locks a pooled host account for 24h
-    # (ttl-only, see accounts_using_key_tmpl) so it isn't handed out to
-    # another connection concurrently. Fires here too instead of only
-    # relying on that ttl, so the account frees up as soon as the session
-    # actually ends - on timeout (SECURITY_MAX_IDLE_TIME/session cleanup) or
-    # the user closing the tab - instead of staying locked for up to 24h
-    # after a session that may have lasted seconds.
     if not session.user_id or not session.asset_id:
-        return []
+        return
     idx_pattern = Applet.account_lock_idx_key_tmpl.format(session.user_id, session.asset_id, '*')
     idx_keys = cache.keys(idx_pattern) or []
-    if not idx_keys:
-        return []
-    entries = [v for v in cache.get_many(idx_keys).values() if v]
-    lock_keys = [entry['lock_key'] for entry in entries]
-    if lock_keys:
-        cache.delete_many(lock_keys)
-    cache.delete_many(idx_keys)
-    return [(entry['host_id'], entry['account_id']) for entry in entries]
+    for idx_key in idx_keys:
+        entry = cache.get(idx_key)
+        # cache.delete() reports whether it actually removed something -
+        # Redis DEL is atomic, so exactly one concurrent claimer can ever see
+        # True for a given idx_key, even if two sessions are created at once.
+        if entry and cache.delete(idx_key):
+            cache.set(Applet.session_claim_key_tmpl.format(session.id), entry, 60 * 60 * 24)
+            return
+
+
+def release_applet_account_lock(session):
+    """
+    Releases the pooled-account lock claimed by claim_applet_account_lock()
+    for this exact session, if any. Returns (host_id, account_id) if this
+    was an applet session, None otherwise.
+    """
+    claim_key = Applet.session_claim_key_tmpl.format(session.id)
+    entry = cache.get(claim_key)
+    if not entry:
+        return None
+    cache.delete(entry['lock_key'])
+    cache.delete(claim_key)
+    return entry['host_id'], entry['account_id']
