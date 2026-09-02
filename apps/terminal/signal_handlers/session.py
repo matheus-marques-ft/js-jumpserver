@@ -48,8 +48,15 @@ def on_session_finished(sender, instance: Session, created, **kwargs):
         return
     # Clean up cached data that may exist because the task didn't run
     Session.unlock_session(instance.id)
-    was_applet_session = release_applet_account_locks(instance)
-    if was_applet_session:
+    # instance.account_id/asset_id are the RemoteApp's own virtual account/asset
+    # (e.g. "SemUser"/"Google") - NOT the real pooled OS account or AppletHost VM,
+    # which only released_host_accounts below actually knows about. Passing the
+    # instance ids straight to the kill task was a real bug: AppletHost lookup by
+    # that asset_id always missed, so the task returned instantly without ever
+    # attempting to kill anything (confirmed live - task "succeeded" in ~26ms with
+    # the process still running on the host after).
+    released_host_accounts = release_applet_account_locks(instance)
+    for host_id, account_id in released_host_accounts:
         # Don't rely on xrdp/xorgxrdp's own disconnect-timeout to free the OS
         # session - live testing showed xrdp-sesman can keep believing a
         # session is still alive (and reconnect new logins into it, black
@@ -57,15 +64,17 @@ def on_session_finished(sender, instance: Session, created, **kwargs):
         # process already exited on its own. Force it closed right now
         # instead, so the account is guaranteed clean before anyone connects
         # to it again.
-        kill_applet_host_session_processes.delay(instance.account_id, instance.asset_id)
+        kill_applet_host_session_processes.delay(account_id, host_id)
 
 
 def release_applet_account_locks(session):
     """
     Releases the pooled-account lock/cache entries for a finished applet
-    session. Returns True if this session actually was one (i.e. there was a
-    lock to release), False otherwise - callers use this to know whether any
-    other applet-host-specific cleanup is worth doing for this session.
+    session. Returns a list of (host_id, account_id) pairs actually released
+    (empty if this session wasn't an applet session) - callers use this both
+    to know whether there's applet-host-specific cleanup to do, and to get
+    back to the real pooled OS account/AppletHost, which session.account_id/
+    asset_id don't point at (see on_session_finished).
     """
     # Applet.select_host_account() locks a pooled host account for 24h
     # (ttl-only, see accounts_using_key_tmpl) so it isn't handed out to
@@ -75,13 +84,14 @@ def release_applet_account_locks(session):
     # the user closing the tab - instead of staying locked for up to 24h
     # after a session that may have lasted seconds.
     if not session.user_id or not session.asset_id:
-        return False
+        return []
     idx_pattern = Applet.account_lock_idx_key_tmpl.format(session.user_id, session.asset_id, '*')
     idx_keys = cache.keys(idx_pattern) or []
     if not idx_keys:
-        return False
-    lock_keys = [key for key in cache.get_many(idx_keys).values() if key]
+        return []
+    entries = [v for v in cache.get_many(idx_keys).values() if v]
+    lock_keys = [entry['lock_key'] for entry in entries]
     if lock_keys:
         cache.delete_many(lock_keys)
     cache.delete_many(idx_keys)
-    return True
+    return [(entry['host_id'], entry['account_id']) for entry in entries]

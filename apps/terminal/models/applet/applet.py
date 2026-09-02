@@ -386,7 +386,13 @@ class Applet(JMSBaseModel):
         # regardless of the session actually ending sooner (timeout or the
         # user closing the tab).
         idx_key = self.account_lock_idx_key_tmpl.format(user.id, asset.id, lock_key)
-        cache.set(idx_key, lock_key, ttl)
+        # Also carry host_id/account_id here, not just lock_key: session.asset_id/
+        # account_id (the finishing Session in terminal/signal_handlers/session.py)
+        # point at the RemoteApp's own virtual asset/account (e.g. "Google" /
+        # "SemUser"), never at the real pooled OS account or the AppletHost VM -
+        # those only exist inside this lock_key otherwise, with no clean way to
+        # get back to the actual objects from the Session alone.
+        cache.set(idx_key, {'lock_key': lock_key, 'host_id': str(host.id), 'account_id': str(account.id)}, ttl)
 
         res = {
             'host': host,
