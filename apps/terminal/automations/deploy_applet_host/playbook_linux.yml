@@ -362,6 +362,33 @@
           failed_when: pkill_result.rc not in [0, 1]
           changed_when: pkill_result.rc == 0
 
+        # SIGKILL gives Xorg no chance to run its own exit cleanup, so its
+        # /tmp/.X11-unix/X<N> socket (and matching /tmp/.X<N>-lock) survive the
+        # kill above - confirmed live: sesman kept reporting "Found X server
+        # running at X10/X11/X12/X13" for displays whose owning account had
+        # already been force-killed deploys ago. sesman only checks for the
+        # socket file's existence, not whether anything is actually listening
+        # on it, so a stale one makes it treat a dead display as reusable.
+        # Safe to wipe unconditionally here: every pooled-account process was
+        # just killed above, so nothing legitimate can still be attached to a
+        # display >= X11DisplayOffset (10, see [Sessions] below).
+        - name: Remove stale X11 sockets left behind by the SIGKILL above
+          ansible.builtin.shell: |
+            for f in /tmp/.X11-unix/X*; do
+              [ -e "$f" ] || continue
+              n=${f##*/X}
+              case "$n" in ''|*[!0-9]*) continue ;; esac
+              [ "$n" -ge 10 ] && rm -f "$f"
+            done
+            for f in /tmp/.X*-lock; do
+              [ -e "$f" ] || continue
+              n=${f#/tmp/.X}
+              n=${n%-lock}
+              case "$n" in ''|*[!0-9]*) continue ;; esac
+              [ "$n" -ge 10 ] && rm -f "$f"
+            done
+          changed_when: false
+
         # xrdp's default behavior on client disconnect (network drop, closing the
         # browser tab, guacd connection dropping) is to leave the session running
         # and reconnect to it later - fine for a normal desktop, wrong here: these

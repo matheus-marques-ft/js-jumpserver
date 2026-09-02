@@ -64,13 +64,22 @@ def maximize_active_window_async():
     picks by default instead of filling the display. There's nothing WM-specific
     to hook into, so poll for the app's window with xdotool and force it to
     cover the whole screen once it appears. Runs in a background thread since
-    the app itself is launched as a blocking subprocess.run() call."""
+    the app itself is launched as a blocking subprocess.run() call.
+
+    Deliberately `search`, not `getactivewindow`: "active window" is an EWMH
+    concept (_NET_ACTIVE_WINDOW) that only exists because a window manager
+    maintains it - with none running here, getactivewindow never finds
+    anything and this silently never resized anything. `search` walks the X11
+    window tree directly (XQueryTree), so it works with no WM at all. The
+    session's own display only ever has this one app on it, so a bare ".*"
+    (any window with a non-empty title) is enough to find it."""
 
     def _run():
         deadline = time.monotonic() + 20
         while time.monotonic() < deadline:
             result = subprocess.run(
-                ["xdotool", "getactivewindow", "windowsize", "100%", "100%", "windowmove", "0", "0"],
+                ["xdotool", "search", "--onlyvisible", "--limit", "1", ".*",
+                 "windowsize", "100%", "100%", "windowmove", "0", "0"],
                 capture_output=True,
             )
             if result.returncode == 0:
