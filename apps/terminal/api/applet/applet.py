@@ -15,6 +15,7 @@ from rest_framework.decorators import action
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
+from rest_framework.views import APIView
 
 from common.api import JMSBulkModelViewSet
 from common.drf.filters import BaseFilterSet
@@ -22,10 +23,10 @@ from common.serializers import FileSerializer
 from common.utils import is_uuid
 from common.utils.http import is_true
 from terminal import serializers
-from terminal.models import AppletPublication, Applet
+from terminal.models import AppletPublication, Applet, AppletCookieStore
 from common.utils.zip import safe_extract_zip
 
-__all__ = ['AppletViewSet', 'AppletPublicationViewSet']
+__all__ = ['AppletViewSet', 'AppletPublicationViewSet', 'AppletCookieStoreAPI']
 
 
 class DownloadUploadMixin:
@@ -145,6 +146,48 @@ class AppletViewSet(DownloadUploadMixin, JMSBulkModelViewSet):
         if os.path.exists(path):
             shutil.rmtree(path)
         instance.delete()
+
+
+class AppletCookieStoreAPI(APIView):
+    """
+    Tiny key-value API backing chrome_frete_v8's cookie_relay.py: N sessions
+    (concurrent or sequential, from any pooled Linux account) converging on
+    one shared cookie jar for the same target-site asset, stored in Postgres
+    instead of a per-VM /tmp file (see AppletCookieStore's docstring for
+    why). Only ever called by an AppletHost's own service account (the same
+    HTTP-Signature auth applet_shim.py already uses), keyed by asset_key in
+    the query string rather than the URL path - asset_key can be a raw
+    website address (e.g. https://www.google.com), which would otherwise
+    have to be escaped to survive as a path segment.
+    """
+    rbac_perms = {
+        'GET': 'terminal.view_appletcookiestore',
+        'PUT': 'terminal.change_appletcookiestore',
+    }
+
+    @staticmethod
+    def _get_asset_key(request):
+        asset_key = request.query_params.get('asset_key')
+        if not asset_key:
+            raise ValidationError({'error': 'asset_key is required'})
+        return asset_key
+
+    def get(self, request, *args, **kwargs):
+        asset_key = self._get_asset_key(request)
+        instance = AppletCookieStore.objects.filter(asset_key=asset_key).first()
+        if not instance:
+            return Response(status=404)
+        return Response({'cookies': instance.cookies, 'date_updated': instance.date_updated})
+
+    def put(self, request, *args, **kwargs):
+        asset_key = self._get_asset_key(request)
+        cookies = request.data.get('cookies')
+        if cookies is None:
+            raise ValidationError({'error': 'cookies is required'})
+        AppletCookieStore.objects.update_or_create(
+            asset_key=asset_key, defaults={'cookies': cookies}
+        )
+        return Response({'ok': True})
 
 
 class AppletPublicationFilterSet(BaseFilterSet):

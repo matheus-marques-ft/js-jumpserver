@@ -22,7 +22,7 @@ from terminal.const import PublishStatus
 
 logger = get_logger(__name__)
 
-__all__ = ['Applet', 'AppletPublication']
+__all__ = ['Applet', 'AppletPublication', 'AppletCookieStore']
 
 
 class Applet(JMSBaseModel):
@@ -414,6 +414,30 @@ class Applet(JMSBaseModel):
         if platform and platform.assets.count() == 0:
             platform.delete()
         return super().delete(using, keep_parents)
+
+
+class AppletCookieStore(JMSBaseModel):
+    """
+    Small shared store for a RemoteApp's browser cookie jar, keyed by the
+    target Asset's own id/address (see chrome_frete_v8's cookie_relay.py).
+    Lets N sessions (concurrent or sequential, from the same or different
+    pooled Linux accounts) to the same target-site account converge on one
+    durable cookie state, instead of each starting a fresh browser profile
+    that looks like a brand new device to the target site every time.
+
+    Was previously a JSON file under /tmp on the AppletHost VM - local disk
+    on a single host doesn't survive systemd's default /tmp cleanup, a
+    reboot, or the VM being replaced (all of which have happened to hosts in
+    this project). Postgres does.
+    """
+    asset_key = models.CharField(max_length=255, unique=True, db_index=True, verbose_name=_('Asset key'))
+    cookies = models.JSONField(default=list, verbose_name=_('Cookies'))
+
+    class Meta:
+        verbose_name = _('Applet cookie store')
+
+    def __str__(self):
+        return self.asset_key
 
 
 class AppletPublication(JMSBaseModel):

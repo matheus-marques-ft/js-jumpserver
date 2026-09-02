@@ -228,12 +228,31 @@ def kill_applet_host_session_processes(account_id, asset_id):
             hostname=ip, port=port, username=account.username,
             timeout=10, banner_timeout=10, auth_timeout=10, **connect_kwargs,
         )
-        # Clean the account's own X11 socket first (it can only remove ones
-        # it owns, no root needed) - order matters: the pkill below kills
-        # this very shell too (it owns its own SSH session), so it has to run
-        # last or the socket cleanup below it would never get a chance to run.
+        # Clean the account's own X11 socket AND lock file first (it can only
+        # remove ones it owns, no root needed) - SIGKILL doesn't let Xorg run
+        # its own cleanup, so both /tmp/.X11-unix/X<N> and /tmp/.X<N>-lock
+        # survive it and pile up forever otherwise (confirmed live: 22 stale
+        # lock files with zero live Xorg processes, xrdp-sesman scanning all
+        # of them on every new connection and eventually failing to start a
+        # session at all).
+        #
+        # Also remove this account's own leftover Chrome profile dirs
+        # (/tmp/jms_chrome_<username>_...) - chrome_frete_v8's own close()
+        # (which would normally persist+delete them) never actually gets a
+        # chance to run under SIGKILL, and it turned out close() wasn't even
+        # being called on any exit path in that applet's current code either
+        # way. Confirmed live: 27 of these piled up to 1.9G, filling /tmp
+        # (tmpfs) completely and taking Xorg down with it ("Could not write
+        # pid to lock file" - no space left). Until chrome_frete_v8's own
+        # lifecycle is fixed, this is the only thing actually cleaning these
+        # up.
+        #
+        # Order matters: the pkill below kills this very shell too (it owns
+        # its own SSH session), so it has to run last or the cleanup above it
+        # would never get a chance to run.
         client.exec_command(
-            'for f in /tmp/.X11-unix/X*; do [ -O "$f" ] && rm -f "$f"; done; '
+            'for f in /tmp/.X11-unix/X* /tmp/.X*-lock; do [ -O "$f" ] && rm -f "$f"; done; '
+            'rm -rf /tmp/jms_chrome_"$(whoami)"_*; '
             'pkill -9 -u "$(whoami)"'
         )
         # Best-effort, fire-and-forget: give the remote command a moment to

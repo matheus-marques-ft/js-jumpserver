@@ -54,6 +54,7 @@ urlpatterns = [
     path('components/connect-methods/', api.ConnectMethodListApi.as_view(), name='connect-methods'),
     path('loki/logs/', api.LokiLogAPI.as_view(), name='loki-logs'),
     path('encrypted-config/', api.EncryptedTerminalConfig.as_view(), name='encrypted-terminal-config'),
+    path('applet-cookie-store/', api.AppletCookieStoreAPI.as_view(), name='applet-cookie-store'),
 ]
 
 urlpatterns += router.urls
