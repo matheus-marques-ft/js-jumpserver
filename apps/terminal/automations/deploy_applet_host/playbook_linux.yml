@@ -389,6 +389,44 @@
             done
           changed_when: false
 
+        # Live testing showed the actual session process was Xvnc, not Xorg
+        # (`ps -u <pooled account>` listed an `Xvnc` process) - and xrdp's own
+        # docs say KillDisconnected/DisconnectedTimeLimit below "currently only
+        # works with xorgxrdp sessions". Xvnc was silently winning because
+        # xrdp.ini lists [Xvnc] before [Xorg], and with no login chooser in
+        # this kiosk flow (direct creds, no session-type dropdown shown) xrdp
+        # just uses whichever session type comes first - installing the
+        # xorgxrdp package earlier in this play was never enough on its own.
+        - name: Ensure the Xorg (xorgxrdp) session type is defined in xrdp.ini
+          ansible.builtin.blockinfile:
+            path: /etc/xrdp/xrdp.ini
+            marker: "# {mark} ANSIBLE MANAGED - Xorg session type (xorgxrdp)"
+            block: |
+              [Xorg]
+              name=Xorg
+              lib=libxup.so
+              username=ask
+              password=ask
+              ip=127.0.0.1
+              port=-1
+              code=20
+
+        - name: Disable the Xvnc session type so xrdp defaults to Xorg (xorgxrdp) instead
+          ansible.builtin.replace:
+            path: /etc/xrdp/xrdp.ini
+            regexp: '^\[Xvnc\]'
+            replace: '[Xvnc_disabled]'
+
+        # Same "already-running process keeps whatever it loaded at startup"
+        # gotcha as xrdp-sesman further below - xrdp.ini is only read when
+        # xrdp.service starts, so the Xorg-default change above does nothing
+        # to an already-running daemon until it's actually restarted (`enable
+        # --now` above is a no-op if it was already active). Safe
+        # unconditionally here too: every pooled-account process was already
+        # force-killed above, so there's no live session left to disrupt.
+        - name: Restart xrdp to pick up the Xorg-default session type change
+          ansible.builtin.command: systemctl restart xrdp
+
         # xrdp's default behavior on client disconnect (network drop, closing the
         # browser tab, guacd connection dropping) is to leave the session running
         # and reconnect to it later - fine for a normal desktop, wrong here: these
