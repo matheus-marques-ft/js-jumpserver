@@ -41,6 +41,7 @@ app_nodes_data = [
     {'id': 'settings', 'view': 'view_setting'},
     {'id': 'tickets', 'view': 'view_other'},
     {'id': 'labels', 'view': 'view_console'},
+    {'id': 'keyvault', 'name': _('Secrets'), 'view': 'view_console'},
     {'id': 'authentication', 'view': 'view_other'},
     {'id': 'ops', 'view': 'view_workbench'},
 ]

@@ -30,6 +30,7 @@ resource_api = [
     path('notifications/', include('notifications.urls.api_urls', namespace='api-notifications')),
     path('rbac/', include('rbac.urls.api_urls', namespace='api-rbac')),
     path('labels/', include('labels.urls', namespace='api-label')),
+    path('keyvault/', include('keyvault.urls', namespace='api-keyvault')),
     path('reports/', include('reports.urls.api_urls', namespace='api-reports')),
 ]
 

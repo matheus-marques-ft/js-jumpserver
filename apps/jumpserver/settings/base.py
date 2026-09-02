@@ -140,6 +140,7 @@ INSTALLED_APPS = [
     'notifications.apps.NotificationsConfig',
     'rbac.apps.RBACConfig',
     'labels.apps.LabelsConfig',
+    'keyvault.apps.KeyVaultConfig',
     'reports.apps.ReportsConfig',
     'rest_framework',
     'drf_spectacular',
