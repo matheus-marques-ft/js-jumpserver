@@ -392,11 +392,9 @@
         # Live testing showed the actual session process was Xvnc, not Xorg
         # (`ps -u <pooled account>` listed an `Xvnc` process) - and xrdp's own
         # docs say KillDisconnected/DisconnectedTimeLimit below "currently only
-        # works with xorgxrdp sessions". Xvnc was silently winning because
-        # xrdp.ini lists [Xvnc] before [Xorg], and with no login chooser in
-        # this kiosk flow (direct creds, no session-type dropdown shown) xrdp
-        # just uses whichever session type comes first - installing the
-        # xorgxrdp package earlier in this play was never enough on its own.
+        # works with xorgxrdp sessions". Installing the xorgxrdp package
+        # earlier in this play was never enough on its own to make anything
+        # actually use it.
         - name: Ensure the Xorg (xorgxrdp) session type is defined in xrdp.ini
           ansible.builtin.blockinfile:
             path: /etc/xrdp/xrdp.ini
@@ -411,7 +409,24 @@
               port=-1
               code=20
 
-        - name: Disable the Xvnc session type so xrdp defaults to Xorg (xorgxrdp) instead
+        # First attempt at forcing this (disabling [Xvnc] so [Xorg] would be
+        # "the only/first section") was based on a wrong assumption - and
+        # confirmed wrong live, still connecting via Xvnc afterwards. This
+        # login flow supplies a valid username+password directly (no xrdp
+        # login-chooser screen ever shown), and for that specific case xrdp.ini
+        # has a dedicated, deterministic override: [Globals] autorun=<section
+        # name> always uses that named session type for any direct-credential
+        # login, regardless of section order. This is the actual fix; keeping
+        # [Xvnc] disabled below too since nothing here needs it as a fallback.
+        - name: Force every direct-credential login to use the Xorg (xorgxrdp) session type
+          ansible.builtin.ini_file:
+            path: /etc/xrdp/xrdp.ini
+            section: Globals
+            option: autorun
+            value: Xorg
+            mode: "0644"
+
+        - name: Disable the Xvnc session type (not needed as a fallback here)
           ansible.builtin.replace:
             path: /etc/xrdp/xrdp.ini
             regexp: '^\[Xvnc\]'
@@ -453,12 +468,19 @@
         # means "automatic killing is disabled" - the session sits
         # disconnected forever with no timer armed. Needs a real positive
         # value for KillDisconnected to ever actually fire.
-        - name: Set a real (non-zero) disconnected-session timeout so KillDisconnected actually fires
+        #
+        # 60 (not some smaller "snappier" value) because xrdp enforces 60 as
+        # the actual minimum - confirmed live via the per-session Xorg log
+        # (~/.xorgxrdp.<display>.log): with this set to 5, it still printed
+        # "kill disconnected [1] timeout [60]" and genuinely killed the
+        # session 60.0s after disconnect, not 5s. Setting the honest value
+        # here so the config isn't lying about what actually happens.
+        - name: Set the disconnected-session timeout so KillDisconnected actually fires
           ansible.builtin.ini_file:
             path: /etc/xrdp/sesman.ini
             section: Sessions
             option: DisconnectedTimeLimit
-            value: "5"
+            value: "60"
             mode: "0644"
 
         # Not `when: <ini_file task>.changed` - a sesman process already
