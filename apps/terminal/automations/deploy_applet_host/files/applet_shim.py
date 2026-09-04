@@ -72,19 +72,47 @@ def maximize_active_window_async():
     anything and this silently never resized anything. `search` walks the X11
     window tree directly (XQueryTree), so it works with no WM at all. The
     session's own display only ever has this one app on it, so a bare ".*"
-    (any window with a non-empty title) is enough to find it."""
+    (any window with a non-empty title) is enough to find it.
+
+    A single resize at startup isn't enough: the client can change the virtual
+    screen's resolution mid-session (js-lion's ResizeObserver + guacd's
+    resize-method=display-update fire whenever the browser's own display
+    element changes size, not just once), and xorgxrdp applies that as a real
+    RandR resolution change on this session's X screen. With no window
+    manager to notice the screen changed and resize the one window that's on
+    it, the app keeps whatever size it had when it was first fit, no longer
+    matching the display - same symptom as never having fit it at all. So
+    this keeps polling for the rest of the session (thread is daemon=True,
+    dies on its own when the process exits) and re-applies the fullscreen fit
+    whenever the reported geometry differs from what was last applied."""
+
+    def _screen_geometry():
+        result = subprocess.run(["xdotool", "getdisplaygeometry"], capture_output=True, text=True)
+        return result.stdout.strip() if result.returncode == 0 else None
+
+    def _fit_window():
+        return subprocess.run(
+            ["xdotool", "search", "--onlyvisible", "--limit", "1", ".*",
+             "windowsize", "100%", "100%", "windowmove", "0", "0"],
+            capture_output=True,
+        ).returncode == 0
 
     def _run():
         deadline = time.monotonic() + 20
         while time.monotonic() < deadline:
-            result = subprocess.run(
-                ["xdotool", "search", "--onlyvisible", "--limit", "1", ".*",
-                 "windowsize", "100%", "100%", "windowmove", "0", "0"],
-                capture_output=True,
-            )
-            if result.returncode == 0:
-                return
+            if _fit_window():
+                break
             time.sleep(0.5)
+        else:
+            return
+
+        last_geometry = _screen_geometry()
+        while True:
+            time.sleep(1)
+            geometry = _screen_geometry()
+            if geometry and geometry != last_geometry:
+                last_geometry = geometry
+                _fit_window()
 
     threading.Thread(target=_run, daemon=True).start()
 
@@ -149,6 +177,13 @@ def main():
         "asset": detail["asset"],
         "account": detail["account"],
         "platform": detail["platform"],
+        # Part of the official main.py contract (confirmed against JumpServer's
+        # own applet demo project: the base64 payload includes app_name/protocol/
+        # user/asset/account/platform) - chrome doesn't need it (it never calls
+        # asset.get_protocol_port()), so its absence went unnoticed until an
+        # applet that does need it (mongodb_frete_v1, resolving the Mongo port
+        # via asset.get_protocol_port(self.protocol)) was added.
+        "protocol": detail.get("protocol"),
         "connect_options": detail.get("connect_options") or {},
     }
     payload_b64 = base64.b64encode(json.dumps(payload).encode()).decode()

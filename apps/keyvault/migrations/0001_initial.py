@@ -23,7 +23,7 @@ class Migration(migrations.Migration):
                 ('comment', models.TextField(blank=True, default='', verbose_name='Comment')),
                 ('id', models.UUIDField(default=uuid.uuid4, primary_key=True, serialize=False)),
                 ('org_id', models.CharField(blank=True, db_index=True, default='', max_length=36, verbose_name='Organization')),
-                ('source', models.CharField(blank=True, default='', max_length=128, verbose_name='Source')),
+                ('source', models.CharField(max_length=128, verbose_name='Source')),
                 ('name', models.CharField(db_index=True, max_length=128, verbose_name='Name')),
                 ('value', common.db.fields.EncryptTextField(blank=True, null=True, verbose_name='Value')),
                 ('expiration_date', models.DateTimeField(blank=True, null=True, verbose_name='Expiration date')),

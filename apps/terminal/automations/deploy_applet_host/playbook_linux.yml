@@ -23,6 +23,17 @@
   vars:
     APPLET_DOWNLOAD_HOST: https://demo.example.com
     IGNORE_VERIFY_CERTS: true
+    # Pinned to a specific release (checked directly against GitHub's release
+    # API, not guessed) because, unlike Chrome, MongoDB doesn't publish an
+    # apt/yum repo for Compass - only versioned direct-download packages.
+    # x86_64 only: mongodb-js/compass's v1.50.0 release has no arm64/aarch64
+    # Linux asset at all (.deb/.rpm/.tar.gz are all linux-x64/rhel-x64 only) -
+    # unlike Chrome, this applet cannot be published to an ARM AppletHost.
+    MONGODB_COMPASS_VERSION: "1.50.0"
+    MONGODB_COMPASS_DEB_URL: "https://github.com/mongodb-js/compass/releases/download/v{{ MONGODB_COMPASS_VERSION }}/mongodb-compass_{{ MONGODB_COMPASS_VERSION }}_amd64.deb"
+    MONGODB_COMPASS_DEB_SHA256: "959efc6008d8ded66ff1f771961d2e14012dcdc57abbcf897fa8ee8286f3bcb0"
+    MONGODB_COMPASS_RPM_URL: "https://github.com/mongodb-js/compass/releases/download/v{{ MONGODB_COMPASS_VERSION }}/mongodb-compass-{{ MONGODB_COMPASS_VERSION }}.x86_64.rpm"
+    MONGODB_COMPASS_RPM_SHA256: "37720e0b77f219f57790985115edf94a4de009d1f272bb7e22e8fc0a73a18000"
     HOST_NAME: test
     HOST_ID: 00000000-0000-0000-0000-000000000000
     CORE_HOST: https://demo.example.com
@@ -93,6 +104,25 @@
             state: present
             update_cache: true
 
+        # MongoDB has no apt repo for Compass (unlike Chrome above), and
+        # mongodb_frete_v1 (the AppletHost's actual publish target here) needs
+        # the real binary present before any session can launch it - see
+        # MONGODB_COMPASS_* vars for why this is a pinned direct download.
+        # x86_64 only - see the vars block.
+        - name: Download MongoDB Compass (Debian/Ubuntu, x86_64 only)
+          when: ansible_facts['os_family'] == 'Debian' and ansible_facts['architecture'] == 'x86_64'
+          ansible.builtin.get_url:
+            url: "{{ MONGODB_COMPASS_DEB_URL }}"
+            dest: /tmp/mongodb-compass.deb
+            checksum: "sha256:{{ MONGODB_COMPASS_DEB_SHA256 }}"
+            mode: "0644"
+
+        - name: Install MongoDB Compass (Debian/Ubuntu, x86_64 only)
+          when: ansible_facts['os_family'] == 'Debian' and ansible_facts['architecture'] == 'x86_64'
+          ansible.builtin.apt:
+            deb: /tmp/mongodb-compass.deb
+            state: present
+
         # xrdp/xorgxrdp aren't in AL2023's own repos - SPAL carries the AL2023-native
         # rebuild (see file header). spal-release itself is resolvable straight from
         # AL2023's default repos, no repo file needs adding first.
@@ -129,6 +159,22 @@
               - xdotool
               - google-chrome-stable
             state: present
+
+        # See the Debian task's comment above - same reason, x86_64 only.
+        - name: Download MongoDB Compass (RHEL family / Amazon Linux, x86_64 only)
+          when: ansible_facts['os_family'] == 'RedHat' and ansible_facts['architecture'] == 'x86_64'
+          ansible.builtin.get_url:
+            url: "{{ MONGODB_COMPASS_RPM_URL }}"
+            dest: /tmp/mongodb-compass.rpm
+            checksum: "sha256:{{ MONGODB_COMPASS_RPM_SHA256 }}"
+            mode: "0644"
+
+        - name: Install MongoDB Compass (RHEL family / Amazon Linux, x86_64 only)
+          when: ansible_facts['os_family'] == 'RedHat' and ansible_facts['architecture'] == 'x86_64'
+          ansible.builtin.dnf:
+            name: /tmp/mongodb-compass.rpm
+            state: present
+            disable_gpg_check: true
 
         - name: Ensure /opt/jumpserver directories exist
           ansible.builtin.file:

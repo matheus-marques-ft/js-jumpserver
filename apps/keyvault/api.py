@@ -28,6 +28,12 @@ class SecretViewSet(OrgBulkModelViewSet):
                 raise ValidationError({'clone_from': _('Invalid secret')})
             if not self.request.user.has_perm('keyvault.view_secretvalue'):
                 self.permission_denied(self.request)
+        elif not serializer.validated_data.get('value'):
+            # value stays required=False on the serializer (PATCH/PUT must be able to omit it
+            # without wiping the stored secret, see cleanFormValue on the frontend) - enforcing
+            # "required at creation" here instead. Skipped for clone_from since perform_create
+            # fills the real value in below, straight from the DB, never through this payload.
+            raise ValidationError({'value': _('This field is required.')})
 
         instance = serializer.save()
         if source:

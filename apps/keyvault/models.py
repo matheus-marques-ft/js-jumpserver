@@ -9,7 +9,7 @@ __all__ = ['Secret']
 
 
 class Secret(JMSOrgBaseModel):
-    source = models.CharField(max_length=128, default='', blank=True, verbose_name=_('Source'))
+    source = models.CharField(max_length=128, verbose_name=_('Source'))
     name = models.CharField(max_length=128, verbose_name=_('Name'), db_index=True)
     value = fields.EncryptTextField(blank=True, null=True, verbose_name=_('Value'))
     expiration_date = models.DateTimeField(null=True, blank=True, verbose_name=_('Expiration date'))
