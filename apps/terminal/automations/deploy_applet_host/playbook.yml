@@ -79,6 +79,26 @@
               } else {
                   Write-Error "Failed to get access_key or access_secret。"
               }
+
+        # Companheiro do access_key acima, mesma pasta - chrome_frete_win_v8's
+        # cookie_relay.py le os dois pra assinar chamadas pro core (mesmo
+        # esquema HTTP Signature que applet_shim.py ja usa no lado Linux).
+        # Tinker em si nao precisa deste arquivo - e so pro nosso applet.
+        - name: Create Tinker core_host file
+          ansible.windows.win_powershell:
+            script: |
+              $targetPath = "$env:USERPROFILE\AppData\Local\Programs\Tinker\data\keys\core_host"
+              if (Test-Path -Path $targetPath) {
+                Write-Output "core_host already exists at $targetPath"
+                return
+              }
+              $dir = [System.IO.Path]::GetDirectoryName($targetPath)
+              if (-not (Test-Path -Path $dir)) {
+                New-Item -ItemType Directory -Path $dir -Force | Out-Null
+              }
+              $utf8NoBOM = New-Object System.Text.UTF8Encoding($false)
+              [System.IO.File]::WriteAllText($targetPath, "{{ CORE_HOST }}", $utf8NoBOM)
+              Write-Output "core_host saved to $targetPath"
         - name: Install RDS-RD-Server (RDS)
           ansible.windows.win_feature:
             name: RDS-RD-Server
@@ -167,6 +187,29 @@
           community.windows.win_unzip:
             src: "{{ ansible_env.TEMP }}\\jumpserver-tinker-python-{{ PYTHON_VERSION }}-win64.zip"
             dest: "%ProgramFiles%\\JumpServer\\applications"
+
+        # httpsig nao vem no zip Python empacotado (jumpserver-tinker-python-*-win64.zip,
+        # baixado do APPLET_DOWNLOAD_HOST) - so passou a ser necessario com
+        # cookie_relay.py do chrome_frete_win_v8 (relay de cookies/cache de perfil,
+        # assinatura HTTP contra o core, mesma lib que o lado Linux ja usa em
+        # applet_shim.py). Sem essa task, main.py do applet quebra com
+        # "ModuleNotFoundError: No module named 'httpsig'" ao tentar importar
+        # cookie_relay.py.
+        - name: Install httpsig into Tinker's Python (needed by chrome_frete_win_v8's cookie_relay.py)
+          ansible.windows.win_powershell:
+            script: |
+              & "$env:ProgramFiles\JumpServer\applications\Python\python.exe" -m pip install httpsig
+
+        # chrome_frete_win_v9 trocou DrissionPage (CDP) por UI Automation do
+        # Windows + SendInput real, pra nao ser detectado como navegador
+        # automatizado (ver CHANGELOG.txt do v9) - pywinauto e quem fala com
+        # a arvore de UI Automation; puxa pywin32 e comtypes como
+        # dependencia transitiva. psutil e usado pra achar a janela do
+        # Chrome certa pelo cmdline do processo dono (--user-data-dir).
+        - name: Install pywinauto and psutil into Tinker's Python (needed by chrome_frete_win_v9's app.py)
+          ansible.windows.win_powershell:
+            script: |
+              & "$env:ProgramFiles\JumpServer\applications\Python\python.exe" -m pip install pywinauto psutil
 
         - name: Check and Clean global system path (Python)
           ansible.windows.win_path:

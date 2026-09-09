@@ -297,6 +297,17 @@
               - httpsig
               - DrissionPage
               - pyotp
+              # Lets applet_shim.py query a window's override-redirect
+              # attribute (tells a real top-level window apart from a Chrome
+              # menu/dropdown popup) straight over the X11 protocol, instead
+              # of shelling out to xwininfo - which package provides that
+              # binary, and whether it even exists in the repos at all,
+              # varies across the Debian/RHEL/Amazon Linux 2023 hosts this
+              # same playbook targets (confirmed live: xorg-x11-utils isn't
+              # resolvable on at least one tested AL2023 host). A pip package
+              # inside the venv this playbook already fully controls sidesteps
+              # that distro-repo guessing entirely.
+              - python-xlib
             virtualenv: /opt/jumpserver/applet-env
 
         - name: Push the generic applet shim

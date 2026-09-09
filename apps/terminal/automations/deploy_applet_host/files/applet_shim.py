@@ -86,32 +86,141 @@ def maximize_active_window_async():
     dies on its own when the process exits) and re-applies the fullscreen fit
     whenever the reported geometry differs from what was last applied."""
 
+    debug_log_path = f"/tmp/jumpserver-resize-debug-{getpass.getuser()}.log"
+
+    def _debug(msg):
+        try:
+            with open(debug_log_path, "a") as f:
+                f.write(f"{time.time():.3f} {msg}\n")
+        except Exception:
+            pass
+
     def _screen_geometry():
         result = subprocess.run(["xdotool", "getdisplaygeometry"], capture_output=True, text=True)
         return result.stdout.strip() if result.returncode == 0 else None
 
+    _x_display_holder = {}
+
+    def _get_x_display():
+        if "d" not in _x_display_holder:
+            # Local import, deliberately not at module level: python-xlib is
+            # only needed for this one filter (telling a menu/popup apart from
+            # a real window) - a host that hasn't been re-provisioned with the
+            # playbook_linux.yml pip requirement yet shouldn't have THIS
+            # import blow up the whole shim (which also handles the actual
+            # applet launch, entirely unrelated to resize) at module load
+            # time. ImportError here is just one more failure mode the
+            # caller's try/except already treats as "can't tell, don't
+            # exclude" - same fallback used for a raw connection failure.
+            from Xlib import display
+            _x_display_holder["d"] = display.Display()
+        return _x_display_holder["d"]
+
+    def _is_top_level_window(window_id):
+        # Chrome's own menus/dropdowns (e.g. the 3-dot options menu) are
+        # separate X11 windows too, and _found_window_ids() below picks them
+        # up like any other - confirmed live: forcing every found window to
+        # 100%x100% stretched the menu popup itself across the screen while
+        # leaving the actual browser window untouched. override-redirect is
+        # the actual X11 mechanism a popup uses to place itself without going
+        # through window management, so it's the correct signal to tell a
+        # menu apart from a real top-level window (the outer frame and the
+        # separate content surface are both override-redirect=0).
+        #
+        # Queried via python-xlib (raw X11 protocol) rather than shelling out
+        # to xwininfo: confirmed live that xwininfo isn't even installed on
+        # at least one tested AL2023 AppletHost (xorg-x11-utils doesn't
+        # resolve there), so the filter silently never excluded anything.
+        # A pip package inside the venv this playbook already fully controls
+        # sidesteps that distro-repo guessing entirely. If the query itself
+        # fails for any reason, don't exclude the window - this whole thread
+        # has no outer try/except, so letting an exception escape here would
+        # silently kill it and stop ALL future resizing for the rest of the
+        # session, not just skip this one filter check.
+        try:
+            window = _get_x_display().create_resource_object("window", int(window_id))
+            is_override_redirect = bool(window.get_attributes().override_redirect)
+        except Exception as exc:
+            _debug(f"_is_top_level_window window={window_id} Xlib query FAILED: {exc!r}")
+            return True
+        _debug(f"_is_top_level_window window={window_id} override_redirect={is_override_redirect}")
+        return not is_override_redirect
+
+    def _found_window_ids():
+        result = subprocess.run(
+            ["xdotool", "search", "--onlyvisible", ".*"],
+            capture_output=True, text=True,
+        )
+        if result.returncode != 0:
+            return []
+        ids = [line for line in result.stdout.splitlines() if line.strip()]
+        return [window_id for window_id in ids if _is_top_level_window(window_id)]
+
     def _fit_window():
-        return subprocess.run(
-            ["xdotool", "search", "--onlyvisible", "--limit", "1", ".*",
-             "windowsize", "100%", "100%", "windowmove", "0", "0"],
-            capture_output=True,
-        ).returncode == 0
+        # Deliberately every visible TOP-LEVEL window, not just the first
+        # (--limit 1 used to stop here) - the debug log showed a second
+        # window (a GPU/compositor content surface, separate from the outer
+        # browser frame) appearing partway into the session, and only the
+        # first (the frame) was ever getting resized. window.innerWidth
+        # staying frozen while the outer frame's own X11 geometry genuinely
+        # changed (confirmed via a live CDP query) pointed straight at this -
+        # the content surface never got its own resize. _found_window_ids()
+        # already excludes override-redirect windows (menus/dropdowns), so
+        # nothing here needs to special-case those.
+        window_ids = _found_window_ids()
+        ok = True
+        for window_id in window_ids:
+            result = subprocess.run(
+                ["xdotool", "windowsize", window_id, "100%", "100%",
+                 "windowmove", window_id, "0", "0"],
+                capture_output=True, text=True,
+            )
+            ok = ok and result.returncode == 0
+            if result.returncode != 0:
+                _debug(f"_fit_window window={window_id} FAILED rc={result.returncode} stderr={result.stderr.strip()!r}")
+        after = subprocess.run(
+            ["xdotool", "search", "--onlyvisible", ".*", "getwindowgeometry"],
+            capture_output=True, text=True,
+        ).stdout.strip().replace("\n", " | ")
+        _debug(f"_fit_window ok={ok} windows_seen={window_ids} after_geometry={after!r}")
+        return ok and bool(window_ids)
 
     def _run():
+        _debug(f"maximize_active_window_async started, log={debug_log_path}")
         deadline = time.monotonic() + 20
         while time.monotonic() < deadline:
             if _fit_window():
                 break
             time.sleep(0.5)
         else:
+            _debug("gave up waiting for a window within 20s")
             return
 
         last_geometry = _screen_geometry()
+        last_window_ids = set(_found_window_ids())
+        _debug(f"initial fit done, last_geometry={last_geometry!r}, last_window_ids={last_window_ids}")
         while True:
             time.sleep(1)
             geometry = _screen_geometry()
-            if geometry and geometry != last_geometry:
+            window_ids = set(_found_window_ids())
+            geometry_changed = geometry and geometry != last_geometry
+            # Chrome creates its real content surface (a second window,
+            # separate from the outer frame) lazily, sometime after launch -
+            # confirmed live: the very first fit only ever sees the frame
+            # (the content window doesn't exist yet), so it never gets sized
+            # until something ELSE happens to trigger a refit later. Reacting
+            # to the window SET changing (not just the screen size) means we
+            # catch that new window and size it immediately, instead of
+            # leaving it stuck at whatever default Chrome gave it until the
+            # next real screen resize happens to sweep it up as a side effect.
+            windows_changed = window_ids != last_window_ids
+            if geometry_changed or windows_changed:
+                _debug(
+                    f"refitting (geometry_changed={geometry_changed} {last_geometry!r}->{geometry!r}, "
+                    f"windows_changed={windows_changed} {last_window_ids}->{window_ids})"
+                )
                 last_geometry = geometry
+                last_window_ids = window_ids
                 _fit_window()
 
     threading.Thread(target=_run, daemon=True).start()

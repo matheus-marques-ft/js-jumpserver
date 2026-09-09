@@ -923,7 +923,7 @@ msgstr "Data do último uso"
 #: terminal/models/component/endpoint.py:119
 #: terminal/models/session/sharing.py:29 terminal/serializers/terminal.py:44
 msgid "Active"
-msgstr "Ativação em andamento"
+msgstr "Ativo"
 
 #: accounts/models/application.py:28
 msgid "Integration App"
