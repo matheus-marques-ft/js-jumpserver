@@ -100,6 +100,8 @@
               # picks by default instead of filling the display - applet_shim.py
               # uses this to force it fullscreen after launch.
               - xdotool
+              # FUSE for xrdp drive redirection (~/thinclient_drives via xrdp-chansrv).
+              - fuse3
               - google-chrome-stable
             state: present
             update_cache: true
@@ -157,6 +159,8 @@
               - python3-tkinter
               # See the Debian task's xdotool comment - same reason.
               - xdotool
+              # See the Debian task's fuse3 comment - same reason.
+              - fuse3
               - google-chrome-stable
             state: present
 
@@ -388,6 +392,25 @@
             content: |
               #!/bin/sh
               exec /opt/jumpserver/applet-env/bin/python3 /opt/jumpserver/applet_shim.py
+
+        # Permite que o usuario da sessao xrdp monte ~/thinclient_drives (redirecionamento
+        # de drives via FUSE, xrdp-chansrv): sem user_allow_other o FUSE recusa o mount
+        # para usuarios nao-root.
+        - name: Allow non-root FUSE mounts for xrdp drive redirection
+          ansible.builtin.lineinfile:
+            path: /etc/fuse.conf
+            regexp: '^#?\s*user_allow_other'
+            line: user_allow_other
+            create: true
+            mode: "0644"
+
+        # Falha o deploy aqui se nenhum helper de mount FUSE estiver presente, em vez de
+        # o drive sumir silenciosamente numa sessao.
+        - name: Assert FUSE mount helper is available (drive redirection)
+          ansible.builtin.command: sh -c 'command -v fusermount3 || command -v fusermount'
+          register: fuse_helper
+          changed_when: false
+          failed_when: fuse_helper.rc != 0
 
         # ansible.builtin.systemd fails here with "module (ansible.builtin.systemd) is
         # missing interpreter line" under JumpServer's ansible-core fork (v2.16.18.3,
