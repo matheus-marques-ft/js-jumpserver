@@ -264,7 +264,9 @@ class AppletHostDeployment(JMSBaseModel):
             self.host.save()
             terminal.delete()
 
-        cache.set(f'APPLET_HOST_DELOYING', str(self.id), timeout=300)
+        # 1800s (era 300): num host novo o deploy instala xrdp/Chrome/Compass/DBeaver antes do
+        # passo de registro, e passa de 5 min - ai o registro era negado com 401.
+        cache.set(f'APPLET_HOST_DELOYING', str(self.id), timeout=1800)
         from ...automations.deploy_applet_host import DeployAppletHostManager
         manager = DeployAppletHostManager(self, **kwargs)
         manager.run()

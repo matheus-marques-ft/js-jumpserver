@@ -146,7 +146,11 @@ class PlaybookRunner:
         self.copy_playbook()
         self.prepare_safe_inputs()
 
-        verbosity = get_ansible_log_verbosity(verbosity)
+        # concise: log so com sucesso/erro/avisos - ignora DEBUG_ANSIBLE (verbosidade 10)
+        if getattr(self, 'concise', False):
+            verbosity = 0
+        else:
+            verbosity = get_ansible_log_verbosity(verbosity)
         private_env = safe_join(self.project_dir, 'env')
         if os.path.exists(private_env):
             shutil.rmtree(private_env)
@@ -179,12 +183,25 @@ class PlaybookRunner:
 
 
 class SuperPlaybookRunner(PlaybookRunner):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, concise=False, **kwargs):
         super().__init__(*args, **kwargs)
         self.envs = {"ANSIBLE_SUPER_MODE": "1"}
         self.isolate = False
+        self.concise = concise
+        if concise:
+            # Sem cor, sem tasks puladas; ok/changed/failed e avisos continuam.
+            self.envs.update({
+                "ANSIBLE_NOCOLOR": "1",
+                "ANSIBLE_DISPLAY_SKIPPED_HOSTS": "false",
+                "ANSIBLE_DISPLAY_ARGS_TO_STDOUT": "false",
+            })
 
     def run(self, *args, **kwargs):
+        if self.concise:
+            # O deploy nao reporta progresso proprio: o stream do Ansible
+            # (PLAY/TASK/RECAP, em verbosidade 0) e o log do usuario.
+            kwargs['quiet'] = False
+            return super().run(*args, **kwargs)
         # Automation tasks report their own user-oriented progress. Suppress
         # Ansible's raw PLAY/TASK/RECAP stream unless an administrator has
         # explicitly enabled Ansible debugging.

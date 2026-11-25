@@ -40,6 +40,12 @@
     DBEAVER_VERSION: "26.2.5.2"
     DBEAVER_SHA256_AARCH64: "1cd92d8ccb7461fce787d35258bbf24104f5059871bef235c6445a5e3ea843aa"
     DBEAVER_SHA256_X86_64: "315ab02e6e4bb09d6fe43ab156ceb22def1d074d911558795bd2ee8fdc0f4b6b"
+    # Fuso/idioma do host: o navegador herda ambos (Intl timezone, navigator.languages).
+    # UTC + en-US vindos de um IP brasileiro e VM com 1 vCPU/2 GB foram o que o GoDaddy
+    # sinalizava como "browser unusual". Sobrescreviveis via deploy options.
+    # Recomendado: >= 4 vCPU e 8 GB de RAM (navigator.hardwareConcurrency/deviceMemory).
+    HOST_TIMEZONE: "America/Sao_Paulo"
+    HOST_LOCALE: "pt_BR.UTF-8"
     HOST_NAME: test
     HOST_ID: 00000000-0000-0000-0000-000000000000
     CORE_HOST: https://demo.example.com
@@ -108,6 +114,8 @@
               - xdotool
               # FUSE for xrdp drive redirection (~/thinclient_drives via xrdp-chansrv).
               - fuse3
+              # ansible unarchive precisa do unzip para extrair o zip de cada applet
+              - unzip
               - google-chrome-stable
             state: present
             update_cache: true
@@ -167,6 +175,8 @@
               - xdotool
               # See the Debian task's fuse3 comment - same reason.
               - fuse3
+              # ansible unarchive precisa do unzip para extrair o zip de cada applet
+              - unzip
               - google-chrome-stable
             state: present
 
@@ -225,6 +235,70 @@
             path: /opt/dbeaver/.installed-{{ DBEAVER_VERSION }}
             state: touch
             mode: "0644"
+
+        # Fuso, idioma e fontes do host (ver HOST_TIMEZONE/HOST_LOCALE acima).
+        - name: Install locale and font packages (Debian/Ubuntu)
+          when: ansible_facts['os_family'] == 'Debian'
+          ansible.builtin.apt:
+            name:
+              - locales
+              - language-pack-pt-base
+              - fontconfig
+              - fonts-dejavu
+              - fonts-liberation
+              - fonts-noto-core
+              - fonts-noto-color-emoji
+              - fonts-ubuntu
+              - fonts-roboto
+            state: present
+
+        - name: Install locale and font packages (RHEL family / Amazon Linux)
+          when: ansible_facts['os_family'] == 'RedHat'
+          ansible.builtin.dnf:
+            name:
+              - glibc-langpack-pt
+              - fontconfig
+              - dejavu-sans-fonts
+              - liberation-fonts
+              - google-noto-sans-fonts
+              - google-noto-emoji-fonts
+            state: present
+
+        - name: Set the system timezone
+          ansible.builtin.command: timedatectl set-timezone {{ HOST_TIMEZONE }}
+          changed_when: false
+
+        - name: Generate the locale (Debian/Ubuntu)
+          when: ansible_facts['os_family'] == 'Debian'
+          ansible.builtin.command: locale-gen {{ HOST_LOCALE }}
+          changed_when: false
+
+        - name: Set the system locale (Debian/Ubuntu)
+          when: ansible_facts['os_family'] == 'Debian'
+          ansible.builtin.command: update-locale LANG={{ HOST_LOCALE }} LANGUAGE=pt_BR:pt:en_US:en
+          changed_when: false
+
+        - name: Set the system locale (RHEL family / Amazon Linux)
+          when: ansible_facts['os_family'] == 'RedHat'
+          ansible.builtin.command: localectl set-locale LANG={{ HOST_LOCALE }}
+          changed_when: false
+
+        # Sessoes xrdp nao sao de login no AL2023: /etc/environment (lido via PAM) e o que
+        # garante que o Chrome enxergue o idioma.
+        - name: Export LANG/LANGUAGE for xrdp sessions (/etc/environment)
+          ansible.builtin.lineinfile:
+            path: /etc/environment
+            regexp: '^{{ item.key }}='
+            line: '{{ item.key }}={{ item.value }}'
+            create: true
+            mode: "0644"
+          loop:
+            - { key: LANG, value: "{{ HOST_LOCALE }}" }
+            - { key: LANGUAGE, value: "pt_BR:pt:en_US:en" }
+
+        - name: Rebuild the font cache
+          ansible.builtin.command: fc-cache -f
+          changed_when: false
 
         - name: Ensure /opt/jumpserver directories exist
           ansible.builtin.file:

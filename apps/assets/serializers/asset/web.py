@@ -1,17 +1,18 @@
 from assets.models import Web
+from .applet_routing import AppletRoutingMixin
 from .common import AssetSerializer
 
 __all__ = ['WebSerializer']
 
 
-class WebSerializer(AssetSerializer):
+class WebSerializer(AppletRoutingMixin, AssetSerializer):
     class Meta(AssetSerializer.Meta):
         model = Web
         fields = AssetSerializer.Meta.fields + [
             'autofill', 'username_selector',
             'password_selector', 'submit_selector',
             'script'
-        ]
+        ] + AppletRoutingMixin.APPLET_ROUTING_FIELDS
         extra_kwargs = {
             **AssetSerializer.Meta.extra_kwargs,
             'address': {

@@ -201,6 +201,7 @@ class DeployAppletHostManager:
             project_dir=self.run_dir,
             safety_mode="playbook_unsafe",
             inventory_safety="json_escape",
+            concise=True,
         )
         return runner.run(**kwargs)
 

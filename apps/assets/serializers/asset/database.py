@@ -4,12 +4,13 @@ from rest_framework import serializers
 
 from assets.models import Database, Platform
 from assets.serializers.gateway import GatewayWithAccountSecretSerializer
+from .applet_routing import AppletRoutingMixin
 from .common import AssetSerializer
 
 __all__ = ['DatabaseSerializer', 'DatabaseWithGatewaySerializer']
 
 
-class DatabaseSerializer(AssetSerializer):
+class DatabaseSerializer(AppletRoutingMixin, AssetSerializer):
     db_name = serializers.CharField(max_length=1024, label=_('Default database'), required=True)
 
     class Meta(AssetSerializer.Meta):
@@ -18,7 +19,7 @@ class DatabaseSerializer(AssetSerializer):
             'db_name', 'use_ssl', 'ca_cert', 'client_cert',
             'client_key', 'allow_invalid_cert', 'pg_ssl_mode'
         ]
-        fields = AssetSerializer.Meta.fields + extra_fields
+        fields = AssetSerializer.Meta.fields + extra_fields + AppletRoutingMixin.APPLET_ROUTING_FIELDS
         extra_kwargs = {
             'ca_cert': {'help_text': _('CA cert help text')},
             'pg_ssl_mode': {'help_text': _('Postgresql ssl model help text')},

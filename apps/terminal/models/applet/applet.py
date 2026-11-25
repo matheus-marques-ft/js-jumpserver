@@ -210,13 +210,62 @@ class Applet(JMSBaseModel):
             return None
         return hosts
 
-    def select_host(self, user, asset):
+    @staticmethod
+    def _match_requested_host(hosts, requested_host_id):
+        matched = [host for host in hosts if str(host.id) == str(requested_host_id)]
+        if not matched:
+            logger.info("Requested applet host not eligible: {}".format(requested_host_id))
+            return None
+        return matched[0]
+
+    def _prefer_or_load_host(self, user, hosts):
+        prefer_key = self.host_prefer_key_tpl.format(user.id)
+        prefer_host_id = cache.get(prefer_key, None)
+        pref_host = [host for host in hosts if host.id == prefer_host_id]
+
+        if pref_host:
+            host = pref_host[0]
+        else:
+            host = self._select_by_load(hosts)
+            if host is None:
+                return
+            cache.set(prefer_key, str(host.id), timeout=None)
+        return host
+
+    def select_host(self, user, asset, requested_host_id=None):
         hosts = self.filter_available_hosts()
+        if not hosts:
+            # filter_available_hosts() devolve None sem host ativo/publicado; sem
+            # este retorno, os loops abaixo levantavam TypeError (iterar None).
+            return None
+
+        # Import e leitura dentro do try: qualquer falha cai no comportamento legado.
+        try:
+            from .routing import get_asset_routing, filter_hosts_by_routing
+            routing = get_asset_routing(asset)
+        except Exception as e:
+            logger.error("Read applet routing failed, fallback to legacy: {}".format(e))
+            routing = None
+
+        if routing is not None:
+            candidates = filter_hosts_by_routing(routing, list(hosts))
+            candidates = candidates if settings.DEBUG_DEV else [h for h in candidates if h.load != 'offline']
+            if not candidates:
+                logger.info("No eligible online host for applet routing: {}".format(self.name))
+                return None
+            if requested_host_id:
+                return self._match_requested_host(candidates, requested_host_id)
+            if routing.balance is False:
+                return candidates[0]
+            return self._prefer_or_load_host(user, candidates)
+
         only_label_values = asset.get_labels().filter(
             name__in=['AppletHostOnly', '仅发布机']
         ).values_list('value', flat=True)
         if only_label_values:
             host_matched = [host for host in hosts if host.name in only_label_values]
+            if requested_host_id:
+                host_matched = [h for h in host_matched if str(h.id) == str(requested_host_id)]
             if host_matched:
                 return host_matched[0]
             else:
@@ -232,21 +281,12 @@ class Applet(JMSBaseModel):
             name__in=['AppletHost', '发布机']
         ).values_list('value', flat=True)
         host_matched = [host for host in hosts if host.name in spec_label_values]
+        if requested_host_id:
+            return self._match_requested_host(host_matched or hosts, requested_host_id)
         if host_matched:
             return random.choice(host_matched)
 
-        prefer_key = self.host_prefer_key_tpl.format(user.id)
-        prefer_host_id = cache.get(prefer_key, None)
-        pref_host = [host for host in hosts if host.id == prefer_host_id]
-
-        if pref_host:
-            host = pref_host[0]
-        else:
-            host = self._select_by_load(hosts)
-            if host is None:
-                return
-            cache.set(prefer_key, str(host.id), timeout=None)
-        return host
+        return self._prefer_or_load_host(user, hosts)
 
     def get_related_platform(self):
         created_by = 'Applet:{}'.format(self.name)
@@ -363,9 +403,9 @@ class Applet(JMSBaseModel):
                 account = private_account
         return account
 
-    def select_host_account(self, user, asset):
+    def select_host_account(self, user, asset, requested_host_id=None):
         # Select an active applet host
-        host = self.select_host(user, asset)
+        host = self.select_host(user, asset, requested_host_id=requested_host_id)
         if not host:
             return None
         logger.info('Select applet host: {}'.format(host.name))

@@ -1,5 +1,6 @@
 import base64
 import json
+import uuid
 from datetime import timedelta
 
 import paramiko
@@ -260,7 +261,15 @@ class ConnectionToken(JMSOrgBaseModel):
         if not applet:
             return None
 
-        host_account = applet.select_host_account(self.user, self.asset)
+        requested = (self.connect_options or {}).get('applet_host')
+        try:
+            requested_host_id = str(uuid.UUID(str(requested))) if requested else None
+        except (ValueError, TypeError, AttributeError):
+            requested_host_id = None
+
+        host_account = applet.select_host_account(
+            self.user, self.asset, requested_host_id=requested_host_id
+        )
         if not host_account:
             raise JMSException({'error': 'No host account available, please check the applet, host and account'})
 

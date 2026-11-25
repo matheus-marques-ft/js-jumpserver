@@ -1,15 +1,18 @@
 import uuid
 
+from django.conf import settings
 from django.db import transaction
 from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from assets.models import Asset
 from common.api import JMSBulkModelViewSet
-from common.permissions import IsServiceAccount
-from orgs.utils import tmp_to_builtin_org
-from terminal.models import AppletHost, AppletHostDeployment
+from common.permissions import IsServiceAccount, IsValidUser
+from orgs.utils import tmp_to_builtin_org, tmp_to_org, get_current_org_id
+from terminal.models import Applet, AppletHost, AppletHostDeployment
+from terminal.models.applet.routing import get_asset_routing, filter_hosts_by_routing
 from terminal.serializers import (
     AppletHostSerializer, AppletHostDeploymentSerializer,
     AppletHostStartupSerializer, AppletSetupSerializer
@@ -33,13 +36,57 @@ class AppletHostViewSet(JMSBulkModelViewSet):
     }
 
     def dispatch(self, request, *args, **kwargs):
+        # Keep the caller's org so the asset lookup in `allowed` stays org-scoped
+        self._request_org_id = get_current_org_id()
         with tmp_to_builtin_org(system=1):
             return super().dispatch(request, *args, **kwargs)
 
     def get_permissions(self):
         if self.action == 'startup':
             return [IsServiceAccount()]
+        if self.action == 'allowed':
+            return [IsValidUser()]
         return super().get_permissions()
+
+    @action(methods=['get'], detail=False)
+    def allowed(self, request, *args, **kwargs):
+        asset_id = request.query_params.get('asset', '')
+        applet_name = request.query_params.get('applet', '')
+        if not asset_id or not applet_name:
+            return Response(
+                {'msg': 'asset and applet are required'}, status=status.HTTP_400_BAD_REQUEST
+            )
+        try:
+            uuid.UUID(asset_id)
+        except ValueError:
+            return Response({'msg': 'invalid asset id'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Not found and not allowed both return [] so existence is not leaked
+        with tmp_to_org(self._request_org_id):
+            asset = Asset.objects.filter(id=asset_id).first()
+        applet = Applet.objects.filter(name=applet_name, is_active=True).first()
+        if not asset or not applet:
+            return Response([])
+
+        hosts = applet.filter_available_hosts()
+        if not hosts:
+            return Response([])
+        hosts = list(hosts)
+
+        routing = get_asset_routing(asset)
+        if routing is not None:
+            hosts = filter_hosts_by_routing(routing, hosts)
+        else:
+            only_values = list(
+                asset.get_labels().filter(name__in=['AppletHostOnly', '仅发布机'])
+                .values_list('value', flat=True)
+            )
+            if only_values:
+                hosts = [h for h in hosts if h.name in only_values]
+
+        if not settings.DEBUG_DEV:
+            hosts = [h for h in hosts if h.load != 'offline']
+        return Response([{'id': str(h.id), 'name': h.name, 'load': h.load} for h in hosts])
 
     @action(methods=['post'], detail=True, serializer_class=AppletHostStartupSerializer)
     def startup(self, request, *args, **kwargs):
