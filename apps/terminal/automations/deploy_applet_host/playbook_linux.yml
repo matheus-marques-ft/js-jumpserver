@@ -30,10 +30,16 @@
     # Linux asset at all (.deb/.rpm/.tar.gz are all linux-x64/rhel-x64 only) -
     # unlike Chrome, this applet cannot be published to an ARM AppletHost.
     MONGODB_COMPASS_VERSION: "1.50.0"
-    MONGODB_COMPASS_DEB_URL: "https://github.com/mongodb-js/compass/releases/download/v{{ MONGODB_COMPASS_VERSION }}/mongodb-compass_{{ MONGODB_COMPASS_VERSION }}_amd64.deb"
+    # URL literal (sem {{ }} aninhado: o deploy nao resolve var dentro de var). Manter em sincronia com a versao acima.
+    MONGODB_COMPASS_DEB_URL: "https://github.com/mongodb-js/compass/releases/download/v1.50.0/mongodb-compass_1.50.0_amd64.deb"
     MONGODB_COMPASS_DEB_SHA256: "959efc6008d8ded66ff1f771961d2e14012dcdc57abbcf897fa8ee8286f3bcb0"
-    MONGODB_COMPASS_RPM_URL: "https://github.com/mongodb-js/compass/releases/download/v{{ MONGODB_COMPASS_VERSION }}/mongodb-compass-{{ MONGODB_COMPASS_VERSION }}.x86_64.rpm"
+    MONGODB_COMPASS_RPM_URL: "https://github.com/mongodb-js/compass/releases/download/v1.50.0/mongodb-compass-1.50.0.x86_64.rpm"
     MONGODB_COMPASS_RPM_SHA256: "37720e0b77f219f57790985115edf94a4de009d1f272bb7e22e8fc0a73a18000"
+    # DBeaver Community: tar.gz oficial (JRE embutido), arm64 e x86_64. Versao fixada
+    # e checada contra a API de releases do GitHub (digests sha256 publicados).
+    DBEAVER_VERSION: "26.2.5.2"
+    DBEAVER_SHA256_AARCH64: "1cd92d8ccb7461fce787d35258bbf24104f5059871bef235c6445a5e3ea843aa"
+    DBEAVER_SHA256_X86_64: "315ab02e6e4bb09d6fe43ab156ceb22def1d074d911558795bd2ee8fdc0f4b6b"
     HOST_NAME: test
     HOST_ID: 00000000-0000-0000-0000-000000000000
     CORE_HOST: https://demo.example.com
@@ -180,6 +186,46 @@
             state: present
             disable_gpg_check: true
 
+        # DBeaver (dbeaver_frete_v1): GTK3/SWT precisa destas libs; o JRE vem no tar.gz.
+        - name: Install DBeaver runtime libraries (Debian/Ubuntu)
+          when: ansible_facts['os_family'] == 'Debian'
+          ansible.builtin.apt:
+            name: [libgtk-3-0, libxtst6]
+            state: present
+
+        - name: Install DBeaver runtime libraries (RHEL family / Amazon Linux)
+          when: ansible_facts['os_family'] == 'RedHat'
+          ansible.builtin.dnf:
+            name: [gtk3, libXtst]
+            state: present
+
+        - name: Check if DBeaver {{ DBEAVER_VERSION }} is already installed
+          ansible.builtin.stat:
+            path: /opt/dbeaver/.installed-{{ DBEAVER_VERSION }}
+          register: dbeaver_installed
+
+        - name: Download DBeaver tar.gz
+          when: not dbeaver_installed.stat.exists
+          ansible.builtin.get_url:
+            url: "https://github.com/dbeaver/dbeaver/releases/download/{{ DBEAVER_VERSION }}/dbeaver-ce-{{ DBEAVER_VERSION }}-linux-{{ ansible_facts['architecture'] }}.tar.gz"
+            dest: /tmp/dbeaver.tar.gz
+            checksum: "sha256:{{ DBEAVER_SHA256_AARCH64 if ansible_facts['architecture'] == 'aarch64' else DBEAVER_SHA256_X86_64 }}"
+            mode: "0644"
+
+        - name: Extract DBeaver to /opt/dbeaver
+          when: not dbeaver_installed.stat.exists
+          ansible.builtin.unarchive:
+            src: /tmp/dbeaver.tar.gz
+            dest: /opt
+            remote_src: true
+
+        - name: Mark DBeaver version as installed (skips download on later deploys)
+          when: not dbeaver_installed.stat.exists
+          ansible.builtin.file:
+            path: /opt/dbeaver/.installed-{{ DBEAVER_VERSION }}
+            state: touch
+            mode: "0644"
+
         - name: Ensure /opt/jumpserver directories exist
           ansible.builtin.file:
             path: "{{ item }}"
@@ -298,6 +344,9 @@
         - name: Install shim/applet runtime dependencies in the venv
           ansible.builtin.pip:
             name:
+              # httpsig importa pkg_resources (setuptools), que um venv novo do Python 3.12+
+              # (ex.: Ubuntu 24.04) nao traz mais.
+              - "setuptools<81"
               - httpsig
               - DrissionPage
               - pyotp
