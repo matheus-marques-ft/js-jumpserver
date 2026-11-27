@@ -15,7 +15,7 @@ from accounts.tasks import push_accounts_to_assets_task
 from assets.const import Category, AllTypes
 from assets.models import Asset
 from common.serializers import SecretReadableMixin, SecretReadableCheckMixin, CommonBulkModelSerializer
-from common.serializers.fields import ObjectRelatedField, LabeledChoiceField
+from common.serializers.fields import ObjectRelatedField, LabeledChoiceField, EncryptedField
 from common.utils import get_logger
 from accounts.utils import validate_account_username
 from .base import BaseAccountSerializer, AuthValidateMixin
@@ -235,6 +235,11 @@ class AccountSerializer(AccountCreateUpdateSerializerMixin, BaseAccountSerialize
         label=_('Su from'), attrs=('id', 'name', 'username')
     )
     ds = ObjectRelatedField(read_only=True, label=_('Directory service'), attrs=('id', 'name', 'domain_name'))
+    mfa_secret = EncryptedField(
+        required=False, allow_blank=True, allow_null=True, write_only=True,
+        label=_('MFA secret'), style={'input_type': 'password'}
+    )
+    has_mfa_secret = serializers.SerializerMethodField(label=_('Has MFA secret'))
 
     class Meta(BaseAccountSerializer.Meta):
         model = Account
@@ -245,8 +250,9 @@ class AccountSerializer(AccountCreateUpdateSerializerMixin, BaseAccountSerialize
         fields = BaseAccountSerializer.Meta.fields + [
             'su_from', 'asset', 'version', 'ds',
             'source', 'source_id', 'secret_reset',
+            'mfa_secret', 'has_mfa_secret',
         ] + AccountCreateUpdateSerializerMixin.Meta.fields + automation_fields
-        read_only_fields = BaseAccountSerializer.Meta.read_only_fields + automation_fields
+        read_only_fields = BaseAccountSerializer.Meta.read_only_fields + automation_fields + ['has_mfa_secret']
         fields = [f for f in fields if f not in ['spec_info']]
         extra_kwargs = {
             **BaseAccountSerializer.Meta.extra_kwargs,
@@ -265,6 +271,10 @@ class AccountSerializer(AccountCreateUpdateSerializerMixin, BaseAccountSerialize
             'asset__platform__automation'
         )
         return queryset
+
+    @staticmethod
+    def get_has_mfa_secret(obj) -> bool:
+        return bool(obj.mfa_secret)
 
     def validate(self, attrs):
         instance = getattr(self, "instance", None)
@@ -306,13 +316,17 @@ class AssetAccountBulkSerializer(
         max_length=128, required=False, write_only=True, allow_null=True, label=_("Su from"),
         allow_blank=True,
     )
+    mfa_secret = EncryptedField(
+        required=False, allow_blank=True, allow_null=True, write_only=True,
+        label=_('MFA secret'), style={'input_type': 'password'}
+    )
 
     class Meta:
         model = Account
         fields = [
             'name', 'username', 'secret', 'secret_type', 'secret_reset',
             'passphrase', 'privileged', 'is_active', 'comment', 'template',
-            'on_invalid', 'push_now', 'params',
+            'on_invalid', 'push_now', 'params', 'mfa_secret',
             'su_from_username', 'source', 'source_id',
         ]
         extra_kwargs = {
@@ -487,12 +501,13 @@ class AccountSecretSerializer(SecretReadableCheckMixin, SecretReadableMixin, Acc
         extra_kwargs = {
             **AccountSerializer.Meta.extra_kwargs,
             'secret': {'write_only': False},
+            'mfa_secret': {'write_only': False},
             'spec_info': {'label': _('Spec info')},
         }
         exclude_backup_fields = [
-            'passphrase', 'push_now', 'params', 'spec_info'
+            'passphrase', 'push_now', 'params', 'spec_info', 'mfa_secret'
         ]
-        secret_fields = ['secret']
+        secret_fields = ['secret', 'mfa_secret']
 
 
 class AccountHistorySerializer(SecretReadableCheckMixin, serializers.ModelSerializer):

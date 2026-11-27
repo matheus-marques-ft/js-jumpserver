@@ -10854,6 +10854,64 @@ msgstr "Inicialização"
 msgid "Applet host deployment"
 msgstr "Implantação de Aplicativo"
 
+#: acls/serializers/connect_method.py:16
+msgid ""
+"Applet hosts this rule allows (accept) or denies (reject) for the selected "
+"connect methods. Leave empty to apply the rule to the whole connect method."
+msgstr ""
+"Máquinas de publicação que esta regra permite (aceitar) ou nega (rejeitar) "
+"para os métodos de conexão selecionados. Deixe vazio para aplicar a regra "
+"ao método de conexão inteiro."
+
+#: acls/models/connect_method.py:11
+#: acls/serializers/connect_method.py:14
+msgid "Applet hosts"
+msgstr "Máquinas de publicação"
+
+#: terminal/models/applet/routing.py:22
+#: assets/serializers/asset/applet_routing.py:30
+msgid "Applet host"
+msgstr "Máquina de publicação"
+
+#: terminal/models/applet/routing.py:26
+#: assets/serializers/asset/applet_routing.py:33
+msgid "Excluded applet hosts"
+msgstr "Máquinas de publicação excluídas"
+
+#: terminal/models/applet/routing.py:30
+msgid "Applet host routing"
+msgstr "Roteamento de máquina de publicação"
+
+#: terminal/models/applet/routing.py:19
+msgid "Balance"
+msgstr "Balanceamento"
+
+#: assets/serializers/asset/applet_routing.py:27
+msgid "Balance (any applet host)"
+msgstr "Balanceamento (qualquer máquina de publicação)"
+
+#: assets/serializers/asset/applet_routing.py:112
+msgid "Select an applet host or enable balancing"
+msgstr "Selecione uma máquina de publicação ou ative o balanceamento"
+
+#: assets/serializers/asset/applet_routing.py:116
+msgid "The selected applet host cannot be excluded"
+msgstr "A máquina de publicação selecionada não pode ser excluída"
+
+#: terminal/models/applet/routing.py:50
+msgid "Applet host is required when balancing is disabled"
+msgstr ""
+"A máquina de publicação é obrigatória quando o balanceamento está desativado"
+
+#: terminal/models/applet/routing.py:52
+msgid "Applet host cannot be both selected and excluded"
+msgstr ""
+"A máquina de publicação não pode ser selecionada e excluída ao mesmo tempo"
+
+#: terminal/models/applet/routing.py:64
+msgid "Applet host not found"
+msgstr "Máquina de publicação não encontrada"
+
 #: terminal/models/component/endpoint.py:16
 msgid "HTTPS port"
 msgstr "Porta HTTPS"
@@ -13958,6 +14016,16 @@ msgstr "Importação de licença bem-sucedida"
 #: xpack/plugins/license/api.py:56
 msgid "Invalid license"
 msgstr "Licença inválida"
+
+#: accounts/models/account.py
+#: accounts/serializers/account/account.py
+msgid "MFA secret"
+msgstr "Segredo MFA"
+
+#: accounts/models/account.py
+#: accounts/serializers/account/account.py
+msgid "Has MFA secret"
+msgstr "Possui segredo MFA"
 
 #, fuzzy, python-format
 #~ msgid "Success: %s, Unverified: %s, Failed: %s, Total: %s"

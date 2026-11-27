@@ -300,6 +300,30 @@
           ansible.builtin.command: fc-cache -f
           changed_when: false
 
+        # Politica gerenciada do Chrome: esconde "salvar senha", gerenciador de senhas, autofill,
+        # verificacao de vazamento e login/sync do Chrome. As prefs do perfil (credentials_enable_service
+        # etc.) sozinhas nao bastaram nas versoes novas; politica vence as prefs do usuario.
+        # Os applets sao o unico uso de Chrome nestes hosts.
+        - name: Ensure the Chrome managed policy directory exists
+          ansible.builtin.file:
+            path: /etc/opt/chrome/policies/managed
+            state: directory
+            mode: "0755"
+
+        - name: Disable password manager, autofill and sign-in in Chrome (managed policy)
+          ansible.builtin.copy:
+            dest: /etc/opt/chrome/policies/managed/jumpserver-applet.json
+            mode: "0644"
+            content: |
+              {
+                "PasswordManagerEnabled": false,
+                "PasswordLeakDetectionEnabled": false,
+                "AutofillAddressEnabled": false,
+                "AutofillCreditCardEnabled": false,
+                "BrowserSignin": 0,
+                "SyncDisabled": true
+              }
+
         - name: Ensure /opt/jumpserver directories exist
           ansible.builtin.file:
             path: "{{ item }}"

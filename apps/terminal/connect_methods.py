@@ -241,16 +241,16 @@ class ConnectMethodUtil:
     def get_user_allowed_connect_methods(cls, os, user):
         from acls.models import ConnectMethodACL
         methods = cls.get_filtered_protocols_connect_methods(os)
+        # Rules with applet_hosts are host-level and do not hide the connect method
+        method_acls = [a for a in ConnectMethodACL.get_user_acls(user) if not a.applet_hosts]
         accept_methods = set(itertools.chain.from_iterable(
-            ConnectMethodACL.get_user_acls(user)
-            .filter(action=ConnectMethodACL.ActionChoices.accept)
-            .values_list('connect_methods', flat=True)
+            a.connect_methods for a in method_acls
+            if a.action == ConnectMethodACL.ActionChoices.accept
         ))
         # On top of the disabled set, allow some connect methods through
         disabled_connect_methods = set(itertools.chain.from_iterable(
-            ConnectMethodACL.get_user_acls(user)
-            .filter(action=ConnectMethodACL.ActionChoices.reject)
-            .values_list('connect_methods', flat=True)
+            a.connect_methods for a in method_acls
+            if a.action == ConnectMethodACL.ActionChoices.reject
         )) - accept_methods
 
         new_queryset = {}

@@ -58,7 +58,7 @@ class _ConnectionTokenAccountSerializer(serializers.ModelSerializer):
         model = Account
         fields = [
             'id', 'name', 'username', 'secret_type',
-            'secret', 'su_from', 'privileged'
+            'secret', 'su_from', 'privileged', 'mfa_secret'
         ]
 
     @staticmethod

@@ -11051,6 +11051,64 @@ msgstr "Inicialización"
 msgid "Applet host deployment"
 msgstr "Despliegue de aplicaciones"
 
+#: acls/serializers/connect_method.py:16
+msgid ""
+"Applet hosts this rule allows (accept) or denies (reject) for the selected "
+"connect methods. Leave empty to apply the rule to the whole connect method."
+msgstr ""
+"Publicadores de aplicaciones que esta regla permite (aceptar) o deniega (rechazar) "
+"para los métodos de conexión seleccionados. Déjelo vacío para aplicar la "
+"regla a todo el método de conexión."
+
+#: acls/models/connect_method.py:11
+#: acls/serializers/connect_method.py:14
+msgid "Applet hosts"
+msgstr "Publicadores de aplicaciones"
+
+#: terminal/models/applet/routing.py:22
+#: assets/serializers/asset/applet_routing.py:30
+msgid "Applet host"
+msgstr "Publicador de aplicaciones"
+
+#: terminal/models/applet/routing.py:26
+#: assets/serializers/asset/applet_routing.py:33
+msgid "Excluded applet hosts"
+msgstr "Publicadores de aplicaciones excluidos"
+
+#: terminal/models/applet/routing.py:30
+msgid "Applet host routing"
+msgstr "Enrutamiento del publicador de aplicaciones"
+
+#: terminal/models/applet/routing.py:19
+msgid "Balance"
+msgstr "Balanceo"
+
+#: assets/serializers/asset/applet_routing.py:27
+msgid "Balance (any applet host)"
+msgstr "Balanceo (cualquier publicador de aplicaciones)"
+
+#: assets/serializers/asset/applet_routing.py:112
+msgid "Select an applet host or enable balancing"
+msgstr "Seleccione un publicador de aplicaciones o active el balanceo"
+
+#: assets/serializers/asset/applet_routing.py:116
+msgid "The selected applet host cannot be excluded"
+msgstr "El publicador de aplicaciones seleccionado no puede excluirse"
+
+#: terminal/models/applet/routing.py:50
+msgid "Applet host is required when balancing is disabled"
+msgstr ""
+"El publicador de aplicaciones es obligatorio cuando el balanceo está desactivado"
+
+#: terminal/models/applet/routing.py:52
+msgid "Applet host cannot be both selected and excluded"
+msgstr ""
+"El publicador de aplicaciones no puede estar seleccionado y excluido a la vez"
+
+#: terminal/models/applet/routing.py:64
+msgid "Applet host not found"
+msgstr "Publicador de aplicaciones no encontrado"
+
 #: terminal/models/component/endpoint.py:16
 msgid "HTTPS port"
 msgstr "Puerto HTTPS"
@@ -14192,6 +14250,16 @@ msgstr "Importación de licencia exitosa"
 #: xpack/plugins/license/api.py:56
 msgid "Invalid license"
 msgstr "Licencia no válida"
+
+#: accounts/models/account.py
+#: accounts/serializers/account/account.py
+msgid "MFA secret"
+msgstr "Secreto MFA"
+
+#: accounts/models/account.py
+#: accounts/serializers/account/account.py
+msgid "Has MFA secret"
+msgstr "Tiene secreto MFA"
 
 #, fuzzy, python-format
 #~ msgid "Success: %s, Unverified: %s, Failed: %s, Total: %s"

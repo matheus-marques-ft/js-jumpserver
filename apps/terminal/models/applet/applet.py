@@ -239,6 +239,16 @@ class Applet(JMSBaseModel):
             # este retorno, os loops abaixo levantavam TypeError (iterar None).
             return None
 
+        # Permissoes por ACL de metodo de conexao: falha na consulta nega (fail closed).
+        try:
+            from acls.models import ConnectMethodACL
+            hosts = ConnectMethodACL.filter_applet_hosts(user, self.name, list(hosts))
+        except Exception as e:
+            logger.error("Filter applet hosts by connect method ACL failed: {}".format(e))
+            return None
+        if not hosts:
+            return None
+
         # Import e leitura dentro do try: qualquer falha cai no comportamento legado.
         try:
             from .routing import get_asset_routing, filter_hosts_by_routing

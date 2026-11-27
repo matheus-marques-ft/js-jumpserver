@@ -10809,6 +10809,61 @@ msgstr "Initialize"
 msgid "Applet host deployment"
 msgstr "App deployment"
 
+#: acls/serializers/connect_method.py:16
+msgid ""
+"Applet hosts this rule allows (accept) or denies (reject) for the selected "
+"connect methods. Leave empty to apply the rule to the whole connect method."
+msgstr ""
+"Applet hosts this rule allows (accept) or denies (reject) for the selected "
+"connect methods. Leave empty to apply the rule to the whole connect method."
+
+#: acls/models/connect_method.py:11
+#: acls/serializers/connect_method.py:14
+msgid "Applet hosts"
+msgstr "Applet hosts"
+
+#: terminal/models/applet/routing.py:22
+#: assets/serializers/asset/applet_routing.py:30
+msgid "Applet host"
+msgstr "Applet host"
+
+#: terminal/models/applet/routing.py:26
+#: assets/serializers/asset/applet_routing.py:33
+msgid "Excluded applet hosts"
+msgstr "Excluded applet hosts"
+
+#: terminal/models/applet/routing.py:30
+msgid "Applet host routing"
+msgstr "Applet host routing"
+
+#: terminal/models/applet/routing.py:19
+msgid "Balance"
+msgstr "Balance"
+
+#: assets/serializers/asset/applet_routing.py:27
+msgid "Balance (any applet host)"
+msgstr "Balance (any applet host)"
+
+#: assets/serializers/asset/applet_routing.py:112
+msgid "Select an applet host or enable balancing"
+msgstr "Select an applet host or enable balancing"
+
+#: assets/serializers/asset/applet_routing.py:116
+msgid "The selected applet host cannot be excluded"
+msgstr "The selected applet host cannot be excluded"
+
+#: terminal/models/applet/routing.py:50
+msgid "Applet host is required when balancing is disabled"
+msgstr "Applet host is required when balancing is disabled"
+
+#: terminal/models/applet/routing.py:52
+msgid "Applet host cannot be both selected and excluded"
+msgstr "Applet host cannot be both selected and excluded"
+
+#: terminal/models/applet/routing.py:64
+msgid "Applet host not found"
+msgstr "Applet host not found"
+
 #: terminal/models/component/endpoint.py:16
 msgid "HTTPS port"
 msgstr "HTTPS port"
@@ -13900,6 +13955,16 @@ msgstr "License imported successfully"
 #: xpack/plugins/license/api.py:56
 msgid "Invalid license"
 msgstr "Invalid license"
+
+#: accounts/models/account.py
+#: accounts/serializers/account/account.py
+msgid "MFA secret"
+msgstr "MFA secret"
+
+#: accounts/models/account.py
+#: accounts/serializers/account/account.py
+msgid "Has MFA secret"
+msgstr "Has MFA secret"
 
 #~ msgid ""
 #~ "---\n"

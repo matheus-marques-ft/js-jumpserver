@@ -10,6 +10,7 @@ from rest_framework.response import Response
 from assets.models import Asset
 from common.api import JMSBulkModelViewSet
 from common.permissions import IsServiceAccount, IsValidUser
+from common.utils import get_logger
 from orgs.utils import tmp_to_builtin_org, tmp_to_org, get_current_org_id
 from terminal.models import Applet, AppletHost, AppletHostDeployment
 from terminal.models.applet.routing import get_asset_routing, filter_hosts_by_routing
@@ -24,6 +25,8 @@ from terminal.tasks import (
 )
 
 __all__ = ['AppletHostViewSet', 'AppletHostDeploymentViewSet']
+
+logger = get_logger(__name__)
 
 
 class AppletHostViewSet(JMSBulkModelViewSet):
@@ -72,6 +75,12 @@ class AppletHostViewSet(JMSBulkModelViewSet):
         if not hosts:
             return Response([])
         hosts = list(hosts)
+        try:
+            from acls.models import ConnectMethodACL
+            hosts = ConnectMethodACL.filter_applet_hosts(request.user, applet.name, hosts)
+        except Exception as e:
+            logger.error("Filter applet hosts by connect method ACL failed: {}".format(e))
+            return Response([])
 
         routing = get_asset_routing(asset)
         if routing is not None:

@@ -1,5 +1,6 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
+from django.utils.translation import gettext as _t
 from django.utils.translation import gettext_lazy as _
 
 from common.db.models import JMSBaseModel
@@ -46,9 +47,9 @@ def save_asset_routing(asset, balance, host_id, excluded_ids):
     excluded_ids = [str(i) for i in (excluded_ids or [])]
 
     if not balance and not host_id:
-        raise ValueError('applet host is required when balancing is disabled')
+        raise ValueError(_t('Applet host is required when balancing is disabled'))
     if host_id and host_id in excluded_ids:
-        raise ValueError('applet host cannot be both selected and excluded')
+        raise ValueError(_t('Applet host cannot be both selected and excluded'))
 
     # Estado padrao (balanceado, sem host, sem exclusoes) = sem linha: o ativo segue o
     # comportamento legado (labels AppletHostOnly/AppletHost continuam valendo).
@@ -60,7 +61,7 @@ def save_asset_routing(asset, balance, host_id, excluded_ids):
     if not balance:
         host = AppletHost.objects.filter(id=host_id).first()
         if host is None:
-            raise ValueError('applet host not found')
+            raise ValueError(_t('Applet host not found'))
 
     routing, created = AppletHostRouting.objects.update_or_create(
         asset=asset, defaults={'balance': bool(balance), 'host': host}
