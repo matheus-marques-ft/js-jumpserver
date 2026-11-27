@@ -234,6 +234,11 @@ class UserUnblockPKApi(UserQuerysetMixin, generics.UpdateAPIView):
 
 class UserResetMFAApi(UserQuerysetMixin, generics.RetrieveAPIView):
     serializer_class = serializers.ResetOTPSerializer
+    # Reset de MFA altera o usuario, por isso exige change_user
+    rbac_perms = (
+        ('retrieve', 'users.change_user'),
+        ('GET', 'users.change_user'),
+    )
 
     def retrieve(self, request, *args, **kwargs):
         user = self.get_object() if kwargs.get('pk') else request.user

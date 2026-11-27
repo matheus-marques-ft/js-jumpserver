@@ -1352,6 +1352,8 @@
     "ResetMFA": "Restablecer MFA",
     "ResetMFAWarningMsg": "¿Estás seguro de que deseas restablecer la MFA del usuario?  \nPlataforma",
     "ResetMFAdSuccessMsg": "Restablecimiento de MFA exitoso, el usuario puede volver a configurar MFA",
+    "ResetMFANotEnabled": "El MFA está desactivado para este usuario",
+    "ResetMFAHelp": "Elimina el registro de MFA del usuario; deberá registrarlo de nuevo en el próximo inicio de sesión (requiere MFA activado para el usuario)",
     "ResetPassword": "Restablecer contraseña",
     "ResetPasswordNextLogin": "El próximo inicio de sesión requiere cambiar la contraseña",
     "ResetPasswordSuccessMsg": "Se ha enviado al usuario un mensaje para restablecer la contraseña",

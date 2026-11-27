@@ -301,7 +301,8 @@
           changed_when: false
 
         # Politica gerenciada do Chrome: esconde "salvar senha", gerenciador de senhas, autofill,
-        # verificacao de vazamento e login/sync do Chrome. As prefs do perfil (credentials_enable_service
+        # verificacao de vazamento e login/sync do Chrome, e bloqueia navegacao por file:// (a sessao
+        # nao deve listar/ler arquivos do host). As prefs do perfil (credentials_enable_service
         # etc.) sozinhas nao bastaram nas versoes novas; politica vence as prefs do usuario.
         # Os applets sao o unico uso de Chrome nestes hosts.
         - name: Ensure the Chrome managed policy directory exists
@@ -321,7 +322,8 @@
                 "AutofillAddressEnabled": false,
                 "AutofillCreditCardEnabled": false,
                 "BrowserSignin": 0,
-                "SyncDisabled": true
+                "SyncDisabled": true,
+                "URLBlocklist": ["file://*"]
               }
 
         - name: Ensure /opt/jumpserver directories exist
@@ -559,6 +561,72 @@
           changed_when: false
           failed_when: fuse_helper.rc != 0
 
+        # Contas do pool sao reaproveitadas entre sessoes. Quando uma sessao termina sem o
+        # xrdp-chansrv desmontar (SIGKILL, KillDisconnected, deploy), o ponto FUSE de
+        # ~/thinclient_drives fica preso ("Transport endpoint is not connected") e o
+        # chansrv da sessao seguinte nao consegue montar por cima: o drive de download
+        # nao sobe. Este script desmonta (lazy) so os pontos presos de contas do pool.
+        - name: Push the stale FUSE mount cleaner
+          ansible.builtin.copy:
+            dest: /opt/jumpserver/fuse_cleanup.sh
+            mode: "0755"
+            content: |
+              #!/bin/sh
+              # Desmonta pontos FUSE de ~/thinclient_drives de contas do pool (frete_/js_/jms_)
+              # presos: sem xrdp-chansrv do dono, ou com "Transport endpoint is not connected".
+              export LC_ALL=C
+              awk '$3 ~ /^fuse/ && $2 ~ /^\/home\/(frete_|js_|jms_)[^\/]+\/thinclient_drives$/ { print $2 }' /proc/self/mounts |
+              while IFS= read -r mp; do
+                user=${mp#/home/}
+                user=${user%%/*}
+                stale=0
+                pgrep -u "$user" -x xrdp-chansrv >/dev/null 2>&1 || stale=1
+                if [ "$stale" = 0 ] && ls -d "$mp/." 2>&1 | grep -q 'not connected'; then
+                  stale=1
+                fi
+                if [ "$stale" = 1 ]; then
+                  umount -l "$mp" 2>/dev/null
+                fi
+              done
+              exit 0
+
+        - name: Install the stale FUSE mount cleaner service
+          ansible.builtin.copy:
+            dest: /etc/systemd/system/jumpserver-fuse-cleanup.service
+            mode: "0644"
+            content: |
+              [Unit]
+              Description=Unmount stale xrdp drive (FUSE) mounts of pooled applet accounts
+
+              [Service]
+              Type=oneshot
+              ExecStart=/opt/jumpserver/fuse_cleanup.sh
+          register: fuse_cleanup_service
+
+        - name: Install the stale FUSE mount cleaner timer
+          ansible.builtin.copy:
+            dest: /etc/systemd/system/jumpserver-fuse-cleanup.timer
+            mode: "0644"
+            content: |
+              [Unit]
+              Description=Run the stale FUSE mount cleaner every 10 seconds
+
+              [Timer]
+              OnBootSec=30
+              OnUnitActiveSec=10
+              AccuracySec=1
+
+              [Install]
+              WantedBy=timers.target
+          register: fuse_cleanup_timer
+
+        - name: Reload systemd units (FUSE cleaner)
+          ansible.builtin.command: systemctl daemon-reload
+          when: fuse_cleanup_service.changed or fuse_cleanup_timer.changed
+
+        - name: Enable and (re)start the stale FUSE mount cleaner timer
+          ansible.builtin.command: systemctl enable --now jumpserver-fuse-cleanup.timer
+
         # ansible.builtin.systemd fails here with "module (ansible.builtin.systemd) is
         # missing interpreter line" under JumpServer's ansible-core fork (v2.16.18.3,
         # see pyproject.toml [tool.uv.sources]) running on the Python 3.14 controller
@@ -614,6 +682,12 @@
               case "$n" in ''|*[!0-9]*) continue ;; esac
               [ "$n" -ge 10 ] && rm -f "$f"
             done
+          changed_when: false
+
+        # O pkill -9 acima mata os xrdp-chansrv sem desmontar: limpa os pontos FUSE presos
+        # ja neste deploy, para a primeira sessao depois dele montar o drive normalmente.
+        - name: Unmount stale xrdp drive mounts left by the SIGKILL above
+          ansible.builtin.command: /opt/jumpserver/fuse_cleanup.sh
           changed_when: false
 
         # Live testing showed the actual session process was Xvnc, not Xorg

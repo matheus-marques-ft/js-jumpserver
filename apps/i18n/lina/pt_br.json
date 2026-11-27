@@ -1352,6 +1352,8 @@
     "ResetMFA": "Resetar MFA",
     "ResetMFAWarningMsg": "Tem certeza de que deseja redefinir o MFA do usuário?",
     "ResetMFAdSuccessMsg": "Redefinição de MFA bem-sucedida, o usuário pode redefinir o MFA novamente",
+    "ResetMFANotEnabled": "O MFA está desativado para este usuário",
+    "ResetMFAHelp": "Remove o cadastro de MFA do usuário; ele precisará cadastrar novamente no próximo login (exige MFA ativado para o usuário)",
     "ResetPassword": "Reconfigurar senha",
     "ResetPasswordNextLogin": "É necessário alterar a senha no próximo login",
     "ResetPasswordSuccessMsg": "A mensagem de redefinição de senha foi enviada ao usuário",

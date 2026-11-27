@@ -1357,6 +1357,8 @@
     "ResetMFA": "Reset mfa",
     "ResetMFAWarningMsg": "Are you sure you want to reset the user's mfa?",
     "ResetMFAdSuccessMsg": "Mfa reset successful, user can reset mfa again",
+    "ResetMFANotEnabled": "MFA is disabled for this user",
+    "ResetMFAHelp": "Clears the user's MFA binding; the user must register it again at the next login (requires MFA to be enabled for the user)",
     "ResetPassword": "Reset password",
     "ResetPasswordNextLogin": "Password must be changed during next login",
     "ResetPasswordSuccessMsg": "Reset password message sent to user",
